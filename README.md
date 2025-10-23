@@ -1,3 +1,3 @@
 Bile Salt Hydrolase (BSH) MODEL- (W.I.P)
 
-Here we are trying to build a model where we can predict BSH activity of a enzyme given a product bag. 
+Lukowski and Dorrestein lab ran some enzymaic assays of BSH hydrolases pooled with various bile acids (BA) and amines in efforts to see if these BSH  are capable of generating new BA x amine conjugations. To detect the formation of products they used LC-MS, only being able to detect the pooled product types ... 
