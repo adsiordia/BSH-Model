@@ -1,0 +1,12 @@
+numpy
+pandas
+rdkit
+pubchempy
+h5py
+matplotlib
+plotly
+scikit-learn
+xgboost
+torch
+openpyxl
+ipython
