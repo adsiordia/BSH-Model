@@ -10,3 +10,6 @@ xgboost
 torch
 openpyxl
 ipython
+umap-learn
+molplotly
+biopython

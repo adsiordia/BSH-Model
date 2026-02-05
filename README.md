@@ -12,6 +12,23 @@ This repository contains the data preprocessing pipeline and model training code
 - **Bile acid molecular fingerprints** (Morgan fingerprints from SMILES)
 - **Amine molecular fingerprints**
 
+## Sequence Alignment & Conservation
+
+The notebook `notebooks/bsh_alignment_conservation.ipynb` aligns all 127 BSH sequences with MUSCLE and identifies conserved vs variable positions across the family.
+
+Out of 330 well-occupied alignment columns, only **16 positions are >=95% conserved** — the catalytic and structural core of the BSH family:
+
+- **C** (Cys) — catalytic nucleophile
+- **H** (His), **D** (Asp) — complete the Ntn-hydrolase catalytic triad
+- **E** (Glu x2), **R** (Arg x2), **N** (Asn x2) — active site / substrate binding
+- **G** (Gly x4), **P** (Pro x2), **T** (Thr) — structural flexibility and turns
+
+The remaining ~95% of positions are variable, representing the sequence diversity that drives differences in substrate specificity across BSH enzymes.
+
+![Conserved residues analysis](images/conserved_residues_analysis.png)
+
+The non-conserved residue positions are mapped back to each enzyme's original sequence indices and exported for downstream per-residue embedding extraction (selecting only variable positions for ProtT5 embeddings).
+
 ## Repository Structure
 
 ```
@@ -21,13 +38,17 @@ BSH_model/
 ├── .gitignore
 ├── data/                          # Input data files
 │   ├── bsh_reactants_SMILES.xlsx          # Reactant SMILES for bile acids and amines
+│   ├── Seqs_list_total.fasta              # 127 BSH protein sequences
 │   ├── NEW_Stage2_BAs_amines_for_heatmap_manual.csv   # Heatmap: amine-specific products
 │   ├── NEW_Stage2_BAs_subs_for_heatmap_manual.csv     # Heatmap: substitute products
 │   ├── Seqs_list_total.h5                 # ProtT5 enzyme embeddings (per-residue)
 │   └── swap_enumeration_with_core_smiles.xlsx  # Enumeration with core SMILES
 ├── notebooks/
 │   ├── data_preprocessing_BSH_enzyme_model.ipynb  # Data preprocessing pipeline
-│   └── BSH_conjugation_model.ipynb                # MIL model training notebook
+│   ├── BSH_conjugation_model.ipynb                # MIL model training notebook
+│   └── bsh_alignment_conservation.ipynb           # Sequence alignment & conservation analysis
+├── images/                        # Figures for documentation
+│   └── conserved_residues_analysis.png
 ├── training/                      # Standalone training scripts
 │   ├── BSH_train_10_22_2025.py
 │   ├── 20251215_enzyme_amine_holdout.py
@@ -42,6 +63,8 @@ BSH_model/
 ```bash
 pip install -r requirements.txt
 ```
+
+For the alignment notebook, [MUSCLE](https://drive5.com/muscle/) must also be installed and available as `./muscle` in the project root (or on your PATH). On macOS: `brew install brewsci/bio/muscle`.
 
 ## Usage
 
