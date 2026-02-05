@@ -141,8 +141,8 @@ def metrics(y, p):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--data_dir", default="/home/adsiordia/BSH-Model")
-    ap.add_argument("--out_dir", default="/home/adsiordia/BSH-Model/outputs/enzyme_amine_coreclass")
+    ap.add_argument("--data_dir", default=os.path.join(os.path.dirname(__file__), "..", "data"))
+    ap.add_argument("--out_dir", default=os.path.join(os.path.dirname(__file__), "..", "outputs", "enzyme_amine_coreclass"))
     ap.add_argument("--heat_csv", default="ipsita_heatmap_long.csv")
     ap.add_argument("--h5_path", default="Seqs_list_total.h5")
     ap.add_argument("--swap_xlsx", default="swap_enumeration_with_core_smiles.xlsx")

@@ -45,8 +45,8 @@ import h5py
 def parse_args():
     ap = argparse.ArgumentParser("Per-product baseline: Enzyme + Amine + mono/di/tri")
 
-    ap.add_argument("--data_dir", type=str, default="/home/adsiordia/BSH-Model")
-    ap.add_argument("--out_dir", type=str, default="/home/adsiordia/BSH-Model/outputs")
+    ap.add_argument("--data_dir", type=str, default=os.path.join(os.path.dirname(__file__), "..", "data"))
+    ap.add_argument("--out_dir",  type=str, default=os.path.join(os.path.dirname(__file__), "..", "outputs"))
     ap.add_argument("--run-tag", type=str, default="enzyme_amine_class_baseline")
 
     ap.add_argument("--heat_csv", type=str, default="ipsita_heatmap_long.csv")

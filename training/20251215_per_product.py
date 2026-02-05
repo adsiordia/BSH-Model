@@ -38,8 +38,8 @@ def parse_args():
     ap = argparse.ArgumentParser(description="Per-product (one-row-per-ProductName) enzyme holdout binary training")
 
     # Keep SAME default paths as before
-    ap.add_argument("--data_dir", type=str, default="/home/adsiordia/BSH-Model")
-    ap.add_argument("--out_dir",  type=str, default="/home/adsiordia/BSH-Model/outputs")
+    ap.add_argument("--data_dir", type=str, default=os.path.join(os.path.dirname(__file__), "..", "data"))
+    ap.add_argument("--out_dir",  type=str, default=os.path.join(os.path.dirname(__file__), "..", "outputs"))
     ap.add_argument("--run_tag",  type=str, default="enzyme_holdout_binary_per_product")
 
     ap.add_argument("--heat_csv", type=str, default="ipsita_heatmap_long.csv")

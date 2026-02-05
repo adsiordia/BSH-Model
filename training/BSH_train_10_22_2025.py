@@ -37,8 +37,8 @@ except Exception:
 # =================== CLI ===================
 def parse_args():
     ap = argparse.ArgumentParser(description="Train pooled-bag classifier (amine keyed by name) + pred logs")
-    ap.add_argument("--data_dir", type=str, default="/home/adsiordia/BSH-Model")
-    ap.add_argument("--out_dir",  type=str, default="/home/adsiordia/BSH-Model/outputs")
+    ap.add_argument("--data_dir", type=str, default=os.path.join(os.path.dirname(__file__), "..", "data"))
+    ap.add_argument("--out_dir",  type=str, default=os.path.join(os.path.dirname(__file__), "..", "outputs"))
     ap.add_argument("--run-tag",  type=str, default="")
     ap.add_argument("--splits",   type=int, default=5, help="GroupKFold splits per repeat")
     ap.add_argument("--repeats",  type=int, default=3, help="CV repeats with different enzyme permutations")
