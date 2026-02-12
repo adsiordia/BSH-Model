@@ -122,9 +122,23 @@ For the alignment notebook, [MUSCLE](https://drive5.com/muscle/) must also be in
 
 ## Key Results
 
-| Metric | Best Configuration | Value |
-|--------|-------------------|-------|
-| Best enzyme representation | Non-conserved residues (threshold=0.6), max pool, 1024-dim | ROC-AUC: 0.840 |
-| Best amine representation | Physicochemical + one-hot (41-dim) | PR-AUC: 0.617 |
-| Feature importance split | Enzyme vs amine features | 94% / 6% |
-| Replicate noise ceiling | Inconsistent detection across 3 reps | ~15% of combos |
+The best-performing model uses a **regularized XGBoost classifier** (max_depth=3, reg_alpha=1.0, reg_lambda=5.0, subsample=0.7) evaluated with **enzyme hold-out cross-validation** (10 random splits, 80/20 train/test) to ensure generalization to unseen enzymes.
+
+**Model input features (1065-dim):**
+- **Enzyme (1024-dim):** ProtT5 per-residue embeddings at non-conserved alignment positions (conservation score < 0.6), max-pooled across selected residues. Non-conserved positions are identified from a multiple sequence alignment of all 127 BSH sequences -- these variable positions capture the sequence diversity that drives substrate specificity differences.
+- **Amine (41-dim):** 15 RDKit physicochemical descriptors (molecular weight, LogP, TPSA, H-bond donors/acceptors, rotatable bonds, aromatic rings, etc.) + 26-dim one-hot encoding of amine identity. This compact representation outperformed both Morgan fingerprints (1024-dim) and MolT5 molecular language model embeddings (768-dim), likely because the smaller feature space reduces overfitting given the limited training data.
+
+**Prediction target:** Binary classification of whether an enzyme-amine pair produces a detectable deconjugation product (active_approach2 label, aggregated across bile acid cores with max).
+
+| Metric | Value |
+|--------|-------|
+| ROC-AUC | 0.840 +/- 0.031 |
+| PR-AUC | 0.641 +/- 0.061 |
+| F1 Score | 0.615 +/- 0.036 |
+| Feature importance | 94% enzyme / 6% amine |
+| Replicate noise ceiling | ~15% of enzyme-product combos show inconsistent detection across 3 reps |
+
+**Key findings from representation analysis:**
+- Max pooling outperforms mean pooling at every conservation threshold (ROC-AUC gap of 0.03-0.05), because a small set of ~10 residue positions dominate the max-pool signal
+- The enzyme embedding drives 94% of the model's predictions, while amine features contribute 6% -- suggesting that enzyme identity is far more predictive than amine chemistry
+- Compact amine representations (41-dim) reduce overfitting compared to sparse fingerprints (1024-dim), as seen in smaller train-validation log loss gaps
