@@ -73,7 +73,7 @@ We extended the replicate consistency analysis to the **enzyme axis** — asking
 
 ![Borderline signal analysis](images/borderline_signal_analysis.png)
 
-**Pairwise replicate agreement:** Per-enzyme detection counts across replicates are well-correlated for most enzymes, but outliers (falling far off the y=x line) correspond to the Tier 4 enzymes with catastrophic replicate failure.
+**Pairwise replicate agreement:** Per-enzyme detection counts across replicates are well-correlated for most enzymes, but outliers (falling far off the y=x line) correspond to the Tier 4 enzymes with  replicate failure.
 
 ![Enzyme replicate pairwise](images/enzyme_replicate_pairwise.png)
 
