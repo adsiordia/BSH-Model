@@ -63,6 +63,34 @@ The top max-contributing position (alignment position 201) accounts for 7.2% of 
 
 See `notebooks/conservation_threshold_sweep.ipynb` for full analysis.
 
+## Full-Protein Max Pooling Comparison
+
+The earlier conservation threshold sweep only compared mean vs max pooling on **non-conserved residues**. The `full_protein` baseline always used a pre-computed mean-pooled embedding. To make a fair comparison, we ran a 4-way experiment using per-residue embeddings for all strategies:
+
+**4 strategies x 3 models x 10 enzyme hold-out seeds = 120 experiments:**
+
+| Strategy | Residues | Pooling | ROC-AUC | PR-AUC | F1 | LL Gap |
+|----------|----------|---------|---------|--------|----|--------|
+| full_protein_mean | All | Mean | 0.797 +/- 0.050 | 0.611 +/- 0.087 | 0.605 +/- 0.071 | +0.356 |
+| **full_protein_max** | **All** | **Max** | **0.808 +/- 0.052** | **0.622 +/- 0.086** | **0.609 +/- 0.068** | **+0.324** |
+| noncons_mean | Non-conserved | Mean | 0.784 +/- 0.047 | 0.604 +/- 0.080 | 0.595 +/- 0.068 | +0.361 |
+| noncons_max | Non-conserved | Max | 0.799 +/- 0.034 | 0.606 +/- 0.065 | 0.591 +/- 0.060 | +0.326 |
+
+![Pooling comparison boxplots](images/pooling_comparison_boxplots.png)
+
+**Key findings:**
+- **Max pooling improves performance regardless of residue selection** -- both full_protein_max and noncons_max outperform their mean-pooled counterparts
+- **Full protein max pooling is the best single strategy** (ROC-AUC 0.808), slightly edging out noncons_max (0.799)
+- **The max pooling advantage is consistent across all 3 models** (XGBoost, RF, MLP), not just XGBoost
+- **Max pooling reduces overfitting**: the log loss gap is smaller for max-pooled strategies (+0.324) vs mean-pooled (+0.356), suggesting max pooling produces more discriminative features that generalize better
+- **Conservation filtering helps reduce variance**: noncons_max has the tightest confidence interval (0.034 std) vs full_protein_max (0.052 std)
+
+![Pooling comparison all models](images/pooling_comparison_all_models.png)
+
+![Pooling comparison overfit gap](images/pooling_comparison_overfit_gap.png)
+
+See `training/full_protein_max_comparison.py` for the full experiment script.
+
 ## Product-Level Model: Enzyme + Amine + Bile Acid Core
 
 The earlier models collapsed bile acid hydroxylation patterns (Mono/Di/Tri and positional variants like 3a7k, 3k12a) into a single enzyme-amine pair by aggregating across all bile acid substrates. The **product-level model** (`notebooks/bsh_product_level_model.ipynb`) preserves this hydroxylation specificity, treating each **(Enzyme, Amine, Hydroxylation pattern)** triple as a separate sample.
