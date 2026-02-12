@@ -45,6 +45,40 @@ Before building predictive models, we assessed the quality and reproducibility o
 
 See `notebooks/amine_replicate_consistency.ipynb` and `notebooks/replicate_consistency_analysis.ipynb` for full analysis.
 
+### Enzyme Replicate Consistency
+
+We extended the replicate consistency analysis to the **enzyme axis** — asking which BSH enzymes give reliable, reproducible signal vs. which are noisy.
+
+![Enzyme consistency distribution](images/enzyme_consistency_distribution.png)
+
+**Key findings:**
+- **Enzyme identity is 2x more predictive of inconsistency than amine identity** (point-biserial r = 0.469 vs r = 0.258). The enzyme you pick matters more than the amine for whether a measurement will be reproducible.
+- Inconsistency is **heavily skewed**: median enzyme inconsistency is 10.6%, but 28 enzymes (21%) have >25% of their products inconsistently detected, contributing 57% of all inconsistent measurements.
+- The noisiest enzymes show a **catastrophic single-replicate failure pattern** — one replicate detects 60+ products while the other two detect only 7 (the baseline substrates). For example, A0A1C7H271 shows rep1=8, rep2=7, rep3=77 (range of 70 products).
+
+![Enzyme ranked inconsistency](images/enzyme_ranked_inconsistency.png)
+
+**Enzyme reliability tiers:**
+
+| Tier | Count | % | Avg Inconsistency | Avg Products Always Detected |
+|------|-------|---|-------------------|------------------------------|
+| Tier 1: Highly Reliable | 9 | 7% | 3.2% | 30.3 |
+| Tier 2: Moderate | 62 | 46% | 8.3% | 29.5 |
+| Tier 3: Somewhat Noisy | 35 | 26% | 13.9% | 20.2 |
+| Tier 4: Very Noisy | 28 | 21% | 48.1% | 7.4 |
+
+![Enzyme reliability tiers](images/enzyme_reliability_tiers.png)
+
+**Borderline signal:** Inconsistent products have **26x weaker signal** than consistent products (median intensity 7,170 vs 187,278), confirming they sit near the LC-MS detection limit.
+
+![Borderline signal analysis](images/borderline_signal_analysis.png)
+
+**Pairwise replicate agreement:** Per-enzyme detection counts across replicates are well-correlated for most enzymes, but outliers (falling far off the y=x line) correspond to the Tier 4 enzymes with catastrophic replicate failure.
+
+![Enzyme replicate pairwise](images/enzyme_replicate_pairwise.png)
+
+See `notebooks/enzyme_replicate_consistency.ipynb` for full analysis.
+
 ## Conservation Threshold Sweep & Max-Pooling Analysis
 
 We tested 8 conservation thresholds x 2 pooling strategies (mean vs max) x 2 models (XGBoost, MLP) x 10 enzyme hold-out seeds = 320 experiments to optimize the enzyme representation.
@@ -188,7 +222,9 @@ The train-val gap grows approximately linearly with boosting rounds across all c
 
 ### Assessment & Current Limitations
 
-**Performance plateau:** The product-level model (ROC-AUC ~0.74-0.78, PR-AUC ~0.48-0.57) shows a **notable drop** from the earlier pair-level model (ROC-AUC 0.84, PR-AUC 0.64). This is expected -- predicting activity at the individual hydroxylation pattern level is a harder task with more samples but sparser positive labels.
+**The model is not yet performing well enough for reliable predictions.** Despite systematic optimization of enzyme representations, amine representations, label schemes, and regularization, the model remains in a regime where noise and overfitting dominate.
+
+**Performance plateau:** The product-level model (ROC-AUC ~0.74-0.78, PR-AUC ~0.48-0.57) shows a **notable drop** from the earlier pair-level model (ROC-AUC 0.84, PR-AUC 0.64). This is expected -- predicting activity at the individual hydroxylation pattern level is a harder task with more samples but sparser positive labels. Even the pair-level model at 0.84 ROC-AUC reflects moderate, not strong, predictive power.
 
 **What the log loss curves tell us:**
 1. **The model learns fast then overfits.** Most useful signal is extracted in the first 50-80 rounds. After that, additional rounds only memorize training noise.
@@ -196,16 +232,20 @@ The train-val gap grows approximately linearly with boosting rounds across all c
 3. **Representations make marginal differences.** Swapping enzyme or amine representations shifts metrics by ~0.03 ROC-AUC at most. This suggests the bottleneck is not in feature engineering but in the fundamental signal-to-noise ratio of the data.
 
 **Likely root causes:**
+- **Enzyme noise is the dominant noise source.** The enzyme consistency analysis shows 28 enzymes (21%) are "very noisy" — contributing 57% of all inconsistent measurements. Many of these show catastrophic single-replicate failure (one rep detects 60+ products, others detect 7), suggesting experimental issues rather than true biological variability. This sets a hard noise ceiling on any model trained on this data.
 - **Dataset size vs dimensionality:** With ~8,000 product-level samples and 1024+ features, the model is in a high-dimensional regime where XGBoost can easily overfit. The enzyme hold-out evaluation makes this harder since the model must generalize to entirely unseen protein sequences.
 - **Bile acid core adds little.** The 12-dim hydroxylation encoding contributes only 1-2% feature importance. This could mean (a) hydroxylation specificity is genuinely driven by enzyme identity rather than the bile acid pattern itself, or (b) the positional encoding doesn't capture the right chemical information about bile acid structure.
-- **Label noise ceiling.** With ~15% of enzyme-product combinations showing inconsistent detection across replicates, there is a hard noise floor that limits achievable performance. The majority-vote labels help but don't eliminate this.
+- **Label noise ceiling.** With ~17.7% of enzyme-product combinations showing inconsistent detection across replicates (driven more by enzyme identity than amine identity), there is a hard noise floor that limits achievable performance. The majority-vote labels help but don't eliminate this.
+- **Data quality issues.** Duplicate enzyme sequences (Q8Y5J3 / A0A3Q0NGD6), missing SMILES for 4 amines, and 10 amines with no detected products all reduce the effective dataset size and introduce noise.
 
 **Potential next directions:**
+- **Enzyme reliability weighting** — downweight or exclude the 28 Tier 4 enzymes that contribute the most noise, or use sample weighting by enzyme consistency tier
 - **Dimensionality reduction on enzyme embeddings** (PCA to 50-100 dims) to reduce the feature-to-sample ratio
 - **Neural network architectures** (attention-based or graph neural networks) that can learn non-linear enzyme-amine-bile acid interactions
 - **Data augmentation** through replicate-level training instead of aggregated labels
 - **Incorporating 3D structural information** about the bile acid binding pocket rather than sequence-only features
 - **Transfer learning** from larger protein-ligand interaction datasets before fine-tuning on BSH-specific data
+- **Remove or merge duplicate sequences** and audit which experimental controls are inadvertently included in training
 
 ## Repository Structure
 
@@ -228,6 +268,7 @@ BSH_model/
 │   ├── bsh_alignment_conservation.ipynb              # Sequence alignment & conservation
 │   ├── replicate_consistency_analysis.ipynb           # Replicate quality assessment
 │   ├── amine_replicate_consistency.ipynb              # Per-amine detection consistency
+│   ├── enzyme_replicate_consistency.ipynb             # Per-enzyme detection consistency & reliability tiers
 │   ├── amine_activity_analysis.ipynb                  # Amine activity profiling
 │   ├── amine_representation_comparison.ipynb          # Amine feature comparison
 │   ├── molt5_amine_representation.ipynb               # MolT5 molecular embeddings
@@ -265,6 +306,53 @@ For the alignment notebook, [MUSCLE](https://drive5.com/muscle/) must also be in
 | `molt5_base_amine_embeddings.csv` | MolT5-base molecular embeddings for amines (768-dim) |
 | `molt5_small_amine_embeddings.csv` | MolT5-small molecular embeddings for amines |
 | `swap_enumeration_with_core_smiles.xlsx` | Pre-computed enumeration with core SMILES annotations |
+
+## Known Data Discrepancies
+
+### Enzyme count: 134 in activity data vs 127 in FASTA
+
+The activity CSV reports 134 unique enzyme codes, but the FASTA file contains only 127 sequences. The 7 missing entries are **not BSH enzymes**:
+
+| Code | Type |
+|------|------|
+| `Negative_ctrl_1` | Negative control |
+| `Negative_ctrl_2` | Negative control |
+| `Negative_ctrl_3` | Negative control |
+| `Only_substrate_1` | Substrate-only control |
+| `Only_substrate_2` | Substrate-only control |
+| `Only_substrate_3` | Substrate-only control |
+| `Pencillin_amidase` | Reference enzyme (not a BSH) |
+
+After removing controls, 134 - 7 = 127 BSH enzymes, matching the FASTA exactly.
+
+### Duplicate enzyme sequence
+
+Two FASTA entries share an **identical 325-residue sequence**:
+- `Q8Y5J3` (Listeria BSH)
+- `A0A3Q0NGD6` (Listeria BSH)
+
+These are the same protein from different database entries. Out of 127 FASTA entries, there are only **126 unique amino acid sequences**. Models trained on these data treat them as separate enzymes, but they provide redundant information.
+
+### Amines/products with missing or incorrect SMILES
+
+Four amines that appear in product columns lack correct SMILES in the reactants file:
+
+| Amine | Issue |
+|-------|-------|
+| **cystine** | Reactants file has L-Cysteine (monomer), not cystine (disulfide dimer) |
+| **glyglycine** | Glycylglycine (Gly-Gly dipeptide) not in reactants file |
+| **serotonin** | Not in reactants file |
+| **tyramine** | Not in reactants file |
+
+Additionally, `Di_unconjugated_34634` represents a free (unconjugated) bile acid, not an amine conjugate.
+
+### Reactant amines with no detected products
+
+These 10 amines were included in the experimental assay but produced **no detectable conjugation products** in any enzyme:
+
+1,3-Diaminopropane, 5-Aminovaleric Acid, Aspartic Acid, Beta-Alanine, Histamine, Isoniazid, L-Glutathione (Reduced), L-Homoserine, L-Leucine, Glycyl-L-Valine
+
+These amines are absent from all downstream modeling since they have no positive activity labels.
 
 ## Key Results
 
