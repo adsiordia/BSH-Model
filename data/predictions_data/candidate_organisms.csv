@@ -1,0 +1,67 @@
+accession,entry_name,protein,organism,length,phylum,class,order,family,genus,source,mnemonic,approximate
+A0A069S9I0,A0A069S9I0_PHOVU,"Linear amide C-N hydrolase, choloylglycine hydrolase family protein",Bacteroides vulgatus str. 3975 RP4,359,Bacteroidota,Bacteroidia,Bacteroidales,Bacteroidaceae,,archived entry (deleted from current UniProt),PHOVU,False
+A0A078S2R5,A0A078S2R5_BACUN,"Linear amide C-N hydrolase, choloylglycine hydrolase family protein",Bacteroides uniformis str. 3978 T3 ii,361,Bacteroidota,Bacteroidia,Bacteroidales,Bacteroidaceae,,archived entry (deleted from current UniProt),BACUN,False
+A0A096B1U0,A0A096B1U0_FLAPL,Choloylglycine hydrolase/NAAA C-terminal domain-containing protein,Flavonifractor plautii 1_3_50AFAA,359,Bacillota,Clostridia,Eubacteriales,Oscillospiraceae,Flavonifractor,uniprot entry,,
+A0A096DGB7,A0A096DGB7_FLAPL,Choloylglycine hydrolase/NAAA C-terminal domain-containing protein,Flavonifractor plautii 1_3_50AFAA,369,Bacillota,Clostridia,Eubacteriales,Oscillospiraceae,Flavonifractor,uniprot entry,,
+A0A0F0CI09,A0A0F0CI09_9CLOT,Penicillin acylase,Clostridium sp. FS41,364,Bacillota,Clostridia,Eubacteriales,Clostridiaceae,,archived entry (deleted from current UniProt),9CLOT,False
+A0A0F5JPH2,A0A0F5JPH2_9BACT,Uncharacterized protein,Parabacteroides goldsteinii DSM 19448 = WAL 12034,360,,,,,,archived entry (deleted from current UniProt),9BACT,False
+A0A0P0FKS2,A0A0P0FKS2_9BACE,Choloylglycine hydrolase,Bacteroides cellulosilyticus,350,Bacteroidota,Bacteroidia,Bacteroidales,Bacteroidaceae,,archived entry (deleted from current UniProt),9BACE,False
+A0A0P0LK75,A0A0P0LK75_PHOVU,Choloylglycine hydrolase,Bacteroides vulgatus,363,Bacteroidota,Bacteroidia,Bacteroidales,Bacteroidaceae,,archived entry (deleted from current UniProt),PHOVU,False
+A0A0S2W269,A0A0S2W269_9FIRM,Choloylglycine hydrolase/NAAA C-terminal domain-containing protein,Intestinimonas butyriciproducens,358,Bacillota,Clostridia,Eubacteriales,,Intestinimonas,uniprot entry,,
+A0A174MBD8,A0A174MBD8_CLOSY,Penicillin acylase,Clostridium symbiosum (Bacteroides symbiosus),367,Bacillota,Clostridia,Lachnospirales,Lachnospiraceae,,archived entry (deleted from current UniProt),CLOSY,False
+A0A1C5S406,A0A1C5S406_9FIRM,Choloylglycine hydrolase,uncultured Eubacterium sp,352,Bacillota,Clostridia,Lachnospirales,Lachnospiraceae,,archived entry (deleted from current UniProt),9FIRM,False
+A0A1C6E707,A0A1C6E707_9FIRM,Penicillin acylase,uncultured Blautia sp,375,Bacillota,Clostridia,Lachnospirales,Lachnospiraceae,,archived entry (deleted from current UniProt),9FIRM,False
+A0A1C7H271,A0A1C7H271_9BACE,Choloylglycine hydrolase,Bacteroides caecimuris,360,Bacteroidota,Bacteroidia,Bacteroidales,Bacteroidaceae,Bacteroides,uniprot entry,,
+A0A1E3ADP5,A0A1E3ADP5_9FIRM,"Linear amide C-N hydrolase, choloylglycine hydrolase family",Eisenbergiella tayi,357,Bacillota,Clostridia,Lachnospirales,Lachnospiraceae,,archived entry (deleted from current UniProt),9FIRM,False
+A0A1I4P275,A0A1I4P275_9GAMM,Penicillin amidase Cysteine peptidase. MEROPS family C59,Marinobacter zhejiangensis,347,Pseudomonadota,Gammaproteobacteria,Pseudomonadales,Marinobacteraceae,Marinobacter,uniprot entry,,
+A0A1M3L7G3,A0A1M3L7G3_9BACT,Choloylglycine hydrolase,Dysgonomonas sp. 37-18,360,,,,,,archived entry (deleted from current UniProt),9BACT,False
+A0A1N6ECR1,A0A1N6ECR1_9BACT,"Linear amide C-N hydrolases, choloylglycine hydrolase family",Halodesulfovibrio marinisediminis DSM 17456,405,Thermodesulfobacteriota,Desulfovibrionia,Desulfovibrionales,Desulfovibrionaceae,Halodesulfovibrio,uniprot entry,,
+A0A1Q6E5Z9,A0A1Q6E5Z9_9BACT,Choloylglycine hydrolase,Alistipes sp. 56_11,360,,,,,,archived entry (deleted from current UniProt),9BACT,False
+A0A1Q6F0C9,A0A1Q6F0C9_9ACTN,Penicillin acylase,Collinsella sp. 60_9,361,Actinomycetota,,Coriobacteriales,Atopobiaceae,,archived entry (deleted from current UniProt),9ACTN,False
+A0A1Q6RAM4,A0A1Q6RAM4_9FIRM,Uncharacterized protein,Phascolarctobacterium succinatutens,360,Bacillota,Clostridia,Lachnospirales,Lachnospiraceae,,archived entry (deleted from current UniProt),9FIRM,False
+A0A1Y3QT37,A0A1Y3QT37_9BACT,Choloylglycine hydrolase,Alistipes onderdonkii,349,,,,,,archived entry (deleted from current UniProt),9BACT,False
+A0A1Y3VSR9,A0A1Y3VSR9_9BACT,Choloylglycine hydrolase,Butyricimonas sp. An62,362,,,,,,archived entry (deleted from current UniProt),9BACT,False
+A0A1Y3YYW1,A0A1Y3YYW1_9BACE,Choloylglycine hydrolase,Bacteroides clarus,362,Bacteroidota,Bacteroidia,Bacteroidales,Bacteroidaceae,,archived entry (deleted from current UniProt),9BACE,False
+A0A1Y4QH48,A0A1Y4QH48_9FIRM,Choloylglycine hydrolase,[Clostridium] spiroforme,334,Bacillota,Clostridia,Lachnospirales,Lachnospiraceae,,archived entry (deleted from current UniProt),9FIRM,False
+A0A2S7KLN3,A0A2S7KLN3_9FLAO,Choloylglycine hydrolase/NAAA C-terminal domain-containing protein,Aureitalea marina,283,Bacteroidota,Flavobacteriia,Flavobacteriales,Flavobacteriaceae,Aureitalea,uniprot entry,,
+A0A2S8G2H3,A0A2S8G2H3_9BACT,Choloylglycine hydrolase,Blastopirellula marina,350,Planctomycetota,Planctomycetia,Pirellulales,Pirellulaceae,Blastopirellula,uniprot entry,,
+A0A2S8GTJ2,A0A2S8GTJ2_9BACT,Choloylglycine hydrolase,Blastopirellula marina,334,Planctomycetota,Planctomycetia,Pirellulales,Pirellulaceae,Blastopirellula,uniprot entry,,
+A0A349QN89,A0A349QN89_9FIRM,Choloylglycine hydrolase,Roseburia sp,328,Bacillota,Clostridia,Lachnospirales,Lachnospiraceae,,archived entry (deleted from current UniProt),9FIRM,False
+A0A357TLK7,A0A357TLK7_9FIRM,Penicillin acylase,Ruminococcaceae bacterium,369,Bacillota,Clostridia,Lachnospirales,Lachnospiraceae,,archived entry (deleted from current UniProt),9FIRM,False
+A0A3D3YKZ5,A0A3D3YKZ5_9BACT,Linear amide C-N hydrolase,Alistipes obesi,350,,,,,,archived entry (deleted from current UniProt),9BACT,False
+A0A3E4KT54,A0A3E4KT54_9BACE,Linear amide C-N hydrolase,Bacteroides intestinalis,360,Bacteroidota,Bacteroidia,Bacteroidales,Bacteroidaceae,,archived entry (deleted from current UniProt),9BACE,False
+A0A3N2MZX6,A0A3N2MZX6_9BACT,Linear amide C-N hydrolase,Muribaculaceae bacterium Isolate-102 (HZI),345,,,,,,archived entry (deleted from current UniProt),9BACT,False
+A0A412TTM9,A0A412TTM9_9BACT,Linear amide C-N hydrolase,Odoribacter splanchnicus,358,,,,,,archived entry (deleted from current UniProt),9BACT,False
+A0A414M9L3,A0A414M9L3_9BACE,Linear amide C-N hydrolase,Bacteroides eggerthii,377,Bacteroidota,Bacteroidia,Bacteroidales,Bacteroidaceae,,archived entry (deleted from current UniProt),9BACE,False
+A0A414Q275,A0A414Q275_FUSMR,Linear amide C-N hydrolase,Fusobacterium mortiferum,366,Fusobacteriota,Fusobacteriia,Fusobacteriales,Fusobacteriaceae,,archived entry (deleted from current UniProt),FUSMR,False
+A0A416W4H5,A0A416W4H5_9BACT,Linear amide C-N hydrolase,Odoribacter sp. AF15-53,347,,,,,,archived entry (deleted from current UniProt),9BACT,False
+A0A5C2BYC4,A0A5C2BYC4_9GAMM,Linear amide C-N hydrolase,Francisella marina,387,Pseudomonadota,Gammaproteobacteria,Enterobacterales,Erwiniaceae,,archived entry (deleted from current UniProt),9GAMM,False
+A0A5C2C0X5,A0A5C2C0X5_9GAMM,Choloylglycine hydrolase family protein,Francisella marina,379,Pseudomonadota,Gammaproteobacteria,Enterobacterales,Erwiniaceae,,archived entry (deleted from current UniProt),9GAMM,False
+A0A5C2C1U8,A0A5C2C1U8_9GAMM,Linear amide C-N hydrolase,Francisella marina,349,Pseudomonadota,Gammaproteobacteria,Enterobacterales,Erwiniaceae,,archived entry (deleted from current UniProt),9GAMM,False
+A0A6B3M9R4,A0A6B3M9R4_9CYAN,Linear amide C-N hydrolase,Symploca sp. SIO2E9,355,,,,,,archived entry (deleted from current UniProt),9CYAN,False
+A0A6B3MYR8,A0A6B3MYR8_9CYAN,Choloylglycine hydrolase family protein,Moorea sp. SIO4A1,382,,,,,,archived entry (deleted from current UniProt),9CYAN,False
+A0A6B3PBB6,A0A6B3PBB6_9CYAN,Choloylglycine hydrolase family protein,Okeania sp. SIO1F9,360,,,,,,archived entry (deleted from current UniProt),9CYAN,False
+A0A6B3PFJ7,A0A6B3PFJ7_9CYAN,Linear amide C-N hydrolase,Okeania sp. SIO1F9,427,,,,,,archived entry (deleted from current UniProt),9CYAN,False
+A0A6N3FX58,A0A6N3FX58_9BACT,Choloylglycine hydrolase,Paraprevotella clara,367,,,,,,archived entry (deleted from current UniProt),9BACT,False
+A0A7K1GNS5,A0A7K1GNS5_9FLAO,Linear amide C-N hydrolase,Myroides pelagicus,351,Bacteroidota,Flavobacteriia,Flavobacteriales,Flavobacteriaceae,Myroides,uniprot entry,,
+A0A7W2FPE8,A0A7W2FPE8_9VIBR,Choloylglycine hydrolase family protein,Vibrio marinisediminis,361,Pseudomonadota,Gammaproteobacteria,Vibrionales,Vibrionaceae,Vibrio,uniprot entry,,
+A0A848U0C2,A0A848U0C2_9FLAO,Linear amide C-N hydrolase,Maribacter sp,357,Bacteroidota,Flavobacteriia,Flavobacteriales,Flavobacteriaceae,,archived entry (deleted from current UniProt),9FLAO,False
+A0A8D5FTP2,A0A8D5FTP2_9BACT,Choloylglycine hydrolase,Desulfomarina profundi,368,Thermodesulfobacteriota,Desulfobulbia,Desulfobulbales,Desulfobulbaceae,Desulfomarina,uniprot entry,,
+A0A8J7U9Z7,A0A8J7U9Z7_9BACT,Linear amide C-N hydrolase,Candidatus Homeothermus sp,352,,,,,,archived entry (deleted from current UniProt),9BACT,False
+A0A942AQR8,A0A942AQR8_9BACT,Choloylglycine hydrolase family protein,Barnesiella sp,360,,,,,,archived entry (deleted from current UniProt),9BACT,False
+A0A952U252,A0A952U252_9BACT,Linear amide C-N hydrolase,Candidatus Obscuribacterales bacterium,354,,,,,,archived entry (deleted from current UniProt),9BACT,False
+A6LC91,A6LC91_PARD8,Putative choloylglycine hydrolase,Parabacteroides distasonis (strain ATCC 8503 / DSM 20701 / CIP 104284 / JCM 5825 / NCTC 11152),374,Bacteroidota,Bacteroidia,Bacteroidales,Tannerellaceae,Parabacteroides,uniprot entry,,
+A7A5K1,A7A5K1_BIFAD,Putative uncharacterized protein.,Bifidobacterium adolescentis L2-32,347,Actinomycetota,Actinomycetes,Bifidobacteriales,Bifidobacteriaceae,,archived entry (deleted from current UniProt),BIFAD,False
+A7VQ44,A7VQ44_9FIRM,Linear amide C-N hydrolase,[Clostridium] leptum DSM 753,375,Bacillota,Clostridia,Eubacteriales,Oscillospiraceae,,uniprot entry,,
+B0MC37,B0MC37_ANACD,"Linear amide C-N hydrolase, choloylglycine hydrolase family protein (EC 3.5.1.-)",Anaerostipes caccae (strain DSM 14662 / CCUG 47493 / JCM 13470 / NCIMB 13811 / L1-92),332,Bacillota,Clostridia,Lachnospirales,Lachnospiraceae,Anaerostipes,uniprot entry,,
+B1C4T2,B1C4T2_9FIRM,Penicillin amidase (EC 3.5.1.11),Thomasclavelia spiroformis DSM 1552,338,Bacillota,Erysipelotrichia,Erysipelotrichales,Coprobacillaceae,Thomasclavelia,uniprot entry,,
+B5D243,B5D243_PHOPM,Putative uncharacterized protein,Bacteroides plebeius DSM 17135,361,Bacteroidota,Bacteroidia,Bacteroidales,Bacteroidaceae,,archived entry (deleted from current UniProt),PHOPM,False
+B7AVX6,B7AVX6_9FIRM,choloylglycine hydrolase (EC 3.5.1.24) (Bile salt hydrolase) (Choloylglycine hydrolase),[Bacteroides] pectinophilus ATCC 43243,334,Bacillota,Clostridia,Eubacteriales,,,uniprot entry,,
+C0CIF5,C0CIF5_BLAHS,Choloylglycine hydrolase/NAAA C-terminal domain-containing protein,Blautia hydrogenotrophica (strain DSM 10507 / JCM 14656 / S5a33) (Ruminococcus hydrogenotrophicus),338,Bacillota,Clostridia,Lachnospirales,Lachnospiraceae,Blautia,uniprot entry,,
+C0ERS1,C0ERS1_9FIRM,Putative uncharacterized protein,Eubacterium hallii DSM 3353,334,Bacillota,Clostridia,Lachnospirales,Lachnospiraceae,,archived entry (deleted from current UniProt),9FIRM,False
+G5H9U7,G5H9U7_9BACT,Choloylglycine hydrolase/NAAA C-terminal domain-containing protein,Alistipes indistinctus YIT 12060,339,Bacteroidota,Bacteroidia,Bacteroidales,Rikenellaceae,Alistipes,uniprot entry,,
+H1DEM8,H1DEM8_9BACT,Choloylglycine hydrolase/NAAA C-terminal domain-containing protein,Odoribacter laneus YIT 12061,358,Bacteroidota,Bacteroidia,Bacteroidales,Odoribacteraceae,Odoribacter,uniprot entry,,
+M7X2M2,M7X2M2_9BACT,Choloylglycine hydrolase,Mariniradius saccharolyticus AK6,459,Bacteroidota,Cytophagia,Cytophagales,Cyclobacteriaceae,Mariniradius,uniprot entry,,
+P12256,PAC_LYSSH,Penicillin V acylase (PVA) (EC 3.5.1.11) (BspPVA) (Penicillin V amidase) (Penicillin amidohydrolase),Lysinibacillus sphaericus (Bacillus sphaericus),338,Bacillota,Bacilli,Caryophanales,Bacillaceae,Lysinibacillus,uniprot entry,,
+R7PBA0,R7PBA0_9BACT,Uncharacterized protein,Prevotella sp. CAG:617,363,,,,,,archived entry (deleted from current UniProt),9BACT,False
+U2D571,U2D571_9FIRM,Putative choloylglycine hydrolase,Blautia sp. KLE 1732,327,Bacillota,Clostridia,Lachnospirales,Lachnospiraceae,,archived entry (deleted from current UniProt),9FIRM,False

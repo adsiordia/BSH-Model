@@ -1,0 +1,126 @@
+generated 2026-09-22T11:12:59
+source    data/raw/Seqs_list_total.fasta
+sequences 115
+command   /home/adsiordia/miniconda3/envs/mafft_env/bin/mafft-linsi --anysymbol --thread 8 /home/adsiordia/BSH-Model-v2/data/derived/_to_align.fasta
+version   v7.525 (2024/Mar/13)
+
+mafft stderr (tail):
+ad    7) identical     
+006-0188-1 (thread    7) worse      
+
+006-0189-0 (thread    2) identical     
+
+006-0190-0 (thread    5) worse      
+
+006-0191-0 (thread    3) identical     
+006-0191-1 (thread    1) identical     
+
+006-0192-0 (thread    3) worse      
+
+006-0193-0 (thread    6) identical     
+
+006-0194-0 (thread    4) identical     
+
+006-0195-0 (thread    7) identical     
+006-0195-0 (thread    7) worse      
+
+006-0196-0 (thread    5) identical     
+
+006-0197-1 (thread    2) identical     
+
+006-0198-1 (thread    6) identical     
+
+006-0199-1 (thread    2) identical     
+
+006-0200-0 (thread    8) identical     
+006-0200-0 (thread    3) identical     
+006-0200-0 (thread    3) worse      
+
+006-0201-0 (thread    8) worse      
+
+006-0202-0 (thread    4) identical     
+006-0202-0 (thread    4) worse      
+
+006-0203-0 (thread    6) identical     
+
+006-0204-1 (thread    8) identical     
+006-0204-1 (thread    8) worse      
+
+006-0205-1 (thread    2) identical     
+006-0205-1 (thread    2) worse      
+
+006-0206-0 (thread    5) identical     
+006-0206-0 (thread    3) identical     
+006-0206-0 (thread    3) worse      
+
+006-0207-0 (thread    5) worse      
+
+006-0208-1 (thread    2) identical     
+
+006-0209-1 (thread    1) identical     
+006-0209-1 (thread    5) identical     
+006-0209-1 (thread    5) worse      
+
+006-0210-1 (thread    1) worse      
+
+006-0211-1 (thread    7) identical     
+006-0211-0 (thread    4) identical     
+006-0211-1 (thread    7) worse      
+
+006-0212-0 (thread    4) worse      
+
+006-0213-0 (thread    8) identical     
+
+006-0214-1 (thread    5) identical     
+
+006-0215-1 (thread    7) identical     
+
+006-0216-1 (thread    6) identical     
+006-0216-1 (thread    7) identical     
+006-0216-1 (thread    7) worse      
+
+006-0217-1 (thread    6) worse      
+
+006-0218-0 (thread    2) identical     
+006-0218-0 (thread    3) identical     
+
+006-0219-0 (thread    2) worse      
+
+006-0220-0 (thread    5) identical     
+006-0220-0 (thread    5) worse      
+
+006-0221-1 (thread    8) identical     
+006-0221-0 (thread    1) identical     
+
+006-0222-1 (thread    8) worse      
+
+006-0223-1 (thread    3) identical     
+006-0223-1 (thread    3) worse      
+
+006-0224-0 (thread    4) identical     
+
+006-0225-1 (thread    6) identical     
+006-0225-0 (thread    7) identical     
+006-0225-1 (thread    6) worse      
+
+006-0226-0 (thread    7) worse      
+
+Converged.
+done
+dvtditr (aa) Version 7.525
+alg=A, model=BLOSUM62, 1.53, -0.00, -0.00, noshift, amax=0.0
+8 thread(s)
+
+
+Strategy:
+ L-INS-i (Probably most accurate, very slow)
+ Iterative refinement method (<16) with LOCAL pairwise alignment information
+
+If unsure which option to use, try 'mafft --auto input > output'.
+For more information, see 'mafft --help', 'mafft --man' and the mafft page.
+
+The default gap scoring scheme has been changed in version 7.110 (2013 Oct).
+It tends to insert more gaps into gap-rich regions than previous versions.
+To disable this change, add the --leavegappyregion option.
+
+

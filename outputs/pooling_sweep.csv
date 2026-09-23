@@ -1,0 +1,14 @@
+embedding,scheme,residues,dim,pr_auc,roc_auc,within_mean,within_median
+ProstT5,whole mean,332,1024,0.7791,0.9231,0.6386,0.6719
+ProstT5,whole max,332,1024,0.764,0.9235,0.6314,0.6945
+ProstT5,whole mean+max,332,2048,0.7853,0.9277,0.6515,0.7007
+ProstT5,core columns,280,1024,0.7753,0.9251,0.6525,0.7051
+ProstT5,non-conserved <0.30,43,1024,0.7835,0.9292,0.6691,0.7205
+ProstT5,non-conserved <0.40,93,1024,0.7757,0.927,0.6464,0.728
+ProstT5,non-conserved <0.50,162,1024,0.777,0.9287,0.6613,0.713
+ProstT5,non-conserved <0.60,200,1024,0.7815,0.9286,0.6703,0.7168
+ProstT5,non-conserved <0.70,228,1024,0.773,0.9213,0.6502,0.6974
+ProstT5,non-conserved <0.75,237,1024,0.7732,0.9201,0.6379,0.6883
+ProstT5,non-conserved <0.85,257,1024,0.785,0.9267,0.6582,0.7045
+ProstT5,non-conserved <1.00,274,1024,0.776,0.9284,0.6599,0.6992
+ProstT5,active site only,6,1024,0.7623,0.9125,0.6276,0.6126

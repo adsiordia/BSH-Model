@@ -1,0 +1,72 @@
+Entry	Entry Name	Protein names	Organism	Taxonomic lineage	Length
+A0A2S7KLN3	A0A2S7KLN3_9FLAO	Choloylglycine hydrolase/NAAA C-terminal domain-containing protein	Aureitalea marina	cellular organisms (no rank), Bacteria (domain), Pseudomonadati (kingdom), FCB group (clade), Bacteroidota/Chlorobiota group (clade), Bacteroidota (phylum), Flavobacteriia (class), Flavobacteriales (order), Flavobacteriaceae (family), Aureitalea (genus)	283
+A0A0S2W269	A0A0S2W269_9FIRM	Choloylglycine hydrolase/NAAA C-terminal domain-containing protein	Intestinimonas butyriciproducens	cellular organisms (no rank), Bacteria (domain), Bacillati (kingdom), Bacillota (phylum), Clostridia (class), Eubacteriales (order), Eubacteriales incertae sedis (no rank), Intestinimonas (genus)	358
+A0A1C7H271	A0A1C7H271_9BACE	Choloylglycine hydrolase	Bacteroides caecimuris	cellular organisms (no rank), Bacteria (domain), Pseudomonadati (kingdom), FCB group (clade), Bacteroidota/Chlorobiota group (clade), Bacteroidota (phylum), Bacteroidia (class), Bacteroidales (order), Bacteroidaceae (family), Bacteroides (genus)	360
+A0A1N6ECR1	A0A1N6ECR1_9BACT	Linear amide C-N hydrolases, choloylglycine hydrolase family	Halodesulfovibrio marinisediminis DSM 17456	cellular organisms (no rank), Bacteria (domain), Pseudomonadati (kingdom), Thermodesulfobacteriota (phylum), Desulfovibrionia (class), Desulfovibrionales (order), Desulfovibrionaceae (family), Halodesulfovibrio (genus), Halodesulfovibrio marinisediminis (species)	405
+A0A096B1U0	A0A096B1U0_FLAPL	Choloylglycine hydrolase/NAAA C-terminal domain-containing protein	Flavonifractor plautii 1_3_50AFAA	cellular organisms (no rank), Bacteria (domain), Bacillati (kingdom), Bacillota (phylum), Clostridia (class), Eubacteriales (order), Oscillospiraceae (family), Flavonifractor (genus), Flavonifractor plautii (species)	359
+A0A096DGB7	A0A096DGB7_FLAPL	Choloylglycine hydrolase/NAAA C-terminal domain-containing protein	Flavonifractor plautii 1_3_50AFAA	cellular organisms (no rank), Bacteria (domain), Bacillati (kingdom), Bacillota (phylum), Clostridia (class), Eubacteriales (order), Oscillospiraceae (family), Flavonifractor (genus), Flavonifractor plautii (species)	369
+A0A1I4P275	A0A1I4P275_9GAMM	Penicillin amidase Cysteine peptidase. MEROPS family C59	Marinobacter zhejiangensis	cellular organisms (no rank), Bacteria (domain), Pseudomonadati (kingdom), Pseudomonadota (phylum), Gammaproteobacteria (class), Pseudomonadales (order), Marinobacteraceae (family), Marinobacter (genus)	347
+A0A069S9I0	A0A069S9I0_PHOVU	deleted			
+A0A078S2R5	A0A078S2R5_BACUN	deleted			
+A0A0F0CI09	A0A0F0CI09_9CLOT	deleted			
+A0A0F5JPH2	A0A0F5JPH2_9BACT	deleted			
+A0A0P0FKS2	A0A0P0FKS2_9BACE	deleted			
+A0A0P0LK75	A0A0P0LK75_PHOVU	deleted			
+A0A174MBD8	A0A174MBD8_CLOSY	deleted			
+A0A1C5S406	A0A1C5S406_9FIRM	deleted			
+A0A1C6E707	A0A1C6E707_9FIRM	deleted			
+A0A1E3ADP5	A0A1E3ADP5_9FIRM	deleted			
+A0A1M3L7G3	A0A1M3L7G3_9BACT	deleted			
+A0A1Q6E5Z9	A0A1Q6E5Z9_9BACT	deleted			
+A0A1Q6F0C9	A0A1Q6F0C9_9ACTN	deleted			
+A0A1Q6RAM4	A0A1Q6RAM4_9FIRM	deleted			
+A0A1Y3QT37	A0A1Y3QT37_9BACT	deleted			
+A0A1Y3VSR9	A0A1Y3VSR9_9BACT	deleted			
+A0A1Y3YYW1	A0A1Y3YYW1_9BACE	deleted			
+A0A1Y4QH48	A0A1Y4QH48_9FIRM	deleted			
+
+Entry	Entry Name	Protein names	Organism	Taxonomic lineage	Length
+A0A2S8GTJ2	A0A2S8GTJ2_9BACT	Choloylglycine hydrolase	Blastopirellula marina	cellular organisms (no rank), Bacteria (domain), Pseudomonadati (kingdom), PVC group (clade), Planctomycetota (phylum), Planctomycetia (class), Pirellulales (order), Pirellulaceae (family), Blastopirellula (genus)	334
+A0A7K1GNS5	A0A7K1GNS5_9FLAO	Linear amide C-N hydrolase	Myroides pelagicus	cellular organisms (no rank), Bacteria (domain), Pseudomonadati (kingdom), FCB group (clade), Bacteroidota/Chlorobiota group (clade), Bacteroidota (phylum), Flavobacteriia (class), Flavobacteriales (order), Flavobacteriaceae (family), Myroides (genus)	351
+A0A7W2FPE8	A0A7W2FPE8_9VIBR	Choloylglycine hydrolase family protein	Vibrio marinisediminis	cellular organisms (no rank), Bacteria (domain), Pseudomonadati (kingdom), Pseudomonadota (phylum), Gammaproteobacteria (class), Vibrionales (order), Vibrionaceae (family), Vibrio (genus)	361
+A0A2S8G2H3	A0A2S8G2H3_9BACT	Choloylglycine hydrolase	Blastopirellula marina	cellular organisms (no rank), Bacteria (domain), Pseudomonadati (kingdom), PVC group (clade), Planctomycetota (phylum), Planctomycetia (class), Pirellulales (order), Pirellulaceae (family), Blastopirellula (genus)	350
+A0A8D5FTP2	A0A8D5FTP2_9BACT	Choloylglycine hydrolase	Desulfomarina profundi	cellular organisms (no rank), Bacteria (domain), Pseudomonadati (kingdom), Thermodesulfobacteriota (phylum), Desulfobulbia (class), Desulfobulbales (order), Desulfobulbaceae (family), Desulfomarina (genus)	368
+A0A349QN89	A0A349QN89_9FIRM	deleted			
+A0A357TLK7	A0A357TLK7_9FIRM	deleted			
+A0A3D3YKZ5	A0A3D3YKZ5_9BACT	deleted			
+A0A3E4KT54	A0A3E4KT54_9BACE	deleted			
+A0A3N2MZX6	A0A3N2MZX6_9BACT	deleted			
+A0A412TTM9	A0A412TTM9_9BACT	deleted			
+A0A414M9L3	A0A414M9L3_9BACE	deleted			
+A0A414Q275	A0A414Q275_FUSMR	deleted			
+A0A416W4H5	A0A416W4H5_9BACT	deleted			
+A0A5C2BYC4	A0A5C2BYC4_9GAMM	deleted			
+A0A5C2C0X5	A0A5C2C0X5_9GAMM	deleted			
+A0A5C2C1U8	A0A5C2C1U8_9GAMM	deleted			
+A0A6B3M9R4	A0A6B3M9R4_9CYAN	deleted			
+A0A6B3MYR8	A0A6B3MYR8_9CYAN	deleted			
+A0A6B3PBB6	A0A6B3PBB6_9CYAN	deleted			
+A0A6B3PFJ7	A0A6B3PFJ7_9CYAN	deleted			
+A0A6N3FX58	A0A6N3FX58_9BACT	deleted			
+A0A848U0C2	A0A848U0C2_9FLAO	deleted			
+A0A8J7U9Z7	A0A8J7U9Z7_9BACT	deleted			
+A0A942AQR8	A0A942AQR8_9BACT	deleted			
+
+Entry	Entry Name	Protein names	Organism	Taxonomic lineage	Length
+P12256	PAC_LYSSH	Penicillin V acylase (PVA) (EC 3.5.1.11) (BspPVA) (Penicillin V amidase) (Penicillin amidohydrolase)	Lysinibacillus sphaericus (Bacillus sphaericus)	cellular organisms (no rank), Bacteria (domain), Bacillati (kingdom), Bacillota (phylum), Bacilli (class), Caryophanales (order), Bacillaceae (family), Lysinibacillus (genus)	338
+B7AVX6	B7AVX6_9FIRM	choloylglycine hydrolase (EC 3.5.1.24) (Bile salt hydrolase) (Choloylglycine hydrolase)	[Bacteroides] pectinophilus ATCC 43243	cellular organisms (no rank), Bacteria (domain), Bacillati (kingdom), Bacillota (phylum), Clostridia (class), Eubacteriales (order), Eubacteriales incertae sedis (no rank), [Bacteroides] pectinophilus (species)	334
+A7VQ44	A7VQ44_9FIRM	Linear amide C-N hydrolase	[Clostridium] leptum DSM 753	cellular organisms (no rank), Bacteria (domain), Bacillati (kingdom), Bacillota (phylum), Clostridia (class), Eubacteriales (order), Oscillospiraceae (family), Oscillospiraceae incertae sedis (no rank), [Clostridium] leptum (species)	375
+A6LC91	A6LC91_PARD8	Putative choloylglycine hydrolase	Parabacteroides distasonis (strain ATCC 8503 / DSM 20701 / CIP 104284 / JCM 5825 / NCTC 11152)	cellular organisms (no rank), Bacteria (domain), Pseudomonadati (kingdom), FCB group (clade), Bacteroidota/Chlorobiota group (clade), Bacteroidota (phylum), Bacteroidia (class), Bacteroidales (order), Tannerellaceae (family), Parabacteroides (genus), Parabacteroides distasonis (species)	374
+B0MC37	B0MC37_ANACD	Linear amide C-N hydrolase, choloylglycine hydrolase family protein (EC 3.5.1.-)	Anaerostipes caccae (strain DSM 14662 / CCUG 47493 / JCM 13470 / NCIMB 13811 / L1-92)	cellular organisms (no rank), Bacteria (domain), Bacillati (kingdom), Bacillota (phylum), Clostridia (class), Lachnospirales (order), Lachnospiraceae (family), Anaerostipes (genus), Anaerostipes caccae (species)	332
+M7X2M2	M7X2M2_9BACT	Choloylglycine hydrolase	Mariniradius saccharolyticus AK6	cellular organisms (no rank), Bacteria (domain), Pseudomonadati (kingdom), FCB group (clade), Bacteroidota/Chlorobiota group (clade), Bacteroidota (phylum), Cytophagia (class), Cytophagales (order), Cyclobacteriaceae (family), Mariniradius (genus), Mariniradius saccharolyticus (species)	459
+B1C4T2	B1C4T2_9FIRM	Penicillin amidase (EC 3.5.1.11)	Thomasclavelia spiroformis DSM 1552	cellular organisms (no rank), Bacteria (domain), Bacillati (kingdom), Bacillota (phylum), Erysipelotrichia (class), Erysipelotrichales (order), Coprobacillaceae (family), Thomasclavelia (genus), Thomasclavelia spiroformis (species)	338
+C0CIF5	C0CIF5_BLAHS	Choloylglycine hydrolase/NAAA C-terminal domain-containing protein	Blautia hydrogenotrophica (strain DSM 10507 / JCM 14656 / S5a33) (Ruminococcus hydrogenotrophicus)	cellular organisms (no rank), Bacteria (domain), Bacillati (kingdom), Bacillota (phylum), Clostridia (class), Lachnospirales (order), Lachnospiraceae (family), Blautia (genus), Blautia hydrogenotrophica (species)	338
+G5H9U7	G5H9U7_9BACT	Choloylglycine hydrolase/NAAA C-terminal domain-containing protein	Alistipes indistinctus YIT 12060	cellular organisms (no rank), Bacteria (domain), Pseudomonadati (kingdom), FCB group (clade), Bacteroidota/Chlorobiota group (clade), Bacteroidota (phylum), Bacteroidia (class), Bacteroidales (order), Rikenellaceae (family), Alistipes (genus), Alistipes indistinctus (species)	339
+H1DEM8	H1DEM8_9BACT	Choloylglycine hydrolase/NAAA C-terminal domain-containing protein	Odoribacter laneus YIT 12061	cellular organisms (no rank), Bacteria (domain), Pseudomonadati (kingdom), FCB group (clade), Bacteroidota/Chlorobiota group (clade), Bacteroidota (phylum), Bacteroidia (class), Bacteroidales (order), Odoribacteraceae (family), Odoribacter (genus), Odoribacter laneus (species)	358
+A0A952U252	A0A952U252_9BACT	deleted			
+A7A5K1	A7A5K1_BIFAD	deleted			
+B5D243	B5D243_PHOPM	deleted			
+C0ERS1	C0ERS1_9FIRM	deleted			
+R7PBA0	R7PBA0_9BACT	deleted			
+U2D571	U2D571_9FIRM	deleted			
+

@@ -1,0 +1,59 @@
+compound_name,compound_type,data_name,smiles,smiles_source,correction_note,mw_file,parse_ok,formula,mw_smiles,n_N,n_primary,n_secondary,n_tertiary,n_aniline,has_COOH,n_nucleophilic_N,amine_class,core,conjugate,conjugate_detected,n_OH,n_keto,degree,conjugate_matches_name,n_conjugate_forms
+"1,3-Diaminopropane",Amine,,C(CN)CN,raw,,74.125,True,C3H10N2,74.13,2.0,2.0,0.0,0.0,0.0,False,2.0,polyamine,,,,,,,,
+"2,3-Diaminopropinoic Acid",Amine,"2,3_diaminopropionic acid",NC(CN)C(=O)O,CORRECTED,cyclic C5H11N3O2 in raw file; MW column says 104.11,104.11,True,C3H8N2O2,104.11,2.0,2.0,0.0,0.0,0.0,True,2.0,polyamine,,,,,,,,
+3-methoxytyramine HCl,Amine,3_methoxytyramine,COC1=C(C=CC(=C1)CCN)O,desalted,,203.66,True,C9H13NO2,167.21,1.0,1.0,0.0,0.0,0.0,False,1.0,primary_amine,,,,,,,,
+4-aminophenol,Amine,4_aminophenol,C1=CC(=CC=C1N)O,raw,,109.13,True,C6H7NO,109.13,1.0,0.0,0.0,0.0,1.0,False,0.0,aryl_amine,,,,,,,,
+5-Aminovaleric Acid,Amine,,C(CCN)CC(=O)O,raw,,117.15,True,C5H11NO2,117.15,1.0,1.0,0.0,0.0,0.0,True,1.0,amino_acid,,,,,,,,
+Allantoin,Amine,,C1(C(=O)NC(=O)N1)NC(=O)N,raw,,158.12,True,C4H6N4O3,158.12,4.0,0.0,0.0,0.0,0.0,False,0.0,primary_amine,,,,,,,,
+Asparagine,Amine,asparagine,C([C@@H](C(=O)O)N)C(=O)N,raw,,132.12,True,C4H8N2O3,132.12,2.0,1.0,0.0,0.0,0.0,True,1.0,amino_acid,,,,,,,,
+Aspartic Acid,Amine,,C([C@@H](C(=O)O)N)C(=O)O,raw,,133.1,True,C4H7NO4,133.1,1.0,1.0,0.0,0.0,0.0,True,1.0,amino_acid,,,,,,,,
+B-Alanine,Amine,,C(CN)C(=O)O,raw,,89.09,True,C3H7NO2,89.09,1.0,1.0,0.0,0.0,0.0,True,1.0,amino_acid,,,,,,,,
+DL-Proline,Amine,proline,C1CC(NC1)C(=O)O,raw,,115.13,True,C5H9NO2,115.13,1.0,0.0,1.0,0.0,0.0,True,1.0,secondary_amine,,,,,,,,
+Dopamine HCl,Amine,dopamine,C1=CC(=C(C=C1CCN)O)O,desalted,,189.64,True,C8H11NO2,153.18,1.0,1.0,0.0,0.0,0.0,False,1.0,primary_amine,,,,,,,,
+gamma-Aminobutyric acid >99%,Amine,gaba,O=C(O)CCCN,raw,,103.12,True,C4H9NO2,103.12,1.0,1.0,0.0,0.0,0.0,True,1.0,amino_acid,,,,,,,,
+Glycyl-L-Valine,Amine,glyglycine,CC(C)[C@@H](C(=O)O)NC(=O)CN,raw,,174.2,True,C7H14N2O3,174.2,2.0,1.0,0.0,0.0,0.0,True,1.0,amino_acid,,,,,,,,
+Histamine,Amine,,C1=C(NC=N1)CCN,raw,,111.15,True,C5H9N3,111.15,3.0,1.0,0.0,0.0,0.0,False,1.0,primary_amine,,,,,,,,
+Isoniazid,Amine,,C1=CN=CC=C1C(=O)NN,raw,,137.14,True,C6H7N3O,137.14,3.0,1.0,0.0,0.0,0.0,False,1.0,primary_amine,,,,,,,,
+L-Alanine,Amine,alanine,C[C@@H](C(=O)O)N,raw,,89.09,True,C3H7NO2,89.09,1.0,1.0,0.0,0.0,0.0,True,1.0,amino_acid,,,,,,,,
+L-Arginine,Amine,arginine,C(C[C@@H](C(=O)O)N)CN=C(N)N,raw,,174.2,True,C6H14N4O2,174.2,4.0,1.0,0.0,0.0,0.0,True,1.0,amino_acid,,,,,,,,
+L-Citrulline,Amine,citrulline,C(C[C@@H](C(=O)O)N)CNC(=O)N,raw,,175.19,True,C6H13N3O3,175.19,3.0,1.0,0.0,0.0,0.0,True,1.0,amino_acid,,,,,,,,
+L-Cysteine,Amine,cysteine,C([C@@H](C(=O)O)N)S,raw,,121.16,True,C3H7NO2S,121.16,1.0,1.0,0.0,0.0,0.0,True,1.0,amino_acid,,,,,,,,
+L-Glutamine,Amine,glutamine,C(CC(=O)N)[C@@H](C(=O)O)N,raw,,146.14,True,C5H10N2O3,146.15,2.0,1.0,0.0,0.0,0.0,True,1.0,amino_acid,,,,,,,,
+L-Glutathione (Reduced),Amine,,C(CC(=O)NC(CS)C(=O)NCC(=O)O)C(C(=O)O)N,raw,,307.33,True,C10H17N3O6S,307.33,3.0,1.0,0.0,0.0,0.0,True,1.0,amino_acid,,,,,,,,
+L-Histidine,Amine,histidine,C1=C(NC=N1)C[C@@H](C(=O)O)N,raw,,155.15,True,C6H9N3O2,155.16,3.0,1.0,0.0,0.0,0.0,True,1.0,amino_acid,,,,,,,,
+L-Homoserine,Amine,,C(CO)[C@@H](C(=O)O)N,raw,,119.12,True,C4H9NO3,119.12,1.0,1.0,0.0,0.0,0.0,True,1.0,amino_acid,,,,,,,,
+L-Leucine,Amine,,CC(C)C[C@@H](C(=O)O)N,raw,,131.17,True,C6H13NO2,131.17,1.0,1.0,0.0,0.0,0.0,True,1.0,amino_acid,,,,,,,,
+L-Lysine,Amine,lysine,C(CCN)C[C@@H](C(=O)O)N,raw,,146.19,True,C6H14N2O2,146.19,2.0,2.0,0.0,0.0,0.0,True,2.0,polyamine,,,,,,,,
+L-Methionine,Amine,methionine,CSCC[C@@H](C(=O)O)N,raw,,149.21,True,C5H11NO2S,149.22,1.0,1.0,0.0,0.0,0.0,True,1.0,amino_acid,,,,,,,,
+L-Ornithine monohydrochloride,Amine,ornithine,C(C[C@@H](C(=O)O)N)CN,desalted,,168.62,True,C5H12N2O2,132.16,2.0,2.0,0.0,0.0,0.0,True,2.0,polyamine,,,,,,,,
+L-Phenylalanine,Amine,phenylalanine,C1=CC=C(C=C1)C[C@@H](C(=O)O)N,raw,,165.19,True,C9H11NO2,165.19,1.0,1.0,0.0,0.0,0.0,True,1.0,amino_acid,,,,,,,,
+L-Serine,Amine,serine,C([C@@H](C(=O)O)N)O,raw,,105.09,True,C3H7NO3,105.09,1.0,1.0,0.0,0.0,0.0,True,1.0,amino_acid,,,,,,,,
+L-Threonine,Amine,threonine,C[C@H]([C@@H](C(=O)O)N)O,raw,,119.12,True,C4H9NO3,119.12,1.0,1.0,0.0,0.0,0.0,True,1.0,amino_acid,,,,,,,,
+Tryptamine,Amine,tryptamine,C1=CC=C2C(=C1)C(=CN2)CCN,raw,,160.22,True,C10H12N2,160.22,2.0,1.0,0.0,0.0,0.0,False,1.0,primary_amine,,,,,,,,
+Spermine,Amine,,C(CCNCCCN)CNCCCN,raw,,202.34,True,C10H26N4,202.35,4.0,2.0,2.0,0.0,0.0,False,4.0,polyamine,,,,,,,,
+Spermidine,Amine,,C(CCNCCCN)CN,raw,,145.25,True,C7H19N3,145.25,3.0,2.0,1.0,0.0,0.0,False,3.0,polyamine,,,,,,,,
+Cadaverine,Amine,cadaverine,C(CCN)CCN,raw,,102.18,True,C5H14N2,102.18,2.0,2.0,0.0,0.0,0.0,False,2.0,polyamine,,,,,,,,
+Putrescine,Amine,putrescine,C(CCN)CN,raw,,88.15,True,C4H12N2,88.15,2.0,2.0,0.0,0.0,0.0,False,2.0,polyamine,,,,,,,,
+2-aminophenol,Amine,2_aminophenol,C1=CC=C(C(=C1)N)O,raw,,109.13,True,C6H7NO,109.13,1.0,0.0,0.0,0.0,1.0,False,0.0,aryl_amine,,,,,,,,
+TCA,Bile Acid,,O=S(O)(CCNC(CC[C@@H](C)[C@H]1CC[C@@]2([H])[C@]3([H])[C@H](O)CC4C[C@H](O)CC[C@]4(C)[C@@]3([H])C[C@H](O)[C@]12C)=O)=O,raw,,515.7,True,C26H45NO7S,515.71,,,,,,,,,"3a,7a,12a",Tau,Tau,3.0,0.0,Tri,True,2.0
+TDCA,Bile Acid,,O=S(O)(CCNC(CC[C@@H](C)[C@H]1CC[C@@]2([H])[C@]3([H])CCC4C[C@H](O)CC[C@]4(C)[C@@]3([H])C[C@H](O)[C@]12C)=O)=O,raw,,499.71,True,C26H45NO6S,499.71,,,,,,,,,"3a,12a",Tau,Tau,2.0,0.0,Di,True,2.0
+TUDCA,Bile Acid,,O=S(O)(CCNC(CC[C@@H](C)[C@H]1CC[C@@]2([H])[C@]3([H])[C@@H](O)CC4C[C@H](O)CC[C@]4(C)[C@@]3([H])CC[C@]12C)=O)=O,raw,,499.71,True,C26H45NO6S,499.71,,,,,,,,,"3a,7b",Tau,Tau,2.0,0.0,Di,True,2.0
+GCA,Bile Acid,,O[C@@H]1CC[C@]2(C)[C@@]3([H])C[C@H](O)[C@]4(C)[C@@H]([C@H](C)CCC(NCC(O)=O)=O)CC[C@@]4([H])[C@]3([H])[C@H](O)CC2C1,raw,,465.6,True,C26H43NO6,465.63,,,,,,,,,"3a,7a,12a",Gly,Gly,3.0,0.0,Tri,True,2.0
+GDCA,Bile Acid,,O[C@@H]1CC[C@]2(C)[C@@]3([H])C[C@H](O)[C@]4(C)[C@@H]([C@H](C)CCC(NCC(O)=O)=O)CC[C@@]4([H])[C@]3([H])CCC2C1,raw,,449.6,True,C26H43NO5,449.63,,,,,,,,,"3a,12a",Gly,Gly,2.0,0.0,Di,True,2.0
+GCDCA,Bile Acid,,O[C@@H]1CC[C@]2(C)[C@@]3([H])CC[C@]4(C)[C@@H]([C@H](C)CCC(NCC(O)=O)=O)CC[C@@]4([H])[C@]3([H])[C@H](O)CC2C1,raw,,449.6,True,C26H43NO5,449.63,,,,,,,,,"3a,7a",Gly,Gly,2.0,0.0,Di,True,2.0
+GUDCA,Bile Acid,,C[C@H](CCC(=O)NCC(=O)O)[C@H]1CC[C@@H]2[C@@]1(CC[C@H]3[C@H]2[C@H](C[C@H]4[C@@]3(CC[C@H](C4)O)C)O)C,raw,,449.6,True,C26H43NO5,449.63,,,,,,,,,"3a,7b",Gly,Gly,2.0,0.0,Di,True,2.0
+TLCA,Bile Acid,,O[C@@H]1CC[C@@]2(C)[C@@](CC[C@]3([H])[C@]2([H])CC[C@@]4(C)[C@@]3([H])CC[C@@H]4[C@@H](CCC(NCCS(O)(=O)=O)=O)C)([H])C1,raw,,505.7,True,C26H45NO5S,483.72,,,,,,,,,3a,Tau,Tau,1.0,0.0,Mono,True,2.0
+GHDCA,Bile Acid,,[H][C@@]12C[C@H](O)CC[C@]1(C)[C@]3([H])[C@@]([C@@](CC[C@@H]4[C@@H](CCC(NCC(O)=O)=O)C)([H])[C@]4(C)CC3)([H])C[C@@H]2O,raw,,449.6,True,C26H43NO5,449.63,,,,,,,,,"3a,6a",Gly,Gly,2.0,0.0,Di,True,2.0
+GLCA,Bile Acid,,O[C@@H]1CC[C@]2(C)[C@@]3([H])CC[C@]4(C)[C@@H]([C@H](C)CCC(NCC(O)=O)=O)CC[C@@]4([H])[C@]3([H])CCC2C1,raw,,433.6,True,C26H43NO4,433.63,,,,,,,,,3a,Gly,Gly,1.0,0.0,Mono,True,2.0
+TCDCA,Bile Acid,,O=S(O)(CCNC(CC[C@@H](C)[C@H]1CC[C@@]2([H])[C@]3([H])[C@H](O)CC4C[C@H](O)CC[C@]4(C)[C@@]3([H])CC[C@]12C)=O)=O,raw,,499.7,True,C26H45NO6S,499.71,,,,,,,,,"3a,7a",Tau,Tau,2.0,0.0,Di,True,2.0
+THDCA,Bile Acid,,C[C@H](CCC(=O)NCCS(=O)(=O)O)[C@H]1CC[C@@H]2[C@@]1(CC[C@H]3[C@H]2C[C@@H]([C@H]4[C@@]3(CC[C@H](C4)O)C)O)C,raw,,499.7,True,C26H45NO6S,499.71,,,,,,,,,"3a,6a",Tau,Tau,2.0,0.0,Di,True,2.0
+3a12k-Gly,Bile Acid,,O[C@@H](C[C@@](CC[C@@]1([H])[C@]2([H])CC[C@@H]([C@]23C)[C@H](C)CCC(NCC(O)=O)=O)4[H])CC[C@]4(C)[C@@]1([H])CC3=O,raw,,447.6,True,C26H41NO5,447.62,,,,,,,,,"3a,12k",Gly,Gly,1.0,1.0,Mono,True,2.0
+3a12k-Tau,Bile Acid,,O[C@@H](C[C@@](CC[C@@]1([H])[C@]2([H])CC[C@@H]([C@]23C)[C@H](C)CCC(NCCS(O)(=O)=O)=O)4[H])CC[C@]4(C)[C@@]1([H])CC3=O,raw,,497.7,True,C26H43NO6S,497.7,,,,,,,,,"3a,12k",Tau,Tau,1.0,1.0,Mono,True,2.0
+3a7a12k-Gly,Bile Acid,,O[C@@H](C[C@@](C[C@@H](O)[C@@]1([H])[C@]2([H])CC[C@@H]([C@]23C)[C@H](C)CCC(NCC(O)=O)=O)4[H])CC[C@]4(C)[C@@]1([H])CC3=O,raw,,463.6,True,C26H41NO6,463.62,,,,,,,,,"3a,7a,12k",Gly,Gly,2.0,1.0,Di,True,2.0
+3a7a12k-Tau,Bile Acid,,O[C@@H](C[C@@](C[C@@H](O)[C@@]1([H])[C@]2([H])CC[C@@H]([C@]23C)[C@H](C)CCC(NCCS(O)(=O)=O)=O)4[H])CC[C@]4(C)[C@@]1([H])CC3=O,raw,,513.7,True,C26H43NO7S,513.7,,,,,,,,,"3a,7a,12k",Tau,Tau,2.0,1.0,Di,True,2.0
+3a7k-Gly,Bile Acid,,O[C@@H](C[C@@](C1)2[H])CC[C@]2(C)[C@@]3([H])CC[C@]4(C)[C@@H]([C@H](C)CCC(NCC(O)=O)=O)CC[C@@]4([H])[C@]3([H])C1=O,raw,,447.6,True,C26H41NO5,447.62,,,,,,,,,"3a,7k",Gly,Gly,1.0,1.0,Mono,True,1.0
+3k7a-Gly,Bile Acid,,[H][C@@]12CC(CC[C@]1(C)[C@@]3([H])CC[C@]4(C)[C@@H]([C@H](C)CCC(NCC(O)=O)=O)CC[C@@]4([H])[C@]3([H])[C@H](O)C2)=O,raw,,447.6,True,C26H41NO5,447.62,,,,,,,,,"3k,7a",Gly,Gly,1.0,1.0,Mono,True,1.0
+3k7k12k-Tau,Bile Acid,,[H][C@@]1(CC([C@@]2([H])[C@]3([H])CC[C@@H]([C@]34C)[C@H](C)CCC(NCCS(O)(=O)=O)=O)=O)CC(CC[C@]1(C)[C@@]2([H])CC4=O)=O,raw,,509.66,True,C26H39NO7S,509.67,,,,,,,,,"3k,7k,12k",Tau,Tau,0.0,3.0,,True,1.0
+serotonin,Amine,serotonin,NCCc1c[nH]c2ccc(O)cc12,INFERRED,5-hydroxytryptamine; not in reactants sheet,,True,C10H12N2O,176.22,2.0,1.0,0.0,0.0,0.0,False,1.0,primary_amine,,,,,,,,
+tyramine,Amine,tyramine,NCCc1ccc(O)cc1,INFERRED,4-hydroxyphenethylamine; not in reactants sheet,,True,C8H11NO,137.18,1.0,1.0,0.0,0.0,0.0,False,1.0,primary_amine,,,,,,,,
+cystine,Amine,cystine,OC(=O)C(N)CSSCC(N)C(=O)O,INFERRED,"disulfide dimer of L-cysteine, which IS a reactant",,True,C6H12N2O4S2,240.31,2.0,2.0,0.0,0.0,0.0,True,2.0,polyamine,,,,,,,,

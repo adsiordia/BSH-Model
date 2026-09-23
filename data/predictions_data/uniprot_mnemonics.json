@@ -1,0 +1,72 @@
+{
+ "PHOVU": {
+  "name": "Phocaeicola vulgatus",
+  "lineage": "cellular organisms, Bacteria, Pseudomonadati, FCB group, Bacteroidota/Chlorobiota group, Bacteroidota, Bacteroidia, Bacteroidales, Bacteroidaceae, Phocaeicola",
+  "rank": "species"
+ },
+ "BACUN": {
+  "name": "Bacteroides uniformis",
+  "lineage": "cellular organisms, Bacteria, Pseudomonadati, FCB group, Bacteroidota/Chlorobiota group, Bacteroidota, Bacteroidia, Bacteroidales, Bacteroidaceae, Bacteroides",
+  "rank": "species"
+ },
+ "9CLOT": {
+  "name": "Sarcina",
+  "lineage": "cellular organisms, Bacteria, Bacillati, Bacillota, Clostridia, Eubacteriales, Clostridiaceae",
+  "rank": "genus"
+ },
+ "9BACT": {
+  "name": "Bacteria",
+  "lineage": "cellular organisms",
+  "rank": "domain"
+ },
+ "9BACE": {
+  "name": "Bacteroides",
+  "lineage": "cellular organisms, Bacteria, Pseudomonadati, FCB group, Bacteroidota/Chlorobiota group, Bacteroidota, Bacteroidia, Bacteroidales, Bacteroidaceae",
+  "rank": "genus"
+ },
+ "CLOSY": {
+  "name": "Clostridium symbiosum",
+  "lineage": "cellular organisms, Bacteria, Bacillati, Bacillota, Clostridia, Lachnospirales, Lachnospiraceae, Otoolea",
+  "rank": "species"
+ },
+ "9FIRM": {
+  "name": "Butyrivibrio",
+  "lineage": "cellular organisms, Bacteria, Bacillati, Bacillota, Clostridia, Lachnospirales, Lachnospiraceae",
+  "rank": "genus"
+ },
+ "9ACTN": {
+  "name": "Atopobium",
+  "lineage": "cellular organisms, Bacteria, Bacillati, Actinomycetota, Coriobacteriia, Coriobacteriales, Atopobiaceae",
+  "rank": "genus"
+ },
+ "FUSMR": {
+  "name": "Fusobacterium mortiferum",
+  "lineage": "cellular organisms, Bacteria, Fusobacteriati, Fusobacteriota, Fusobacteriia, Fusobacteriales, Fusobacteriaceae, Fusobacterium",
+  "rank": "species"
+ },
+ "9GAMM": {
+  "name": "Buchnera aphidicola",
+  "lineage": "cellular organisms, Bacteria, Pseudomonadati, Pseudomonadota, Gammaproteobacteria, Enterobacterales, Erwiniaceae, Buchnera",
+  "rank": "species"
+ },
+ "9CYAN": {
+  "name": "Cyanobacteriota",
+  "lineage": "cellular organisms, Bacteria, Bacillati, Cyanobacteriota/Melainabacteria group",
+  "rank": "phylum"
+ },
+ "9FLAO": {
+  "name": "Polaribacter glomeratus",
+  "lineage": "cellular organisms, Bacteria, Pseudomonadati, FCB group, Bacteroidota/Chlorobiota group, Bacteroidota, Flavobacteriia, Flavobacteriales, Flavobacteriaceae, Polaribacter",
+  "rank": "species"
+ },
+ "BIFAD": {
+  "name": "Bifidobacterium adolescentis",
+  "lineage": "cellular organisms, Bacteria, Bacillati, Actinomycetota, Actinomycetes, Bifidobacteriales, Bifidobacteriaceae, Bifidobacterium",
+  "rank": "species"
+ },
+ "PHOPM": {
+  "name": "Phocaeicola plebeius (strain DSM 17135 / JCM 12973 / CCUG 54634 / M2)",
+  "lineage": "cellular organisms, Bacteria, Pseudomonadati, FCB group, Bacteroidota/Chlorobiota group, Bacteroidota, Bacteroidia, Bacteroidales, Bacteroidaceae, Phocaeicola, Phocaeicola plebeius",
+  "rank": "strain"
+ }
+}

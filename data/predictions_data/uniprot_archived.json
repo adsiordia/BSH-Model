@@ -1,0 +1,266 @@
+{
+ "A0A069S9I0": {
+  "entry_name": "A0A069S9I0_BACVU",
+  "length": "359",
+  "organism": "Bacteroides vulgatus str. 3975 RP4",
+  "protein": "Linear amide C-N hydrolase, choloylglycine hydrolase family protein"
+ },
+ "A0A078S2R5": {
+  "entry_name": "A0A078S2R5_BACUN",
+  "length": "361",
+  "organism": "Bacteroides uniformis str. 3978 T3 ii",
+  "protein": "Linear amide C-N hydrolase, choloylglycine hydrolase family protein"
+ },
+ "A0A0F0CI09": {
+  "entry_name": "A0A0F0CI09_9CLOT",
+  "length": "364",
+  "organism": "Clostridium sp. FS41",
+  "protein": "Penicillin acylase"
+ },
+ "A0A0F5JPH2": {
+  "entry_name": "A0A0F5JPH2_9PORP",
+  "length": "360",
+  "organism": "Parabacteroides goldsteinii DSM 19448 = WAL 12034",
+  "protein": "Uncharacterized protein"
+ },
+ "A0A0P0FKS2": {
+  "entry_name": "A0A0P0FKS2_9BACE",
+  "length": "350",
+  "organism": "Bacteroides cellulosilyticus",
+  "protein": "Choloylglycine hydrolase"
+ },
+ "A0A0P0LK75": {
+  "entry_name": "A0A0P0LK75_BACVU",
+  "length": "363",
+  "organism": "Bacteroides vulgatus",
+  "protein": "Choloylglycine hydrolase"
+ },
+ "A0A174MBD8": {
+  "entry_name": "A0A174MBD8_CLOSY",
+  "length": "367",
+  "organism": "Clostridium symbiosum (Bacteroides symbiosus)",
+  "protein": "Penicillin acylase"
+ },
+ "A0A1C5S406": {
+  "entry_name": "A0A1C5S406_9FIRM",
+  "length": "352",
+  "organism": "uncultured Eubacterium sp",
+  "protein": "Choloylglycine hydrolase"
+ },
+ "A0A1C6E707": {
+  "entry_name": "A0A1C6E707_9FIRM",
+  "length": "375",
+  "organism": "uncultured Blautia sp",
+  "protein": "Penicillin acylase"
+ },
+ "A0A1E3ADP5": {
+  "entry_name": "A0A1E3ADP5_9FIRM",
+  "length": "357",
+  "organism": "Eisenbergiella tayi",
+  "protein": "Linear amide C-N hydrolase, choloylglycine hydrolase family"
+ },
+ "A0A1M3L7G3": {
+  "entry_name": "A0A1M3L7G3_9PORP",
+  "length": "360",
+  "organism": "Dysgonomonas sp. 37-18",
+  "protein": "Choloylglycine hydrolase"
+ },
+ "A0A1Q6E5Z9": {
+  "entry_name": "A0A1Q6E5Z9_9BACT",
+  "length": "360",
+  "organism": "Alistipes sp. 56_11",
+  "protein": "Choloylglycine hydrolase"
+ },
+ "A0A1Q6F0C9": {
+  "entry_name": "A0A1Q6F0C9_9ACTN",
+  "length": "361",
+  "organism": "Collinsella sp. 60_9",
+  "protein": "Penicillin acylase"
+ },
+ "A0A1Q6RAM4": {
+  "entry_name": "A0A1Q6RAM4_9FIRM",
+  "length": "360",
+  "organism": "Phascolarctobacterium succinatutens",
+  "protein": "Uncharacterized protein"
+ },
+ "A0A1Y3QT37": {
+  "entry_name": "A0A1Y3QT37_9BACT",
+  "length": "349",
+  "organism": "Alistipes onderdonkii",
+  "protein": "Choloylglycine hydrolase"
+ },
+ "A0A1Y3VSR9": {
+  "entry_name": "A0A1Y3VSR9_9BACT",
+  "length": "362",
+  "organism": "Butyricimonas sp. An62",
+  "protein": "Choloylglycine hydrolase"
+ },
+ "A0A1Y3YYW1": {
+  "entry_name": "A0A1Y3YYW1_9BACE",
+  "length": "362",
+  "organism": "Bacteroides clarus",
+  "protein": "Choloylglycine hydrolase"
+ },
+ "A0A1Y4QH48": {
+  "entry_name": "A0A1Y4QH48_9FIRM",
+  "length": "334",
+  "organism": "[Clostridium] spiroforme",
+  "protein": "Choloylglycine hydrolase"
+ },
+ "A0A349QN89": {
+  "entry_name": "A0A349QN89_9FIRM",
+  "length": "328",
+  "organism": "Roseburia sp",
+  "protein": "Choloylglycine hydrolase"
+ },
+ "A0A357TLK7": {
+  "entry_name": "A0A357TLK7_9FIRM",
+  "length": "369",
+  "organism": "Ruminococcaceae bacterium",
+  "protein": "Penicillin acylase"
+ },
+ "A0A3D3YKZ5": {
+  "entry_name": "A0A3D3YKZ5_9BACT",
+  "length": "350",
+  "organism": "Alistipes obesi",
+  "protein": "Linear amide C-N hydrolase"
+ },
+ "A0A3E4KT54": {
+  "entry_name": "A0A3E4KT54_9BACE",
+  "length": "360",
+  "organism": "Bacteroides intestinalis",
+  "protein": "Linear amide C-N hydrolase"
+ },
+ "A0A3N2MZX6": {
+  "entry_name": "A0A3N2MZX6_9BACT",
+  "length": "345",
+  "organism": "Muribaculaceae bacterium Isolate-102 (HZI)",
+  "protein": "Linear amide C-N hydrolase"
+ },
+ "A0A412TTM9": {
+  "entry_name": "A0A412TTM9_9BACT",
+  "length": "358",
+  "organism": "Odoribacter splanchnicus",
+  "protein": "Linear amide C-N hydrolase"
+ },
+ "A0A414M9L3": {
+  "entry_name": "A0A414M9L3_9BACE",
+  "length": "377",
+  "organism": "Bacteroides eggerthii",
+  "protein": "Linear amide C-N hydrolase"
+ },
+ "A0A414Q275": {
+  "entry_name": "A0A414Q275_FUSMR",
+  "length": "366",
+  "organism": "Fusobacterium mortiferum",
+  "protein": "Linear amide C-N hydrolase"
+ },
+ "A0A416W4H5": {
+  "entry_name": "A0A416W4H5_9BACT",
+  "length": "347",
+  "organism": "Odoribacter sp. AF15-53",
+  "protein": "Linear amide C-N hydrolase"
+ },
+ "A0A5C2BYC4": {
+  "entry_name": "A0A5C2BYC4_9GAMM",
+  "length": "387",
+  "organism": "Francisella marina",
+  "protein": "Linear amide C-N hydrolase"
+ },
+ "A0A5C2C0X5": {
+  "entry_name": "A0A5C2C0X5_9GAMM",
+  "length": "379",
+  "organism": "Francisella marina",
+  "protein": "Choloylglycine hydrolase family protein"
+ },
+ "A0A5C2C1U8": {
+  "entry_name": "A0A5C2C1U8_9GAMM",
+  "length": "349",
+  "organism": "Francisella marina",
+  "protein": "Linear amide C-N hydrolase"
+ },
+ "A0A6B3M9R4": {
+  "entry_name": "A0A6B3M9R4_9CYAN",
+  "length": "355",
+  "organism": "Symploca sp. SIO2E9",
+  "protein": "Linear amide C-N hydrolase"
+ },
+ "A0A6B3MYR8": {
+  "entry_name": "A0A6B3MYR8_9CYAN",
+  "length": "382",
+  "organism": "Moorea sp. SIO4A1",
+  "protein": "Choloylglycine hydrolase family protein"
+ },
+ "A0A6B3PBB6": {
+  "entry_name": "A0A6B3PBB6_9CYAN",
+  "length": "360",
+  "organism": "Okeania sp. SIO1F9",
+  "protein": "Choloylglycine hydrolase family protein"
+ },
+ "A0A6B3PFJ7": {
+  "entry_name": "A0A6B3PFJ7_9CYAN",
+  "length": "427",
+  "organism": "Okeania sp. SIO1F9",
+  "protein": "Linear amide C-N hydrolase"
+ },
+ "A0A6N3FX58": {
+  "entry_name": "A0A6N3FX58_9BACT",
+  "length": "367",
+  "organism": "Paraprevotella clara",
+  "protein": "Choloylglycine hydrolase"
+ },
+ "A0A848U0C2": {
+  "entry_name": "A0A848U0C2_9FLAO",
+  "length": "357",
+  "organism": "Maribacter sp",
+  "protein": "Linear amide C-N hydrolase"
+ },
+ "A0A8J7U9Z7": {
+  "entry_name": "A0A8J7U9Z7_9BACT",
+  "length": "352",
+  "organism": "Candidatus Homeothermus sp",
+  "protein": "Linear amide C-N hydrolase"
+ },
+ "A0A942AQR8": {
+  "entry_name": "A0A942AQR8_9BACT",
+  "length": "360",
+  "organism": "Barnesiella sp",
+  "protein": "Choloylglycine hydrolase family protein"
+ },
+ "A0A952U252": {
+  "entry_name": "A0A952U252_9BACT",
+  "length": "354",
+  "organism": "Candidatus Obscuribacterales bacterium",
+  "protein": "Linear amide C-N hydrolase"
+ },
+ "A7A5K1": {
+  "entry_name": "A7A5K1_BIFAD",
+  "length": "347",
+  "organism": "Bifidobacterium adolescentis L2-32",
+  "protein": "Putative uncharacterized protein."
+ },
+ "B5D243": {
+  "entry_name": "B5D243_9BACE",
+  "length": "361",
+  "organism": "Bacteroides plebeius DSM 17135",
+  "protein": "Putative uncharacterized protein"
+ },
+ "C0ERS1": {
+  "entry_name": "C0ERS1_9FIRM",
+  "length": "334",
+  "organism": "Eubacterium hallii DSM 3353",
+  "protein": "Putative uncharacterized protein"
+ },
+ "R7PBA0": {
+  "entry_name": "R7PBA0_9BACT",
+  "length": "363",
+  "organism": "Prevotella sp. CAG:617",
+  "protein": "Uncharacterized protein"
+ },
+ "U2D571": {
+  "entry_name": "U2D571_9FIRM",
+  "length": "327",
+  "organism": "Blautia sp. KLE 1732",
+  "protein": "Putative choloylglycine hydrolase"
+ }
+}

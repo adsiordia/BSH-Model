@@ -1,0 +1,19 @@
+{
+  "embedding": "ProstT5",
+  "pooling": "mean",
+  "n_estimators": 825,
+  "rounds_per_fold": [
+    619,
+    714,
+    825,
+    983,
+    852
+  ],
+  "enzymes": 115,
+  "rows": 8625,
+  "cv_pr_auc": 0.7642,
+  "cv_roc_auc": 0.9341,
+  "cv_log_loss": 0.2371,
+  "cv_within_substrate": 0.6362,
+  "base_rate": 0.1601
+}

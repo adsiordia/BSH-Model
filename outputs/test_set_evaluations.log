@@ -1,0 +1,1 @@
+2026-09-18T14:00:53  model=bsh_prostt5_xgb.pkl  embedding=ProstT5  n_estimators=750  min_reps=1  test_rows=1725  test_enzymes=23  pr_auc=0.6895  roc_auc=0.9240  log_loss_raw=0.2887  log_loss_cal=0.2726

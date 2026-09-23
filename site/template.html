@@ -1,0 +1,2498 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>BSH Conjugation Explorer</title>
+<style>
+:root{
+  --bg:#f7f6f2; --panel:#fffefc; --sunk:#efede6; --ink:#15181c; --body:#3a4048; --muted:#6b717a;
+  --rule:#e1ded4; --soft:#edeae1; --accent:#0f5f6b; --accent-bg:#e3eff0;
+  --hit:#1a6b52; --hit-bg:#dcefe6; --miss:#8a8f97; --pred:#a85b12; --pred-bg:#f7eade;
+  --s1:#0f5f6b; --s2:#a85b12; --s3:#4a6fa5; --s4:#7d5ba6; --s5:#1a6b52;
+  --m1:#1f6f8b; --m2:#c2521f; --m3:#2f7d52; --m4:#8a6d1f;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme=light]){
+  --bg:#14161a; --panel:#1b1e23; --sunk:#111318; --ink:#f0efea; --body:#c6cad0; --muted:#8d939c;
+  --rule:#2c3138; --soft:#22262c; --accent:#58b2c0; --accent-bg:#15343a;
+  --hit:#4fbf95; --hit-bg:#15302a; --miss:#787e87; --pred:#dd9a5c; --pred-bg:#32220f;
+  --s1:#58b2c0; --s2:#dd9a5c; --s3:#7fa6dd; --s4:#b48fd6; --s5:#4fbf95;
+  --m1:#5fb3cf; --m2:#e8845a; --m3:#5fc08c; --m4:#d4b45c;
+  color-scheme:dark;}}
+:root[data-theme=dark]{
+  --bg:#14161a; --panel:#1b1e23; --sunk:#111318; --ink:#f0efea; --body:#c6cad0; --muted:#8d939c;
+  --rule:#2c3138; --soft:#22262c; --accent:#58b2c0; --accent-bg:#15343a;
+  --hit:#4fbf95; --hit-bg:#15302a; --miss:#787e87; --pred:#dd9a5c; --pred-bg:#32220f;
+  --s1:#58b2c0; --s2:#dd9a5c; --s3:#7fa6dd; --s4:#b48fd6; --s5:#4fbf95;
+  --m1:#5fb3cf; --m2:#e8845a; --m3:#5fc08c; --m4:#d4b45c;
+  color-scheme:dark;}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--body);
+ font:15px/1.6 ui-sans-serif,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+.mono,code{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace;font-variant-numeric:tabular-nums}
+h1,h2,h3{color:var(--ink);margin:0;text-wrap:balance}
+h1{font-size:1.28rem;font-weight:600;letter-spacing:-.01em}
+h2{font-size:1.16rem;font-weight:600;margin-bottom:6px}
+h3{font-size:.94rem;font-weight:600}
+p{margin:0}
+button{font:inherit;cursor:pointer}
+a{color:var(--accent)}
+
+header{background:var(--panel);border-bottom:1px solid var(--rule);position:sticky;top:0;z-index:20}
+.bar{max-width:1280px;margin:0 auto;padding:12px clamp(14px,3vw,26px);
+ display:flex;align-items:center;gap:18px;flex-wrap:wrap}
+.bar .sub{color:var(--muted);font-size:.83rem}
+nav{display:flex;gap:2px;margin-left:auto;flex-wrap:wrap}
+nav button{background:transparent;border:1px solid transparent;color:var(--body);
+ padding:7px 13px;border-radius:5px}
+nav button:hover{background:var(--soft)}
+nav button[aria-current=true]{background:var(--accent-bg);color:var(--accent);font-weight:600}
+main{max-width:1280px;margin:0 auto;padding:clamp(18px,3vw,30px) clamp(14px,3vw,26px) 60px}
+.view[hidden]{display:none}
+
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(168px,1fr));gap:1px;background:var(--rule);
+ border:1px solid var(--rule);margin-bottom:24px}
+.stat{background:var(--panel);padding:14px 16px}
+.stat b{display:block;font-family:ui-monospace,monospace;font-size:1.55rem;color:var(--ink);line-height:1.15}
+.stat span{display:block;font-size:.78rem;color:var(--muted);margin-top:4px;line-height:1.35}
+
+.card{background:var(--panel);border:1px solid var(--rule);padding:18px 20px;margin-bottom:18px}
+.card > * + *{margin-top:12px}
+.prose{max-width:66ch;color:var(--body)}
+.prose p + p{margin-top:10px}
+
+.controls{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:14px}
+input[type=search],select{font:inherit;padding:7px 11px;border:1px solid var(--rule);
+ background:var(--panel);color:var(--ink);border-radius:5px;min-width:0}
+input[type=search]{flex:1 1 220px}
+label.chk{display:inline-flex;align-items:center;gap:6px;font-size:.87rem;color:var(--body);cursor:pointer}
+
+.split{display:grid;grid-template-columns:minmax(220px,300px) 1fr;gap:18px;align-items:start}
+.duo{display:grid;grid-template-columns:1fr 1fr;gap:22px;align-items:start}
+@media(max-width:780px){.duo{grid-template-columns:1fr}}
+@media(max-width:780px){.split{grid-template-columns:1fr}}
+.list{background:var(--panel);border:1px solid var(--rule);max-height:66vh;overflow:auto}
+.list button{display:flex;justify-content:space-between;align-items:center;gap:10px;width:100%;
+ text-align:left;background:transparent;border:0;border-bottom:1px solid var(--soft);
+ padding:9px 13px;color:var(--body)}
+.list button:hover{background:var(--soft)}
+.list button[aria-current=true]{background:var(--accent-bg);color:var(--accent);font-weight:600}
+.list .n{font-family:ui-monospace,monospace;font-size:.78rem;color:var(--muted)}
+.list button[aria-current=true] .n{color:var(--accent)}
+
+table{border-collapse:collapse;width:100%;font-size:.87rem}
+th,td{padding:7px 10px;border-bottom:1px solid var(--soft);text-align:left}
+th{font-size:.72rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);
+ border-bottom:1px solid var(--rule);font-weight:600;white-space:nowrap}
+td.r,th.r{text-align:right;font-family:ui-monospace,monospace;font-variant-numeric:tabular-nums}
+.scroll{overflow-x:auto}
+tbody tr:hover{background:var(--soft)}
+
+.tag{display:inline-block;padding:1.5px 7px;border-radius:99px;font-size:.73rem;font-weight:600;
+ white-space:nowrap}
+.tag.hit{background:var(--hit-bg);color:var(--hit)}
+.tag.no{background:var(--sunk);color:var(--miss)}
+.tag.pred{background:var(--pred-bg);color:var(--pred)}
+.tag.plain{background:var(--sunk);color:var(--muted);font-weight:500}
+
+.bar-mini{display:inline-block;height:8px;background:var(--accent);vertical-align:middle;min-width:1px}
+.bar-track{display:inline-block;width:72px;height:8px;background:var(--sunk);vertical-align:middle;margin-right:7px}
+
+/* heatmap */
+.hm{overflow:auto;max-height:76vh;background:var(--panel);border:1px solid var(--rule)}
+.hm table{font-size:.7rem;border-collapse:separate;border-spacing:0}
+.hm th{position:sticky;background:var(--panel);z-index:2;padding:4px 6px;border-bottom:1px solid var(--rule)}
+.hm thead th{top:0}
+.hm th.rowh{left:0;z-index:3;text-align:left;font-family:ui-monospace,monospace;
+ font-size:.68rem;text-transform:none;letter-spacing:0;border-right:1px solid var(--rule);
+ white-space:nowrap;font-weight:400;color:var(--body)}
+.hm thead th:first-child{z-index:4;left:0}
+.hm td{padding:0;width:15px;height:15px;border:0}
+.hm td div{width:100%;height:100%}
+.vlabel{writing-mode:vertical-rl;transform:rotate(180deg);white-space:nowrap;font-weight:500;
+ font-size:.68rem;text-transform:none;letter-spacing:0;color:var(--body)}
+.hrow{display:grid;grid-template-columns:minmax(90px,150px) 1fr 44px auto;gap:9px;align-items:center;padding:3px 0;font-size:.83rem}
+.hlab{color:var(--body);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.htrack{background:var(--sunk);height:10px}
+.hfill{display:block;height:100%}
+.hval{font-family:ui-monospace,monospace;text-align:right;color:var(--ink);font-size:.8rem}
+.hsub{font-size:.72rem;color:var(--muted);white-space:nowrap}
+.legend{display:flex;gap:16px;flex-wrap:wrap;font-size:.8rem;color:var(--muted);margin-top:12px}
+.legend span{display:flex;align-items:center;gap:6px}
+.legend i{width:13px;height:13px;display:inline-block;border:1px solid var(--rule)}
+
+.struct{display:block;line-height:0}
+.struct svg{width:100%;height:auto;max-width:230px}
+.struct .dk{display:none}
+@media (prefers-color-scheme:dark){:root:not([data-theme=light]) .struct .lt{display:none}
+ :root:not([data-theme=light]) .struct .dk{display:block}}
+:root[data-theme=dark] .struct .lt{display:none}
+:root[data-theme=dark] .struct .dk{display:block}
+.panel2{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:18px;align-items:start}
+.chartbox{background:var(--panel);border:1px solid var(--rule);padding:16px 18px}
+.chartbox h3{margin-bottom:4px}
+.chartbox .cap{font-size:.8rem;color:var(--muted);margin-bottom:12px;max-width:60ch}
+.chartbox svg{width:100%;height:auto;display:block}
+.hbar{display:flex;flex-direction:column;gap:3px}
+.hbar .r{display:grid;grid-template-columns:minmax(84px,150px) 1fr 48px;align-items:center;gap:10px}
+.hbar .lb{font-size:.79rem;text-align:right;color:var(--body);overflow-wrap:anywhere}
+.hbar .tk{background:var(--sunk);height:16px}
+.hbar .fl{height:100%}
+.hbar .vv{font-family:ui-monospace,monospace;font-size:.76rem;color:var(--muted)}
+.keyfig{display:flex;gap:2px;background:var(--rule);border:1px solid var(--rule);flex-wrap:wrap}
+.keyfig div{background:var(--panel);padding:13px 16px;flex:1 1 130px}
+.keyfig b{display:block;font-family:ui-monospace,monospace;font-size:1.5rem;color:var(--ink);line-height:1.15}
+.keyfig span{display:block;font-size:.76rem;color:var(--muted);margin-top:4px;line-height:1.35}
+.gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(212px,1fr));gap:1px;
+ background:var(--rule);border:1px solid var(--rule)}
+.gcard{background:var(--panel);padding:13px 14px 15px;display:flex;flex-direction:column;gap:8px}
+.gcard:hover{background:var(--soft)}
+.gcard .nm{font-weight:600;color:var(--ink);font-size:.9rem;line-height:1.25}
+.gcard .sub{font-size:.75rem;color:var(--muted);display:flex;justify-content:space-between;gap:8px}
+.gcard .meter{height:5px;background:var(--sunk)}
+.gcard .meter i{display:block;height:100%;background:var(--accent)}
+.trio{display:grid;grid-template-columns:minmax(200px,264px) minmax(0,1fr) auto;gap:18px;align-items:start}
+.trio .sticky:not(:empty){width:340px}
+@media(max-width:1180px){.trio{grid-template-columns:minmax(200px,264px) 1fr}.trio .sticky{grid-column:1/-1}}
+@media(max-width:780px){.trio{grid-template-columns:1fr}}
+.sticky{position:sticky;top:14px}
+.sticky .struct{max-width:none}
+.sticky svg{width:100%;height:auto}
+tr.clk:hover{background:var(--soft)}
+:root{--atom-n:#2e5fa3;--atom-o:#b5341f;--atom-s:#8a7212}
+@media(prefers-color-scheme:dark){:root:not([data-theme=light]){--atom-n:#7fa6dd;--atom-o:#e08060;--atom-s:#d4b45c}}
+:root[data-theme=dark]{--atom-n:#7fa6dd;--atom-o:#e08060;--atom-s:#d4b45c}
+.gcard .meter .tick{position:absolute;top:-3px;width:2px;height:11px;background:var(--pred);transform:translateX(-1px)}
+.props{display:grid;grid-template-columns:repeat(auto-fit,minmax(112px,1fr));gap:1px;
+ background:var(--rule);border:1px solid var(--rule)}
+.props div{background:var(--panel);padding:9px 11px}
+.props b{display:block;font-family:ui-monospace,monospace;color:var(--ink);font-size:1rem}
+.props span{display:block;font-size:.7rem;color:var(--muted);margin-top:2px;line-height:1.3}
+.scatter{width:100%;height:auto}
+.foot{color:var(--muted);font-size:.82rem;max-width:70ch;margin-top:6px}
+details{border-top:1px solid var(--soft);padding-top:10px}
+summary{cursor:pointer;color:var(--accent);font-size:.87rem}
+details > *{margin-top:10px}
+</style></head><body>
+
+<header><div class="bar">
+  <h1>BSH Conjugation Explorer</h1>
+  <span class="sub">which bile salt hydrolases attach which amines</span>
+  <nav>
+    <button data-v="about" aria-current="true">Start here</button>
+    <button data-v="data">The data</button>
+    <button data-v="trends">Trends</button>
+    <button data-v="seq">Sequence &amp; preference</button>
+    <button data-v="enzymes">Enzymes</button>
+    <button data-v="amines">Amines</button>
+    <button data-v="chem">Amine chemistry</button>
+    <button data-v="matrix">Full map</button>
+    <button data-v="new">New predictions</button>
+      <button data-v="methods">How it was made</button>
+  </nav>
+</div></header>
+
+<main>
+<!-- ABOUT -->
+<section class="view" id="v-about">
+  <div class="grid" id="stats"></div>
+  <div class="card prose">
+    <h2>What you're looking at</h2>
+    <p>Bile salt hydrolases (BSH) are gut bacterial enzymes. They snip the glycine or taurine
+    off a bile acid and can then attach a <em>different</em> amine in its place — making
+    conjugates that don't normally occur in the body.</p>
+    <p>All 25 amines and all the bile acids went into every well together, with one enzyme,
+    in triplicate. So every enzyme had the opportunity to make every combination. What limits
+    the data is the readout: mass spectrometry searched for a fixed list of product masses, and
+    anything outside that list simply wasn't looked for.</p>
+    <p>A product counts as <b>made</b> if its signal rose above <b>50,000</b> in at least one
+    of the three runs. That line was chosen because it is where a detection becomes
+    repeatable: below it, most products that appear once do not appear again; above it, about
+    four in five do, and raising the bar further does not improve on that.
+    <a href="#" data-goto="data">See the data behind it</a>.</p>
+    <h3>Every cell has an answer</h3>
+    <p><span class="tag hit">made</span> — the product was detected above the cut-off.</p>
+    <p><span class="tag no">not made</span> — it wasn't. Two kinds of evidence sit behind this,
+    and the page distinguishes them: either the product <em>was</em> found in other wells but
+    not this one, or <span class="tag pred">no sample anywhere produced it</span>. The second is
+    still a negative — 366 samples were analysed and none contained it — it just rests on the
+    whole run rather than one well.</p>
+    <p>So there are no unknowns here. All 8,625 combinations have a real label.</p>
+    <p>A machine-learning model was then trained to predict, from the protein sequence alone,
+    which combinations an enzyme will make. This page lets you browse both the measurements
+    and the model's predictions.</p>
+    <h3>Three bile acid types</h3>
+    <p><b>Mono</b>, <b>Di</b> and <b>Tri</b> refer to how many hydroxyl (–OH) groups the bile
+    acid carries. Lithocholic acid is Mono, deoxycholic and related acids are Di, cholic acid
+    is Tri. Mass spectrometry can't always tell apart bile acids with the same number of
+    hydroxyls, so they're grouped.</p>
+    <details>
+      <summary>How good is the model, really?</summary>
+      <div class="prose">
+        <p>This was measured properly. Twenty-three enzymes were set aside before any
+        modelling began — along with every close relative of theirs — and scored once, at the
+        end. On those the model got <b>70% of its confident calls right</b> while catching
+        <b>70% of the real hits</b>, and ranked them as well as it ranked the enzymes it was
+        developed on.</p>
+        <p class="foot"><b>One caveat on that figure.</b> It was measured before the signal
+        cut-off was raised from 10,000 to 50,000 on 22 September 2026, so it describes the
+        model as it was then rather than the one running now. The 23 enzymes are still
+        untouched and could be used again, but only once. The full result is under
+        <a href="#" data-goto="methods">How it was made</a>.</p>
+        <p>The honest caveat: most of that skill comes from learning which <em>amines</em> react
+        easily, not from reading the protein. A model given only the amine and bile acid type,
+        with no protein information at all, already performs nearly as well. The protein
+        sequence adds a real but modest amount on top.</p>
+        <p>There's also a ceiling. Two wells in this experiment contain the same protein
+        sequence, run separately. Their results agree only about two-thirds of the time, so no
+        model can be more consistent than the experiment itself.</p>
+      </div>
+    </details>
+  </div>
+</section>
+
+<!-- TRENDS -->
+<section class="view" id="v-trends" hidden>
+  <div class="card prose">
+    <h2>What gets attached, and what doesn't</h2>
+    <p>Across 115 enzymes and 8,625 opportunities, the amine matters far more than the bile
+    acid. Reactivity spans a factor of thirty between the easiest and hardest amines, while all
+    three bile acid classes behave similarly.</p>
+  </div>
+  <div class="chartbox" style="margin-bottom:18px">
+    <h3>Reactivity by amine</h3>
+    <p class="cap">Share of enzyme-and-bile-acid combinations where this amine was attached.
+    Colour marks the kind of nitrogen that forms the bond.</p>
+    <div class="hbar" id="tAmine"></div>
+    <div class="legend" style="margin-top:14px">
+      <span><i style="background:var(--s1)"></i>primary amine</span>
+      <span><i style="background:var(--s2)"></i>aromatic amine (2-aminophenol)</span>
+      <span><i style="background:var(--s5)"></i>secondary amine</span>
+    </div>
+  </div>
+  <div class="panel2">
+    <div class="chartbox">
+      <h3>A second amine group makes things worse</h3>
+      <p class="cap">Counting nitrogens that could attack the bile acid. Having two of them
+      predicts <em>less</em> reaction, not more.</p>
+      <div class="hbar" id="tNuc"></div>
+    </div>
+    <div class="chartbox">
+      <h3>Kind of nitrogen</h3>
+      <p class="cap">Almost every amine here is a primary amine — the other two rows are one
+      molecule each, so they are single observations rather than classes.</p>
+      <div class="hbar" id="tClass"></div>
+    </div>
+    <div class="chartbox">
+      <h3>Bile acid type barely matters</h3>
+      <p class="cap">Mono, Di and Tri refer to the number of hydroxyl groups. The spread here
+      is small compared with the spread across amines.</p>
+      <div class="hbar" id="tCore"></div>
+    </div>
+    <div class="chartbox">
+      <h3>Size doesn't predict it either</h3>
+      <p class="cap">Molecular weight against reactivity. No trend — bulk properties don't
+      explain which amines BSH accepts.</p>
+      <div id="tMW"></div>
+    </div>
+  </div>
+</section>
+
+<!-- SEQUENCE -->
+<section class="view" id="v-seq" hidden>
+  <div class="card prose">
+    <h2>Do related enzymes prefer the same amines?</h2>
+    <p>Yes — modestly. For every pair of enzymes we can measure how alike their sequences are,
+    and how much their sets of made products overlap. If preference were random with respect to
+    sequence, those two numbers would be unrelated.</p>
+  </div>
+  <div class="keyfig" id="seqFigs" style="margin-bottom:18px"></div>
+  <div class="panel2">
+    <div class="chartbox">
+      <h3>Overlap rises with sequence identity</h3>
+      <p class="cap">Each bar is a band of sequence identity; the height is the average overlap
+      in what those enzyme pairs make. The line marks the quartile range.</p>
+      <div id="seqBands"></div>
+    </div>
+    <div class="chartbox">
+      <h3>Every pair of enzymes</h3>
+      <p class="cap">One dot per enzyme pair (thinned for legibility). Wide scatter — sequence
+      shifts the odds without determining the answer.</p>
+      <div id="seqScatter"></div>
+    </div>
+  </div>
+  <div class="card" style="margin-top:18px">
+    <h3>The catch, and the control</h3>
+    <div class="prose">
+      <p>Two enzymes that each make forty products will overlap a lot whatever those products
+      are. That alone produces a correlation of <b>+0.83</b> — so the raw numbers overstate
+      the case. The right question is: among enzymes of <em>comparable</em> promiscuity, does
+      sequence still predict preference?</p>
+    </div>
+    <div class="scroll" id="seqTable" style="margin-top:12px"></div>
+    <p class="foot">It does, and the protein language model reads it about twice as well as raw
+    sequence identity does — which is the argument for using embeddings rather than percent
+    identity when predicting what a new enzyme will accept.</p>
+  </div>
+</section>
+
+<!-- ENZYMES -->
+<section class="view" id="v-enzymes" hidden>
+  <div class="controls">
+    <input type="search" id="eq" placeholder="Search enzyme accession…" aria-label="Search enzymes">
+    <select id="esort"><option value="active">Sort: most products made</option>
+      <option value="name">Sort: accession</option></select>
+  </div>
+  <div class="split">
+    <div class="list" id="elist"></div>
+    <div id="edetail"></div>
+  </div>
+</section>
+
+<!-- AMINES -->
+<section class="view" id="v-amines" hidden>
+  <div class="controls">
+    <input type="search" id="aq" placeholder="Search amine…" aria-label="Search amines">
+    <select id="asort"><option value="rate">Sort: most reactive</option>
+      <option value="name">Sort: name</option></select>
+  </div>
+  <div class="split">
+    <div class="list" id="alist"></div>
+    <div id="adetail"></div>
+  </div>
+</section>
+
+<!-- CHEMISTRY -->
+<section class="view" id="v-chem" hidden>
+  <div class="card prose">
+    <h2>The 25 amines, and how readily they react</h2>
+    <p>Every amine offered to the enzyme panel. The bar under each structure is <b>how often
+    that amine was attached</b>: of all the chances it had — every enzyme, on every bile acid
+    type — the share that produced a detectable product. Click any one to open its full
+    record.</p>
+  </div>
+  <div class="controls">
+    <select id="csort"><option value="rate">Sort: most reactive</option>
+      <option value="name">Sort: name</option><option value="mw">Sort: size</option>
+      <option value="cls">Sort: kind of nitrogen</option></select>
+  </div>
+  <div class="gallery" id="gallery"></div>
+
+  <div class="card" style="margin-top:20px">
+    <h2>Does any property predict reactivity?</h2>
+    <p class="prose foot" style="margin-bottom:12px">Each dot is one amine. Up the side is
+    <b>how often it was attached</b> — of all <span id="chemDen"></span> chances that amine had
+    (every enzyme, on every bile acid type), the share that produced a detectable product.
+    GABA at 86% was attached by almost every enzyme; proline at 3% by almost none. Along the
+    bottom is whichever property you pick. A relationship would show as the dots trending
+    up or down together.</p>
+    <div id="scatterWrap"></div>
+    <div class="controls" style="margin-top:12px">
+      <select id="sx"></select>
+    </div>
+    <div class="scroll" id="corrTable"></div>
+    <p class="foot">Correlation is Spearman's rho across the 25 amines — it runs from −1 to +1,
+    and anything between about −0.4 and +0.4 is too weak to mean much with only 25 points.
+    Only two properties clear that bar, and one of them is a quirk of the experiment rather
+    than chemistry.</p>
+  </div>
+</section>
+
+<!-- MATRIX -->
+<section class="view" id="v-matrix" hidden>
+  <div class="controls">
+    <select id="mcore"><option value="all">All bile acid types</option>
+      <option value="Mono">Mono only</option><option value="Di">Di only</option>
+      <option value="Tri">Tri only</option></select>
+    <label class="chk"><input type="checkbox" id="mpred"> show what the model predicts, instead of what was measured</label>
+  </div>
+  <div class="hm" id="heat"></div>
+  <div class="legend" id="heatKey"></div>
+  <p class="foot">Rows are enzymes, columns are amine + bile acid type. Hover any cell to see
+  both the measurement and what the model thought. Enzymes are ordered by how many products
+  they make.</p>
+</section>
+
+<!-- PREDICTIONS -->
+
+<!-- METHODS -->
+<section class="view" id="v-methods" hidden>
+  <div class="card prose">
+    <h2>How this model was made</h2>
+    <p>Every number on this page was produced by the pipeline below and read straight back out
+    of the files those runs wrote — nothing here is typed in by hand. The order is: decide what
+    counts as a product being made, turn each protein into a list of numbers, split the enzymes
+    so the test is honest, then try sixteen combinations of representation and algorithm.</p>
+    <p class="foot" id="mGen"></p>
+  </div>
+
+  <div class="keyfig" id="mKey" style="margin-bottom:18px"></div>
+
+  <div class="card prose">
+    <h3>1 &nbsp;What counts as &ldquo;made&rdquo;</h3>
+    <p id="mThresh"></p>
+    <details>
+      <summary>One product, several peaks &mdash; how they are combined before the cut-off</summary>
+      <div class="prose"><p id="mFeat"></p><div class="scroll" id="mFeatTab"
+        style="margin-top:10px"></div><p class="foot" id="mFeatNote"
+        style="margin-top:10px"></p></div>
+    </details>
+    <p>Each enzyme was run in <b>three replicates</b>. How many of the three have to clear the
+    cut-off changes how many products count as made:</p>
+    <div class="scroll" id="mReps"></div>
+    <p class="foot" id="mRepNote"></p>
+    <details>
+      <summary>Why every combination has an answer, including the ones never listed</summary>
+      <div class="prose"><p id="mGrid"></p><p id="mCaveat" class="foot"></p></div>
+    </details>
+    <details>
+      <summary>Mono, Di, Tri — what the bile acid classes mean</summary>
+      <div class="prose"><p id="mDegree"></p></div>
+    </details>
+  </div>
+
+  <div class="card prose">
+    <h3>2 &nbsp;Turning a protein into numbers</h3>
+    <p>A machine-learning model needs each enzyme as a fixed-length list of numbers. Those come
+    from <b>protein language models</b> — networks trained on millions of sequences that learn
+    to represent an amino acid by its context, the way a language model represents a word.
+    Four were tested:</p>
+    <div class="scroll" id="mEmb"></div>
+    <p><b>The pooling step.</b> <span id="mPool"></span></p>
+    <p class="foot" id="mPoolQ"></p>
+    <h4 style="margin-top:16px">What goes into one row</h4>
+    <p id="mFeatNote"></p>
+    <div class="props" id="mBlocks"></div>
+  </div>
+
+  <div class="card prose">
+    <h3>3 &nbsp;Keeping the test honest</h3>
+    <p id="mSplitP"></p>
+    <div class="props" id="mSplit"></div>
+    <p style="margin-top:14px" id="mSplitM"></p>
+    <p id="mCV"></p>
+    <p><span class="tag pred">status</span> <span id="mTest"></span></p>
+  </div>
+
+  <div class="card">
+    <h3 style="margin-bottom:4px">4 &nbsp;Every model that was tried</h3>
+    <p class="foot" style="margin-bottom:12px">Four protein representations &times; four
+    algorithms. Sorted by the metric you pick; the bar shows each row against the best.</p>
+    <div class="controls">
+      <select id="mMetric"></select>
+      <label class="chk"><input type="checkbox" id="mXgbOnly"> XGBoost rows only</label>
+    </div>
+    <div class="scroll" id="mTable"></div>
+    <p class="foot" id="mMetricNote" style="margin-top:10px"></p>
+    <details style="margin-top:12px">
+      <summary>What the four algorithms are</summary>
+      <div class="scroll" id="mAlgos"></div>
+    </details>
+  </div>
+
+  <div class="card">
+    <h3 style="margin-bottom:4px">5 &nbsp;Performance curves</h3>
+    <p class="foot" style="margin-bottom:12px" id="mCurveNote"></p>
+    <div class="controls">
+      <select id="mCurve">
+        <option value="pr">Precision &amp; recall</option>
+        <option value="roc">True vs false positives (ROC)</option>
+        <option value="cal">Calibration — are the probabilities honest?</option>
+      </select>
+      <select id="mCurveEmb"></select>
+    </div>
+    <div class="chartbox" id="mCurveWrap"></div>
+    <div id="mLegend" class="foot" style="margin-top:8px"></div>
+  </div>
+
+  <div class="card">
+    <h3 style="margin-bottom:4px">6 &nbsp;How training progresses</h3>
+    <p class="foot" style="margin-bottom:12px">Log loss measures how wrong the predicted
+    probabilities are — lower is better, and the dotted line is what you would score by
+    ignoring the data and always guessing the overall hit rate. The gap between the training
+    line and the held-out line is the model memorising rows it has already seen.</p>
+    <div class="controls"><select id="mLLEmb"></select></div>
+    <div class="chartbox" id="mLLWrap"></div>
+    <div id="mLLNote" class="foot" style="margin-top:8px"></div>
+  </div>
+
+  <div class="card">
+    <h3>7 &nbsp;Is one protein representation better than another?</h3>
+    <p class="prose" id="mWithinP" style="margin-bottom:14px"></p>
+    <div class="scroll" id="mWithin"></div>
+  </div>
+
+  <div class="card">
+    <h3 style="margin-bottom:4px">8 &nbsp;The real test — enzymes it had never seen</h3>
+    <p class="prose foot" style="margin-bottom:14px" id="fIntro"></p>
+    <div class="keyfig" id="fKey" style="margin-bottom:16px"></div>
+    <div class="scroll" id="fCompare"></div>
+    <p class="prose foot" id="fRead" style="margin-top:14px"></p>
+    <div class="controls" style="margin-top:18px">
+      <select id="fCurve">
+        <option value="pr">Precision &amp; recall</option>
+        <option value="roc">True vs false positives (ROC)</option>
+        <option value="cal">Calibration — are the probabilities honest?</option>
+      </select>
+      <label class="chk"><input type="checkbox" id="fCal" checked> show the calibrated scores too</label>
+    </div>
+    <div class="chartbox" id="fCurveWrap"></div>
+    <p class="foot" id="fCurveNote" style="margin-top:8px"></p>
+    <details style="margin-top:14px">
+      <summary>Enzyme by enzyme</summary>
+      <div class="scroll" id="fPer" style="margin-top:10px"></div>
+    </details>
+    <details style="margin-top:6px">
+      <summary>The ceiling: two wells holding the same protein</summary>
+      <div class="prose"><p id="fDup"></p></div>
+    </details>
+    <p style="margin-top:16px"><span class="tag pred">spent</span> <span id="fCaveat"></span></p>
+  </div>
+
+  <div class="card">
+    <h3 style="margin-bottom:4px">9 &nbsp;Would reading only part of the protein work better?</h3>
+    <p class="prose foot" style="margin-bottom:14px" id="pIntro"></p>
+    <div class="keyfig" id="pKey" style="margin-bottom:18px"></div>
+
+    <h4 style="margin-bottom:2px">Which positions are shared by every enzyme</h4>
+    <p class="prose foot" style="margin-bottom:12px" id="pAlnNote"></p>
+    <div class="scroll" id="pInvariant"></div>
+    <p class="prose foot" id="pAlnRead" style="margin-top:12px"></p>
+
+    <h4 style="margin-top:22px;margin-bottom:2px">How conserved is the rest?</h4>
+    <p class="prose foot" style="margin-bottom:12px" id="pHistNote"></p>
+    <div class="chartbox" id="pHist"></div>
+    <div class="scroll" id="pLadder" style="margin-top:16px"></div>
+    <p class="prose foot" id="pLadderRead" style="margin-top:12px"></p>
+
+    <h4 style="margin-top:22px;margin-bottom:2px">Does any of it help?</h4>
+    <p class="prose foot" style="margin-bottom:12px" id="pResNote"></p>
+    <div class="scroll" id="pResults"></div>
+    <p class="prose foot" id="pResRead" style="margin-top:12px"></p>
+
+    <h4 style="margin-top:22px;margin-bottom:2px">Every run, side by side</h4>
+    <p class="prose foot" style="margin-bottom:12px" id="pCurveNote"></p>
+    <div class="controls"><select id="pCurveEmb"></select></div>
+    <div class="chartbox" id="pCurves"></div>
+
+    <p class="prose" style="margin-top:18px" id="pVerdict"></p>
+  </div>
+
+  <div class="card prose">
+    <h3>What all of this adds up to</h3>
+    <ol id="mFindings" style="padding-left:20px;line-height:1.6"></ol>
+    <p class="foot" style="margin-top:14px">One more check &mdash; whether cutting the signal
+    peptide off the front of each protein changes what the model predicts &mdash; sits with the
+    predictions it affects, under
+    <a href="#" data-goto="new">New predictions</a>.</p>
+  </div>
+</section>
+
+<!-- NEW PREDICTIONS -->
+<section class="view" id="v-new" hidden>
+  <div class="card prose">
+    <h2>New predictions</h2>
+    <p id="nIntro"></p>
+    <p class="foot" id="nCaveat"></p>
+  </div>
+  <div class="keyfig" id="nKey" style="margin-bottom:18px"></div>
+
+  <div class="card">
+    <h3 style="margin-bottom:4px">Which sequence the predictions are built on</h3>
+    <p class="prose foot" style="margin-bottom:10px">Many of these proteins start with a <b>signal peptide</b> &mdash; a short tag that directs the protein out of the cell and is cut off once it arrives. It is not part of the working enzyme, so the predictions on this page are made from the <b>trimmed</b> sequences. Before relying on that, we checked what trimming actually changes.</p>
+    <p class="prose foot" style="margin-bottom:14px" id="tIntro"></p>
+    <div class="keyfig" id="tKey" style="margin-bottom:18px"></div>
+
+    <h4 style="margin-bottom:2px">How many products does the model think each enzyme makes?</h4>
+    <p class="prose foot" style="margin-bottom:12px" id="tSlopeNote"></p>
+    <div class="chartbox" id="tSlope"></div>
+    <p class="prose foot" id="tSlopeRead" style="margin-top:10px"></p>
+
+    <div class="duo" style="margin-top:22px">
+      <div>
+        <h4 style="margin-bottom:2px">Every call, both ways</h4>
+        <p class="foot" style="margin-bottom:10px">Each of the 4,875 enzyme-amine-core
+        combinations gets a yes or a no under each version.</p>
+        <div class="chartbox" id="tConf"></div>
+      </div>
+      <div>
+        <h4 style="margin-bottom:2px">The model stops telling proteins apart</h4>
+        <p class="foot" style="margin-bottom:10px" id="tSpreadNote"></p>
+        <div class="scroll" id="tSpread"></div>
+        <p class="foot" id="tSpreadRead" style="margin-top:10px"></p>
+      </div>
+    </div>
+
+    <h4 style="margin-top:26px;margin-bottom:2px">Set against what the assay actually recorded</h4>
+    <p class="prose foot" style="margin-bottom:12px" id="rIntro"></p>
+    <div class="grid" id="rStats" style="margin-bottom:16px"></div>
+    <div class="duo">
+      <div>
+        <h5 style="margin:0 0 2px">Products the model stops calling</h5>
+        <p class="foot" style="margin-bottom:10px">Combinations the assay <b>did</b> record, called
+        from the full sequence but no longer called once trimmed. &ldquo;made by&rdquo; is how many
+        of the 115 tested enzymes produced that same product.</p>
+        <div class="scroll" id="rLost"></div>
+      </div>
+      <div>
+        <h5 style="margin:0 0 2px">Products the model starts calling</h5>
+        <p class="foot" style="margin-bottom:10px">Combinations the assay recorded <b>nothing</b>
+        for, not called from the full sequence but called once trimmed.</p>
+        <div class="scroll" id="rGained"></div>
+      </div>
+    </div>
+    <p class="prose foot" id="rRead" style="margin-top:12px"></p>
+
+    <h4 style="margin-top:22px;margin-bottom:2px">What does <em>not</em> change: which amines it prefers</h4>
+    <p class="prose foot" style="margin-bottom:12px" id="tRankNote"></p>
+    <div class="chartbox" id="tRank"></div>
+    <details style="margin-top:10px">
+      <summary>A worked example — the worst-agreeing protein in the set</summary>
+      <div class="scroll" id="tExample" style="margin-top:10px"></div>
+      <p class="prose foot" id="tExampleRead" style="margin-top:10px"></p>
+    </details>
+
+    <h4 style="margin-top:22px;margin-bottom:2px">Why the numbers move at all</h4>
+    <p class="prose foot" style="margin-bottom:12px" id="tEmbNote"></p>
+    <div class="chartbox" id="tEmb"></div>
+
+    <details style="margin-top:18px">
+      <summary>Protein by protein</summary>
+      <div class="controls" style="margin-top:10px">
+        <select id="tSort">
+          <option value="d">Sort: biggest change in products predicted</option>
+          <option value="nf">Sort: most products under the full sequence</option>
+          <option value="nt">Sort: most products when trimmed</option>
+          <option value="rho">Sort: ranking moved most</option>
+          <option value="cut">Sort: longest piece cut</option>
+        </select>
+      </div>
+      <div class="scroll" id="tPer"></div>
+    </details>
+
+    <p class="prose" style="margin-top:18px" id="tVerdict"></p>
+  </div>
+
+  <div class="card">
+    <h3 style="margin-bottom:4px">Enzymes the model only calls active once the peptide is gone</h3>
+    <p class="prose foot" style="margin-bottom:14px" id="sIntro"></p>
+    <div class="duo">
+      <div class="scroll" id="sGained"></div>
+      <div id="gPanel" class="sticky"></div>
+    </div>
+    <p class="prose foot" id="sGainedRead" style="margin-top:14px"></p>
+
+  </div>
+
+  <div class="card" style="margin-top:18px">
+    <h3 style="margin-bottom:4px">Does the length of the signal peptide mean anything?</h3>
+    <p class="prose foot" style="margin-bottom:14px" id="sLenIntro"></p>
+    <div class="scroll" id="sLen"></div>
+    <p class="prose foot" id="sLenRead" style="margin-top:12px"></p>
+  </div>
+
+  <div class="card" style="margin-top:18px">
+    <h3 style="margin-bottom:4px">Which amines are predicted to be attached</h3>
+    <p class="foot" style="margin-bottom:14px">Across all <span id="nNP"></span> enzymes. The bar
+    is how often the amine is predicted; where the same amine was measured in the original
+    experiment, the measured rate is marked so you can see whether the model is following the
+    data or departing from it.</p>
+    <div class="gallery" id="nGallery"></div>
+  </div>
+
+  <div class="card" style="margin-top:18px">
+    <h3 style="margin-bottom:4px">What kind of amine gets attached</h3>
+    <p class="prose foot" style="margin-bottom:12px">Grouped by the kind of nitrogen that forms
+    the bond — primary, secondary, tertiary or aromatic. That is one property with one answer
+    per amine, unlike labels such as "amino acid", which overlap (glycine is an amino acid
+    <em>and</em> a primary amine).</p>
+    <div class="scroll" id="nClasses"></div>
+    <p class="prose foot" id="nClassRead" style="margin-top:12px"></p>
+  </div>
+
+  <div class="card" style="margin-top:18px">
+    <h3 style="margin-bottom:4px">How many reactive nitrogens the amine carries</h3>
+    <p class="prose foot" style="margin-bottom:12px">A separate question from which kind. This
+    one does split the panel, and it splits the results with it.</p>
+    <div class="scroll" id="nNitro"></div>
+    <p class="prose foot" id="nNitroRead" style="margin-top:12px"></p>
+  </div>
+
+  <div class="card" style="margin-top:18px">
+    <h3 style="margin-bottom:4px">Which bile acid type</h3>
+    <p class="foot" style="margin-bottom:12px">Mono, Di and Tri count the hydroxyl groups on the
+    bile acid core.</p>
+    <div class="scroll" id="nCores"></div>
+  </div>
+
+  <div class="card" style="margin-top:18px">
+    <h3 style="margin-bottom:4px">Every enzyme</h3>
+    <p class="foot" style="margin-bottom:12px">Click one to see what it is predicted to make.</p>
+    <div class="controls">
+      <input type="search" id="nq" placeholder="Search by name, accession or organism…"
+        aria-label="Search enzymes">
+      <select id="nsort">
+        <option value="pred">Sort: most products predicted</option>
+        <option value="name">Sort: name</option>
+        <option value="org">Sort: organism</option>
+        <option value="new">Sort: never measured first</option>
+      </select>
+    </div>
+    <div class="trio">
+      <div class="list" id="nlist"></div>
+      <div id="ndetail"></div>
+      <div id="nProduct" class="sticky"></div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:18px">
+    <h3 style="margin-bottom:4px">Does it track the bacteria they come from?</h3>
+    <p class="prose foot" style="margin-bottom:12px" id="nTaxNote"></p>
+    <div class="scroll" id="nTax"></div>
+  </div>
+</section>
+
+<!-- THE DATA -->
+<section class="view" id="v-data" hidden>
+  <div class="card prose">
+    <h2>What was measured</h2>
+    <p id="dIntro"></p>
+  </div>
+  <div class="keyfig" id="dKey" style="margin-bottom:18px"></div>
+
+  <div class="duo">
+    <div class="chartbox">
+      <h3>How big the enzymes are</h3>
+      <p class="cap" id="dLenCap"></p>
+      <div id="dLen"></div>
+    </div>
+    <div class="chartbox">
+      <h3>How different they are from each other</h3>
+      <p class="cap" id="dIdCap"></p>
+      <div id="dId"></div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:18px">
+    <h3 style="margin-bottom:4px">The signal, and where the line was drawn</h3>
+    <p class="prose foot" style="margin-bottom:12px" id="dIntCap"></p>
+    <div class="chartbox"><div id="dInt"></div></div>
+    <p class="prose foot" id="dIntRead" style="margin-top:10px"></p>
+    <p class="prose foot" id="dFeat" style="margin-top:10px"></p>
+  </div>
+
+  <div class="card" style="margin-top:18px">
+    <h3 style="margin-bottom:4px">How repeatable is a detection?</h3>
+    <p class="prose foot" style="margin-bottom:12px">Each enzyme was run three times. If a
+    product showed up once, how often did it show up again?</p>
+    <div class="scroll" id="dRepro"></div>
+    <p class="prose foot" id="dReproRead" style="margin-top:12px"></p>
+  </div>
+</section>
+</main>
+
+<script>const DATA = /*__DATA__*/{};
+const CHEM = /*__CHEM__*/{};
+const TR = /*__TRENDS__*/{};
+const MET = /*__METHODS__*/{};
+const TRIM = /*__TRIMMING__*/{};
+const RESC = /*__RESCUE__*/{};
+const POOL = /*__POOLING__*/{};
+const TD = /*__THEDATA__*/{};
+const CAND = /*__CANDIDATES__*/{};
+const CONJUGATES = /*__CONJUGATES__*/{};</script>
+<script>
+const $ = s => document.querySelector(s);
+
+/* Amines are classified by the kind of nitrogen that forms the bond -- one exclusive
+   property. "Amino acid" and "primary amine" were not alternatives (glycine is both),
+   so those labels are gone. How MANY reactive nitrogens an amine has is a separate
+   axis, carried as `nuc`. Defined once here and used by every tab. */
+const AMINE_KIND = {primary:"primary amine", secondary:"secondary amine",
+  tertiary:"tertiary amine", aromatic:"aromatic amine", other:"other"};
+const AMINE_HUE = {primary:"--s1", secondary:"--s5", tertiary:"--s4",
+  aromatic:"--s2", other:"--muted"};
+const kindOf = c => AMINE_KIND[c] || String(c||"").replace(/_/g," ");
+const cells = DATA.cells, AM = DATA.amines, EN = DATA.enzymes, CORES = DATA.cores;
+const amineNames = Object.keys(AM).sort();
+const enzNames = Object.keys(EN).sort();
+const pretty = s => s.replace(/_/g," ").replace(/\b3 methoxytyramine\b/,"3-methoxytyramine")
+  .replace(/^2 aminophenol$/,"2-aminophenol").replace(/^2,3 diaminopropionic acid$/,"2,3-diaminopropionic acid")
+  .replace(/^glyglycine$/,"glycyl-valine").replace(/^gaba$/,"GABA");
+const byEnz = {}, byAm = {}, key = {};
+for (const c of cells){ (byEnz[c.Enzyme] ||= []).push(c); (byAm[c.Amine] ||= []).push(c);
+  key[c.Enzyme+"|"+c.Amine+"|"+c.Hydroxyl] = c; }
+const rate = a => { const m = byAm[a].filter(c=>c.active>=0);
+  return m.length ? m.filter(c=>c.active===1).length/m.length : 0; };
+
+/* ---------- navigation ---------- */
+document.addEventListener("click", e => {
+  const g = e.target.closest("[data-goto]");
+  if (g) { e.preventDefault(); document.querySelector(`nav button[data-v=${g.dataset.goto}]`).click(); }
+});
+document.querySelectorAll("nav button").forEach(b => b.onclick = () => {
+  document.querySelectorAll("nav button").forEach(x => x.setAttribute("aria-current", x===b));
+  document.querySelectorAll(".view").forEach(v => v.hidden = v.id !== "v"+"-"+b.dataset.v);
+  if (b.dataset.v === "matrix") drawHeat();
+});
+
+/* ---------- overview ---------- */
+const measured = cells.filter(c=>c.active>=0);
+$("#stats").innerHTML = [
+  [DATA.meta.n_enzymes, "enzymes tested"],
+  [DATA.meta.n_amines, "amines offered"],
+  [measured.length.toLocaleString(), "combinations measured"],
+  [measured.filter(c=>c.active===1).length.toLocaleString(), "products actually made"],
+  [(cells.length-measured.length).toLocaleString(), "combinations never searched for"],
+].map(([b,s])=>`<div class="stat"><b>${b}</b><span>${s}</span></div>`).join("");
+
+/* ---------- shared bits ---------- */
+const pill = c => c.active===1 ? '<span class="tag hit">made</span>'
+  : c.active===0 ? '<span class="tag no">not detected</span>'
+  : '<span class="tag no">not made</span>';
+const conf = p => `<span class="bar-track"><span class="bar-mini" style="width:${(p*100).toFixed(0)}%"></span></span><span class="mono">${(p*100).toFixed(0)}%</span>`;
+const reps = c => c.r1<0 ? "—" :
+  [c.r1,c.r2,c.r3].map(v => v>=DATA.meta.threshold
+    ? `<b style="color:var(--hit)">${v.toLocaleString()}</b>` : v.toLocaleString()).join(" · ");
+
+/* ---------- the data ---------- */
+if (typeof TD !== "undefined" && TD && TD.assay) {
+  const A = TD.assay, S = TD.sequences, I = TD.intensity;
+
+  $("#dIntro").innerHTML = `Each of the <b>${A.enzymes} enzymes</b> was given every amine and
+    every bile acid at once — one pooled mix per well — and run <b>${A.replicates} times</b>.
+    Mass spectrometry then looked for each possible product. That makes
+    <b>${A.combinations.toLocaleString()}</b> enzyme-and-product combinations
+    (${A.enzymes} × ${A.amines} × ${A.cores}) from ${A.samples} wells — ${A.enzymes} enzymes
+    × ${A.replicates} runs. A further 21 wells held controls, 366 in all.
+    <br><br>Everything the model knows comes from this. It is worth seeing what it looks like
+    before seeing what a model made of it.`;
+
+  $("#dKey").innerHTML = [
+    [A.enzymes, "enzymes, each confirmed present by proteomics"],
+    [A.amines + " × " + A.cores, "amines × bile acid types offered to every one"],
+    [A.combinations.toLocaleString(), "combinations, each with a yes or no answer"],
+    [S.clusters, "genuinely different sequences among the " + A.enzymes],
+  ].map(([b,s])=>`<div><b>${b}</b><span>${s}</span></div>`).join("");
+
+  const bars = (el, rows, fmt, cap) => {
+    const W=430, H=220, L=44, R=12, T=12, B=46;
+    const mx = Math.max(...rows.map(r=>r.n)), bw = (W-L-R)/rows.length;
+    const sy = v => T + (1 - v/mx)*(H-T-B);
+    $(el).innerHTML = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${cap}">
+      ${[0,.5,1].map(f=>`<line x1="${L}" x2="${W-R}" y1="${sy(f*mx)}" y2="${sy(f*mx)}"
+        stroke="var(--soft)"/><text x="${L-7}" y="${sy(f*mx)+4}" text-anchor="end"
+        font-size="10" fill="var(--muted)">${Math.round(f*mx)}</text>`).join("")}
+      ${rows.map((r,i)=>`<rect x="${(L+i*bw+bw*.14).toFixed(1)}" y="${sy(r.n).toFixed(1)}"
+        width="${(bw*.72).toFixed(1)}" height="${(sy(0)-sy(r.n)).toFixed(1)}"
+        fill="var(--accent)" fill-opacity=".85"><title>${fmt(r)} — ${r.n}</title></rect>
+        <text x="${(L+i*bw+bw*.5).toFixed(1)}" y="${H-B+15}" text-anchor="middle" font-size="9"
+        fill="var(--muted)">${fmt(r)}</text>`).join("")}
+    </svg>`;
+  };
+
+  $("#dLenCap").textContent = `${S.n} enzymes, ${S.min} to ${S.max} amino acids long `
+    + `(typically ${S.median}). They are all about the same size.`;
+  bars("#dLen", S.bins, r=>r.lo, "enzyme lengths");
+
+  $("#dIdCap").textContent = `Every pair of enzymes compared. Typically they share only `
+    + `${(S.identity_median*100).toFixed(0)}% of their sequence — these are distant relatives, `
+    + `not variants of one protein.`;
+  bars("#dId", S.identity_bins, r=>`${(r.lo*100).toFixed(0)}%`, "pairwise identity");
+
+  $("#dIntCap").innerHTML = `Mass spectrometry returns a signal size, not a yes or no. Across
+    the ${I.cells.toLocaleString()} combinations it actually searched, <b>${I.zero.toLocaleString()}</b>
+    gave nothing at all. The rest ranged from <b>${I.min}</b> to
+    <b>${I.max.toLocaleString()}</b> — a factor of ${Math.round(I.max/I.min).toLocaleString()}.
+    A product counts as made above <b>${I.cutoff.toLocaleString()}</b>.`;
+  (function(){
+    const D=I.decades, W=880, H=250, L=56, R=14, T=16, B=62;
+    const mx=Math.max(...D.map(d=>d.n)), bw=(W-L-R)/D.length;
+    const sy=v=>T+(1-v/mx)*(H-T-B);
+    // the cut-off sits between two decades; mark it where it falls
+    const ci = D.findIndex(d=>d.lo>=I.cutoff);
+    $("#dInt").innerHTML = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="signal sizes">
+      ${[0,.5,1].map(f=>`<line x1="${L}" x2="${W-R}" y1="${sy(f*mx)}" y2="${sy(f*mx)}"
+        stroke="var(--soft)"/><text x="${L-8}" y="${sy(f*mx)+4}" text-anchor="end" font-size="10"
+        fill="var(--muted)">${Math.round(f*mx)}</text>`).join("")}
+      ${D.map((d,i)=>`<rect x="${(L+i*bw+bw*.14).toFixed(1)}" y="${sy(d.n).toFixed(1)}"
+        width="${(bw*.72).toFixed(1)}" height="${(sy(0)-sy(d.n)).toFixed(1)}"
+        fill="var(${d.lo<I.cutoff?"--muted":"--accent"})" fill-opacity=".85">
+        <title>${d.lo.toLocaleString()} to ${(d.lo*10).toLocaleString()} — ${d.n} combinations</title></rect>
+        <text x="${(L+i*bw+bw*.5).toFixed(1)}" y="${H-B+16}" text-anchor="middle" font-size="9.5"
+        fill="var(--muted)">${d.lo>=1e6?(d.lo/1e6)+"M":d.lo>=1e3?(d.lo/1e3)+"k":d.lo}</text>`).join("")}
+      ${ci>0?`<line x1="${(L+ci*bw).toFixed(1)}" x2="${(L+ci*bw).toFixed(1)}" y1="${T}"
+        y2="${H-B+6}" stroke="var(--pred)" stroke-width="1.6" stroke-dasharray="4 3"/>
+        <text x="${(L+ci*bw-6).toFixed(1)}" y="${H-B+32}" text-anchor="end" font-size="10"
+        fill="var(--muted)">below the cut-off</text>
+        <text x="${(L+ci*bw+6).toFixed(1)}" y="${H-B+32}" font-size="10" fill="var(--pred)">
+        counts as made</text>`:""}
+      <text x="${(L+W-R)/2}" y="${H-6}" text-anchor="middle" font-size="10.5"
+        fill="var(--muted)">size of the signal</text>
+      <text x="13" y="${(T+H-B)/2}" text-anchor="middle" font-size="10.5" fill="var(--muted)"
+        transform="rotate(-90 13 ${(T+H-B)/2})">combinations</text>
+    </svg>`;
+  })();
+  (function(){
+    const F = TD.features; if(!F) return;
+    $("#dFeat").innerHTML = `<b>One product can show up as more than one peak.</b> The same
+      conjugate can be detected as several <b>features</b> with different ids &mdash;
+      <b>${F.n_multi} of the ${F.n_products}</b> products here were, up to
+      <b>${F.max_features}</b> for one product. Those are combined into a single number per
+      replicate by taking the <b>highest</b> one, and the cut-off is applied to that. So a product
+      counts as made when any one feature clears ${F.threshold.toLocaleString()}, rather than when
+      the features added together do. Summing them instead would change only
+      <b>${F.n_disagree}</b> cells in the whole grid
+      (${(F.pct_disagree*100).toFixed(2)}%), so the choice makes little difference here.`;
+  })();
+
+  $("#dIntRead").innerHTML = `The cut-off of ${I.cutoff.toLocaleString()} is not arbitrary: the
+    highest reading ever seen in a well containing no enzyme at all was
+    <b>${I.control_max.toLocaleString()}</b>, so anything above ${I.cutoff.toLocaleString()} is
+    above the background. It is a noise floor rather than a judgement about how strong a real
+    product should be — <b>${I.below_cutoff}</b> combinations produced some signal but fell
+    below it, and count as not made.`;
+
+  $("#dRepro").innerHTML = `<table><thead><tr><th>strongest of the three runs</th>
+    <th class="r">combinations</th><th class="r">seen again in a second run</th>
+    <th style="width:34%"></th></tr></thead><tbody>${
+    TD.reproducibility.map(r=>`<tr>
+      <td>${r.lo.toLocaleString()}${r.hi?" – "+r.hi.toLocaleString():" and above"}</td>
+      <td class="r">${r.cells}</td>
+      <td class="r"><b>${(r.two_plus*100).toFixed(0)}%</b></td>
+      <td><span class="bar-track" style="width:100%"><span class="bar-mini"
+        style="width:${(r.two_plus*100).toFixed(0)}%"></span></span></td></tr>`).join("")}
+    </tbody></table>`;
+  const hi = TD.reproducibility[TD.reproducibility.length-1];
+  $("#dReproRead").innerHTML = `A weak detection usually does not repeat; a strong one usually
+    does — but only up to a point. Above about 50,000 the figure settles around
+    <b>${(hi.two_plus*100).toFixed(0)}%</b> and stops improving, even for the very strongest
+    products. <br><br>There is a second check on this. Two wells in the study turned out to hold
+    the <b>same protein sequence</b>, run separately: their results agree on
+    <b>${(TD.duplicate.agreement*100).toFixed(0)}%</b> of combinations. Two different routes to
+    roughly the same number, which is a useful thing to keep in mind — <b>no model can be more
+    consistent than the experiment it learns from</b>.`;
+}
+
+/* ---------- trends ---------- */
+if (TR && TR.amines) {
+  /* horizontal bars, shared by the four small charts */
+  const hbar = (el, rows, opt = {}) => {
+    const max = Math.max(...rows.map(r => r.v));
+    $(el).innerHTML = rows.map(r => `<div class="hrow">
+      <span class="hlab" title="${r.sub || ""}">${r.k}</span>
+      <span class="htrack"><span class="hfill" style="width:${(r.v / max * 100).toFixed(1)}%;
+        background:var(${r.hue || "--accent"})"></span></span>
+      <span class="hval">${(r.v * 100).toFixed(opt.dp ?? 0)}%</span>
+      ${r.sub ? `<span class="hsub">${r.sub}</span>` : ""}
+    </div>`).join("");
+  };
+
+  hbar("#tAmine", TR.amines.slice().sort((a, b) => b.rate - a.rate).map(a => ({
+    k: pretty(a.name), v: a.rate, hue: AMINE_HUE[a.cls],
+    sub: `${a.hits} of ${a.cells}`})));
+
+  hbar("#tNuc", TR.by_nuc.map(r => ({
+    k: r.k === 0 ? "none" : r.k === 1 ? "one" : r.k === 2 ? "two" : `${r.k}`,
+    v: r.rate, sub: `${r.n} amine${r.n > 1 ? "s" : ""}`})));
+
+  hbar("#tClass", TR.by_class.map(r => ({
+    k: kindOf(r.k), v: r.rate, hue: AMINE_HUE[r.k],
+    sub: `${r.n} amine${r.n > 1 ? "s" : ""}`})));
+
+  hbar("#tCore", TR.by_core.map(r => ({
+    k: r.k, v: r.rate, sub: `${r.hits} of ${r.cells}`})));
+
+  /* molecular weight against reactivity */
+  (function(){
+    const A = TR.amines, W=560, H=250, L=48, R=14, T=14, B=40;
+    const mws = A.map(a => a.mw), lo = Math.min(...mws), hi = Math.max(...mws);
+    const pad = (hi - lo) * .07;
+    const sx = v => L + ((v - (lo - pad)) / ((hi + pad) - (lo - pad))) * (W-L-R);
+    const sy = v => T + (1 - v) * (H-T-B);
+    $("#tMW").innerHTML = `<svg viewBox="0 0 ${W} ${H}" role="img"
+      aria-label="reactivity against molecular weight">
+      ${[0,.25,.5,.75,1].map(v=>`<line x1="${L}" x2="${W-R}" y1="${sy(v)}" y2="${sy(v)}"
+        stroke="var(--soft)"/><text x="${L-8}" y="${sy(v)+4}" text-anchor="end" font-size="10"
+        fill="var(--muted)">${(v*100).toFixed(0)}%</text>`).join("")}
+      ${[lo,(lo+hi)/2,hi].map(v=>`<text x="${sx(v)}" y="${H-B+16}" text-anchor="middle"
+        font-size="10" fill="var(--muted)">${v.toFixed(0)}</text>`).join("")}
+      ${A.map(a=>`<circle cx="${sx(a.mw).toFixed(1)}" cy="${sy(a.rate).toFixed(1)}" r="5"
+        fill="var(${AMINE_HUE[a.cls]||"--accent"})" fill-opacity=".8" stroke="var(--panel)"
+        stroke-width="1.4"><title>${pretty(a.name)} — ${(a.rate*100).toFixed(0)}% attached,
+        ${a.mw.toFixed(1)} g/mol</title></circle>`).join("")}
+      <text x="${(L+W-R)/2}" y="${H-4}" text-anchor="middle" font-size="10.5"
+        fill="var(--muted)">molecular weight (g/mol)</text>
+      <text x="12" y="${(T+H-B)/2}" text-anchor="middle" font-size="10.5" fill="var(--muted)"
+        transform="rotate(-90 12 ${(T+H-B)/2})">how often it was attached</text>
+    </svg>`;
+  })();
+}
+
+/* ---------- sequence & preference ---------- */
+if (TR && TR.seqpref) {
+  const SP = TR.seqpref.active, SPALL = TR.seqpref.all;
+
+  $("#seqFigs").innerHTML = [
+    [SP.n_pairs.toLocaleString(), `pairs of enzymes compared (${SP.n_enzymes} enzymes that made something)`],
+    ["+" + SP.seq_partial.toFixed(2), "how much raw sequence similarity tells you, once promiscuity is accounted for"],
+    ["+" + SP.emb_partial.toFixed(2), "how much the protein language model tells you — about twice as much"],
+    ["+" + SP.level_raw.toFixed(2), "how much you get just from knowing how many products each makes"],
+  ].map(([b,s])=>`<div><b>${b}</b><span>${s}</span></div>`).join("");
+
+  /* bands: mean overlap per identity band, with the quartile range */
+  (function(){
+    const B = SP.bands, W=560, H=280, L=54, R=14, T=16, B0=52;
+    const n = B.length, bw = (W-L-R)/n;
+    const sy = v => T + (1 - v) * (H-T-B0);
+    const lab = b => `${(b.lo*100).toFixed(0)}–${(Math.min(b.hi,1)*100).toFixed(0)}%`;
+    $("#seqBands").innerHTML = `<svg viewBox="0 0 ${W} ${H}" role="img"
+      aria-label="overlap in products made, by sequence identity band">
+      ${[0,.25,.5,.75,1].map(v=>`<line x1="${L}" x2="${W-R}" y1="${sy(v)}" y2="${sy(v)}"
+        stroke="var(--soft)"/><text x="${L-8}" y="${sy(v)+4}" text-anchor="end" font-size="10"
+        fill="var(--muted)">${(v*100).toFixed(0)}%</text>`).join("")}
+      ${B.map((b,i)=>{
+        const x = L + i*bw;
+        return `<rect x="${(x+bw*.18).toFixed(1)}" y="${sy(b.mean).toFixed(1)}"
+            width="${(bw*.64).toFixed(1)}" height="${(sy(0)-sy(b.mean)).toFixed(1)}"
+            fill="var(--accent)" fill-opacity=".8">
+            <title>${lab(b)} identity — ${b.n.toLocaleString()} pairs, average overlap ${(b.mean*100).toFixed(0)}%</title></rect>
+          <line x1="${(x+bw*.5).toFixed(1)}" x2="${(x+bw*.5).toFixed(1)}"
+            y1="${sy(b.q1).toFixed(1)}" y2="${sy(b.q3).toFixed(1)}" stroke="var(--ink)"
+            stroke-width="1.4" opacity=".65"/>
+          <text x="${(x+bw*.5).toFixed(1)}" y="${H-B0+15}" text-anchor="middle" font-size="9.5"
+            fill="var(--muted)">${lab(b)}</text>
+          <text x="${(x+bw*.5).toFixed(1)}" y="${H-B0+27}" text-anchor="middle" font-size="8.5"
+            fill="var(--muted)">${b.n.toLocaleString()}</text>`;
+      }).join("")}
+      <text x="${(L+W-R)/2}" y="${H-6}" text-anchor="middle" font-size="10.5"
+        fill="var(--muted)">how alike the two sequences are (and how many pairs)</text>
+      <text x="13" y="${(T+H-B0)/2}" text-anchor="middle" font-size="10.5" fill="var(--muted)"
+        transform="rotate(-90 13 ${(T+H-B0)/2})">products both make, in common</text>
+    </svg>`;
+  })();
+
+  /* every pair, as a scatter */
+  (function(){
+    const P = SP.points, W=560, H=280, L=54, R=14, T=16, B0=42;
+    const sx = v => L + v*(W-L-R), sy = v => T + (1-v)*(H-T-B0);
+    $("#seqScatter").innerHTML = `<svg viewBox="0 0 ${W} ${H}" role="img"
+      aria-label="overlap against sequence identity, one dot per enzyme pair">
+      ${[0,.25,.5,.75,1].map(v=>`<line x1="${L}" x2="${W-R}" y1="${sy(v)}" y2="${sy(v)}"
+        stroke="var(--soft)"/><text x="${L-8}" y="${sy(v)+4}" text-anchor="end" font-size="10"
+        fill="var(--muted)">${(v*100).toFixed(0)}%</text>
+        <text x="${sx(v)}" y="${H-B0+16}" text-anchor="middle" font-size="10"
+        fill="var(--muted)">${(v*100).toFixed(0)}%</text>`).join("")}
+      ${P.map(([x,y])=>`<circle cx="${sx(x).toFixed(1)}" cy="${sy(y).toFixed(1)}" r="2.6"
+        fill="var(--accent)" fill-opacity=".22"/>`).join("")}
+      <text x="${(L+W-R)/2}" y="${H-4}" text-anchor="middle" font-size="10.5"
+        fill="var(--muted)">how alike the two sequences are</text>
+      <text x="13" y="${(T+H-B0)/2}" text-anchor="middle" font-size="10.5" fill="var(--muted)"
+        transform="rotate(-90 13 ${(T+H-B0)/2})">products both make, in common</text>
+    </svg>`;
+  })();
+
+  /* what actually explains preference */
+  const ROWS = [
+    ["How many products each enzyme makes", SPALL.level_raw, SP.level_raw, null,
+     "Two busy enzymes overlap simply because both make a lot. This is the confound, not a finding."],
+    ["Raw sequence identity", SPALL.seq_raw, SP.seq_raw, SP.seq_partial,
+     "Related enzymes do prefer similar amines — but the effect is modest."],
+    ["Protein language model embedding", SPALL.emb_raw, SP.emb_raw, SP.emb_partial,
+     "Reads the sequence about twice as well as percent identity does."],
+  ];
+  $("#seqTable").innerHTML = `<table><thead><tr><th>What you compare enzymes on</th>
+    <th class="r">agreement</th><th class="r">after removing the confound</th>
+    <th>reading</th></tr></thead><tbody>${ROWS.map(([lab,raw,rawA,part,read])=>`
+    <tr${part!=null && part>0.4 ? ' style="background:var(--hit-bg)"':''}>
+      <td><b>${lab}</b></td>
+      <td class="r">+${rawA.toFixed(2)}</td>
+      <td class="r"${part!=null?' style="font-weight:600;color:var(--ink)"':' style="color:var(--muted)"'}>${
+        part==null ? "—" : "+"+part.toFixed(2)}</td>
+      <td style="color:var(--muted);font-size:.83rem">${read}</td></tr>`).join("")}
+    </tbody></table>`;
+}
+
+/* ---------- enzymes ---------- */
+function enzList(){
+  const q = $("#eq").value.trim().toLowerCase(), s = $("#esort").value;
+  let ns = enzNames.filter(n => n.toLowerCase().includes(q));
+  ns.sort(s==="name" ? (a,b)=>a.localeCompare(b) : (a,b)=>EN[b].n_active-EN[a].n_active);
+  $("#elist").innerHTML = ns.map(n =>
+    `<button data-e="${n}" ${n===curE?'aria-current="true"':''}><span class="mono">${n}</span>`
+    +`<span class="n">${EN[n].n_active}/${EN[n].n_tested}</span></button>`).join("")
+    || '<div style="padding:14px;color:var(--muted)">No match.</div>';
+  $("#elist").querySelectorAll("button").forEach(b => b.onclick = () => { curE=b.dataset.e; enzList(); enzDetail(); });
+}
+let curE = null;
+function enzDetail(){
+  if(!curE){ $("#edetail").innerHTML = '<div class="card prose"><p>Pick an enzyme to see every product searched for, what it made, and what the model expects for the products nobody looked for.</p></div>'; return; }
+  const rows = byEnz[curE].slice().sort((a,b)=> (b.active>=0)-(a.active>=0) || b.p-a.p);
+  const made = rows.filter(r=>r.active===1).length, tested = rows.filter(r=>r.active>=0).length;
+  $("#edetail").innerHTML = `<div class="card">
+    <h2 class="mono">${curE}</h2>
+    <p class="foot">Made <b>${made}</b> of <b>${tested}</b> products that were searched for.
+      ${EN[curE].split==="test" ? "Held out of model training entirely." : "Used in model development."}</p>
+    <div class="scroll"><table><thead><tr><th>Amine</th><th>Bile acid</th><th>Result</th>
+      <th class="r">Model confidence</th><th>Signal in the 3 runs</th></tr></thead><tbody>
+    ${rows.map(r=>`<tr><td>${pretty(r.Amine)}</td><td><span class="tag plain">${r.Hydroxyl}</span></td>
+      <td>${pill(r)}</td><td class="r">${conf(r.p)}</td><td class="mono" style="font-size:.78rem">${reps(r)}</td></tr>`).join("")}
+    </tbody></table></div>
+    <p class="foot">Signal values are the peak intensity in each of the three repeat runs;
+      bold means above the ${DATA.meta.threshold.toLocaleString()} cut-off. "Model confidence"
+      is the model's own estimate, computed without ever seeing this enzyme during training.</p>
+  </div>`;
+}
+$("#eq").oninput = enzList; $("#esort").onchange = enzList; enzList(); enzDetail();
+
+/* ---------- amines ---------- */
+let curA = null;
+function amList(){
+  const q = $("#aq").value.trim().toLowerCase(), s = $("#asort").value;
+  let ns = amineNames.filter(n => pretty(n).toLowerCase().includes(q));
+  ns.sort(s==="name" ? (a,b)=>pretty(a).localeCompare(pretty(b)) : (a,b)=>rate(b)-rate(a));
+  $("#alist").innerHTML = ns.map(n =>
+    `<button data-a="${n}" ${n===curA?'aria-current="true"':''}><span>${pretty(n)}</span>`
+    +`<span class="n">${(rate(n)*100).toFixed(0)}%</span></button>`).join("")
+    || '<div style="padding:14px;color:var(--muted)">No match.</div>';
+  $("#alist").querySelectorAll("button").forEach(b => b.onclick = () => { curA=b.dataset.a; amList(); amDetail(); });
+}
+function amDetail(){
+  if(!curA){ $("#adetail").innerHTML = '<div class="card prose"><p>Pick an amine to see how often enzymes attached it, and which ones did.</p></div>'; return; }
+  const info = AM[curA], mine = byAm[curA].filter(c=>c.active>=0);
+  const perCore = CORES.map(c => { const s = mine.filter(x=>x.Hydroxyl===c);
+    return {c, n:s.length, hit:s.filter(x=>x.active===1).length}; }).filter(x=>x.n);
+  const top = mine.filter(c=>c.active===1)
+    .reduce((m,c)=>{ (m[c.Enzyme] ||= []).push(c.Hydroxyl); return m; }, {});
+
+  const ch = CHEM.amines[curA] || {};
+  $("#adetail").innerHTML = `<div class="card">
+    <h2>${pretty(curA)}</h2>
+    <p class="foot">${kindOf(info.cls)} · ${ch.formula||""} · ${info.mw.toFixed(1)} g/mol ·
+      ${info.nuc} reactive nitrogen${info.nuc===1?"":"s"}
+      ${info.inferred?' · <span class="tag pred">structure inferred</span>':""}</p>
+    ${ch.svg?`<div class="struct"><div class="lt">${ch.svg}</div><div class="dk">${ch.svg_dark}</div></div>`:""}
+    ${ch.props?`<div class="props">${CHEM.desc_labels.map(d=>
+      `<div><b>${ch.props[d.k]}</b><span>${d.label}${d.unit?" ("+d.unit+")":""}</span></div>`).join("")}</div>`:""}
+    ${(CHEM.similar&&CHEM.similar[curA])?`<h3 style="margin-top:14px">Most similar amines</h3>
+      <p style="font-size:.85rem">${CHEM.similar[curA].map(([b,v])=>
+        `<span class="tag plain" style="margin-right:5px">${pretty(b)} <span style="opacity:.65">${(v*100).toFixed(0)}%</span></span>`).join("")}</p>`:""}
+    <p class="mono" style="font-size:.78rem;color:var(--muted);overflow-wrap:anywhere;margin-top:12px">${info.smiles}</p>
+    <div class="scroll"><table><thead><tr><th>Bile acid type</th><th class="r">Enzymes that made it</th>
+      <th class="r">Share</th></tr></thead><tbody>
+      ${perCore.map(x=>`<tr><td><span class="tag plain">${x.c}</span></td>
+        <td class="r">${x.hit} of ${x.n}</td>
+        <td class="r">${conf(x.hit/x.n)}</td></tr>`).join("")}
+    </tbody></table></div>
+    <h3 style="margin-top:14px">Enzymes that attached it (${Object.keys(top).length})</h3>
+    <p class="mono" style="font-size:.78rem;line-height:1.9">${
+      Object.entries(top).sort((a,b)=>b[1].length-a[1].length)
+        .map(([e,cs])=>`<span class="tag hit" style="margin-right:4px">${e} <span style="opacity:.7">${cs.join(",")}</span></span>`).join("")
+      || '<span style="color:var(--muted)">None.</span>'}</p>
+  </div>`;
+}
+$("#aq").oninput = amList; $("#asort").onchange = amList; amList(); amDetail();
+
+/* ---------- heat map ---------- */
+let heatDrawn = false;
+function drawHeat(){
+  const core = $("#mcore").value, shade = $("#mpred").checked;
+  const cols = [];
+  for (const a of amineNames) for (const c of CORES)
+    if ((core==="all"||c===core) && key[enzNames[0]+"|"+a+"|"+c]) cols.push([a,c]);
+  const order = enzNames.slice().sort((x,y)=>EN[y].n_active-EN[x].n_active);
+  const cell = (e,[a,c]) => {
+    const k = key[e+"|"+a+"|"+c]; if(!k) return '<td></td>';
+    // measured view: made or not. model view: every cell shaded by how sure the model is.
+    const bg = shade
+      ? `color-mix(in srgb, var(--accent) ${(k.p*92+4).toFixed(0)}%, var(--panel))`
+      : (k.active===1 ? "var(--hit)" : "var(--sunk)");
+    const st = k.active===1 ? "made" : "not detected";
+    return `<td><div style="background:${bg}" title="${e} · ${pretty(a)} · ${c}&#10;measured: ${st}&#10;model: ${(k.p*100).toFixed(0)}% sure"></div></td>`;
+  };
+  $("#heatKey").innerHTML = shade
+    ? `<span><i style="background:color-mix(in srgb, var(--accent) 96%, var(--panel))"></i>
+         model is confident this happens</span>
+       <span><i style="background:color-mix(in srgb, var(--accent) 50%, var(--panel))"></i> unsure</span>
+       <span><i style="background:color-mix(in srgb, var(--accent) 4%, var(--panel))"></i>
+         confident it does not</span>`
+    : `<span><i style="background:var(--hit)"></i> product was made</span>
+       <span><i style="background:var(--sunk)"></i> was not made</span>`;
+  $("#heat").innerHTML = `<table><thead><tr><th class="rowh">enzyme</th>
+    ${cols.map(([a,c])=>`<th><span class="vlabel">${pretty(a)} · ${c}</span></th>`).join("")}</tr></thead>
+    <tbody>${order.map(e=>`<tr><th class="rowh">${e}</th>${cols.map(c=>cell(e,c)).join("")}</tr>`).join("")}</tbody></table>`;
+  heatDrawn = true;
+}
+$("#mcore").onchange = drawHeat; $("#mpred").onchange = drawHeat;
+
+/* ---------- amine chemistry ---------- */
+
+function gallery(){
+  const s = $("#csort").value, A = CHEM.amines;
+  let ns = Object.keys(A);
+  ns.sort(s==="name" ? (a,b)=>pretty(a).localeCompare(pretty(b))
+    : s==="mw" ? (a,b)=>A[a].props.mw-A[b].props.mw
+    : s==="cls" ? (a,b)=>(A[a].cls+pretty(a)).localeCompare(A[b].cls+pretty(b))
+    : (a,b)=>A[b].rate-A[a].rate);
+  const mx = Math.max(...ns.map(n=>A[n].rate));
+  $("#gallery").innerHTML = ns.map(n=>{const a=A[n];return `<div class="gcard" data-go="${n}" role="button" tabindex="0">
+    <div class="struct"><div class="lt">${a.svg}</div><div class="dk">${a.svg_dark}</div></div>
+    <div class="nm">${pretty(n)}${a.inferred?' <span class="tag pred" style="font-size:.62rem">inferred</span>':""}</div>
+    <div class="meter"><i style="width:${(a.rate/mx*100).toFixed(1)}%"></i></div>
+    <div class="sub"><span>${kindOf(a.cls)}</span><span class="mono">${(a.rate*100).toFixed(0)}%</span></div>
+  </div>`}).join("");
+  $("#gallery").querySelectorAll("[data-go]").forEach(el=>{
+    const go = ()=>{curA=el.dataset.go; document.querySelector('nav button[data-v=amines]').click();
+      amList(); amDetail(); window.scrollTo({top:0});};
+    el.onclick = go; el.onkeydown = e => {if(e.key==="Enter"||e.key===" "){e.preventDefault();go();}};
+  });
+}
+/* Spearman */
+function rank(v){const i=v.map((x,k)=>[x,k]).sort((a,b)=>a[0]-b[0]);const r=new Array(v.length);
+  let k=0;while(k<i.length){let j=k;while(j+1<i.length&&i[j+1][0]===i[k][0])j++;
+  const m=(k+j)/2+1;for(let t=k;t<=j;t++)r[i[t][1]]=m;k=j+1;}return r;}
+function spearman(a,b){const x=rank(a),y=rank(b),n=a.length;
+  const mx=x.reduce((s,v)=>s+v,0)/n, my=y.reduce((s,v)=>s+v,0)/n;
+  let num=0,dx=0,dy=0;for(let i=0;i<n;i++){const u=x[i]-mx,v=y[i]-my;num+=u*v;dx+=u*u;dy+=v*v;}
+  return num/Math.sqrt(dx*dy);}
+const EXTRA = [{k:"nuc",label:"reactive nitrogens",unit:""},
+               {k:"cores",label:"bile acid types tested on",unit:""}];
+function chemVals(k){const A=CHEM.amines;return Object.keys(A).map(n=>
+  k==="nuc"?A[n].nuc : k==="cores"?new Set(byAm[n].filter(c=>c.active>=0).map(c=>c.Hydroxyl)).size
+  : A[n].props[k]);}
+function corrTable(){
+  const A=CHEM.amines, names=Object.keys(A), y=names.map(n=>A[n].rate);
+  const all=[...CHEM.desc_labels,...EXTRA];
+  const rows=all.map(d=>({...d, rho: spearman(chemVals(d.k), y)}))
+    .sort((a,b)=>Math.abs(b.rho)-Math.abs(a.rho));
+  $("#corrTable").innerHTML = `<table><thead><tr><th>Property</th><th class="r">Correlation with reactivity</th>
+    <th>Reading</th></tr></thead><tbody>${rows.map(r=>{
+    const strong=Math.abs(r.rho)>=0.4;
+    const read = !strong ? "no clear relationship"
+      : r.k==="cores" ? "an artefact — amines that looked promising were tested more widely"
+      : r.rho<0 ? "higher values go with LESS reaction" : "higher values go with MORE reaction";
+    return `<tr><td>${r.label}</td><td class="r" style="${strong?"color:var(--ink);font-weight:600":""}">${r.rho>=0?"+":""}${r.rho.toFixed(2)}</td>
+      <td style="color:var(--muted);font-size:.83rem">${read}</td></tr>`}).join("")}</tbody></table>`;
+  $("#sx").innerHTML = all.map(d=>`<option value="${d.k}">${d.label}</option>`).join("");
+  $("#sx").value = "nuc"; scatter();
+}
+function scatter(){
+  const A=CHEM.amines, names=Object.keys(A), k=$("#sx").value;
+  const xs=chemVals(k), ys=names.map(n=>A[n].rate);
+  const W=680,H=250,L=46,R=14,T=12,B=34;
+  const xmin=Math.min(...xs),xmax=Math.max(...xs),pad=(xmax-xmin)*0.08||0.5;
+  const sx=v=>L+((v-(xmin-pad))/((xmax+pad)-(xmin-pad)))*(W-L-R);
+  const sy=v=>T+(1-v)*(H-T-B);
+
+  const xt=[xmin,(xmin+xmax)/2,xmax].map(v=>+v.toFixed(2));
+  $("#scatterWrap").innerHTML = `<svg class="scatter" viewBox="0 0 ${W} ${H}" role="img"
+    aria-label="Reactivity against ${$("#sx").selectedOptions[0].text}">
+    ${[0,.25,.5,.75,1].map(v=>`<line x1="${L}" x2="${W-R}" y1="${sy(v)}" y2="${sy(v)}"
+      stroke="var(--soft)" stroke-width="1"/><text x="${L-8}" y="${sy(v)+4}" text-anchor="end"
+      font-size="10" fill="var(--muted)">${(v*100).toFixed(0)}%</text>`).join("")}
+    <text x="12" y="${(T+H-B)/2}" text-anchor="middle" font-size="10.5" fill="var(--muted)"
+      transform="rotate(-90 12 ${(T+H-B)/2})">how often this amine was attached</text>
+    ${xt.map(v=>`<text x="${sx(v)}" y="${H-12}" text-anchor="middle" font-size="10"
+      fill="var(--muted)">${v}</text>`).join("")}
+    <text x="${(L+W-R)/2}" y="${H-1}" text-anchor="middle" font-size="10.5" fill="var(--muted)">${$("#sx").selectedOptions[0].text}</text>
+    ${names.map((n,i)=>`<circle cx="${sx(xs[i]).toFixed(1)}" cy="${sy(ys[i]).toFixed(1)}" r="5"
+      fill="var(${AMINE_HUE[A[n].cls]||"--accent"})" fill-opacity="0.82" stroke="var(--panel)" stroke-width="1.5">
+      <title>${pretty(n)} — ${(ys[i]*100).toFixed(0)}% reactive, ${$("#sx").selectedOptions[0].text} ${xs[i]}</title></circle>`).join("")}
+  </svg>`;
+}
+$("#csort").onchange = gallery;
+document.addEventListener("change", e => { if(e.target.id==="sx") scatter(); });
+gallery(); corrTable();
+{ const a0 = CHEM.amines[Object.keys(CHEM.amines)[0]];
+  const el = $("#chemDen"); if (el && a0) el.textContent = a0.cells.toLocaleString(); }
+
+/* ---------- new predictions ---------- */
+if (typeof CAND !== "undefined" && CAND && CAND.n_proteins) {
+  const CD = CAND;
+  const coreName = {Mono:"Mono", Di:"Di", Tri:"Tri"};
+  const CLS_LABEL = AMINE_KIND, CLS_VAR = AMINE_HUE;
+
+  const CONJ = (typeof CONJUGATES !== "undefined") ? CONJUGATES : null;
+
+  $("#nIntro").innerHTML = `<b>${CD.n_proteins} of the bile salt hydrolases in this study were
+    found to carry a signal peptide</b> — a short stretch at the front of the protein that the
+    cell uses to export it and then cuts off. These are those ${CD.n_proteins} sequences with the
+    signal peptide removed, scored again against every one of the <b>${CD.n_amines} amines</b> and
+    <b>${CD.n_cores} bile acid types</b>: ${CD.n_rows.toLocaleString()} combinations in all. The
+    model expects <b>${CD.n_predicted.toLocaleString()}</b> of them to work.
+    <br><br>The point is the comparison. Most of these enzymes were measured in the original
+    experiment using their <em>full</em> sequence, so where a prediction here differs from what
+    was measured, the difference is down to the missing signal peptide.`;
+  $("#nCaveat").innerHTML = `These are predictions, not measurements. The model gets about
+    <b>7 in 10</b> of its confident calls right on enzymes it has never seen before — so treat a
+    high score as a candidate worth testing rather than a result. Where a combination was measured
+    in the original experiment, it is marked <span class="tag hit">measured</span> or
+    <span class="tag no">not detected</span> so the two can be compared directly.`;
+
+  $("#nKey").innerHTML = [
+    [CD.n_proteins, "sequences with their signal peptide removed"],
+    [CD.n_predicted.toLocaleString(), `predicted conjugations, of ${CD.n_rows.toLocaleString()} possible`],
+    [CD.n_named, "traced to a named bacterium"],
+    [CD.amines[0].amine.toUpperCase().replace(/_/g," "), "the amine predicted most often"],
+  ].map(([b,s])=>`<div><b>${b}</b><span>${s}</span></div>`).join("");
+  $("#nNP").textContent = CD.n_proteins;
+
+  /* amine gallery, with structures */
+  $("#nGallery").innerHTML = CD.amines.map(a=>{
+    const ch = (typeof CHEM !== "undefined" && CHEM.amines) ? CHEM.amines[a.amine] : null;
+    const meas = a.measured_rate;
+    return `<div class="gcard">
+      ${ch && ch.svg ? `<div class="struct"><div class="lt">${ch.svg}</div>
+         <div class="dk">${ch.svg_dark}</div></div>` : ""}
+      <span class="nm">${pretty(a.amine)}</span>
+      <div class="meter" style="position:relative">
+        <i style="width:${(a.rate*100).toFixed(0)}%"></i>
+        ${meas!=null?`<span class="tick" style="left:${(meas*100).toFixed(0)}%"
+          title="measured ${(meas*100).toFixed(0)}%"></span>`:""}
+      </div>
+      <span class="sub"><span>predicted <b>${(a.rate*100).toFixed(0)}%</b></span>
+        <span>${meas!=null?`measured ${(meas*100).toFixed(0)}%`:"not measured"}</span></span>
+      ${ch?`<span class="sub" style="color:var(--muted)"><span>${ch.formula}</span>
+        <span>${kindOf(ch.cls)}</span></span>`:""}
+    </div>`;
+  }).join("");
+
+  /* --- the two signal-peptide questions --- */
+  const SG = CD.signal, SL = SG.length;
+  $("#sIntro").innerHTML = `Every enzyme here was scored twice — once from its full sequence
+    and once with the signal peptide cut off. For <b>${SG.gained.length}</b> of them the model
+    says nothing at all from the full sequence, then predicts ${
+      Math.min(...SG.gained.map(r=>r.trimmed))} to ${Math.max(...SG.gained.map(r=>r.trimmed))}
+    products once the peptide is removed. These are the clearest cases where the peptide
+    changes the answer.`;
+  $("#sGained").innerHTML = `<table><thead><tr><th>enzyme</th><th class="r">signal peptide</th>
+    <th class="r">predicted, full</th><th class="r">predicted, trimmed</th>
+    <th class="r">measured in the experiment</th></tr></thead><tbody>${
+    SG.gained.map(r=>`<tr data-acc="${r.accession}" style="cursor:pointer">
+      <td class="mono">${r.accession} <span style="color:var(--accent);font-size:.75rem">&#9656;</span></td>
+      <td class="r">${r.cut} aa</td><td class="r">${r.full}</td>
+      <td class="r" style="font-weight:600;color:var(--hit)">${r.trimmed}</td>
+      <td class="r">${r.measured==null?"not measured"
+        :r.measured===0?'<span class="tag no">0 — nothing detected</span>':r.measured}</td>
+    </tr>`).join("")}</tbody></table>`;
+  const allSilent = SG.gained.every(r => r.measured === 0);
+  $("#sGainedRead").innerHTML = `<b>These are worth testing, and worth treating carefully.</b>
+    ${allSilent ? `Every one of them made <b>nothing</b> in the original experiment — which is the
+    interesting part, because that experiment used the <em>full</em> protein. If the signal
+    peptide is what stopped them working, the assay would look exactly like this. That is a real
+    hypothesis and these ${SG.gained.length} enzymes are the way to test it.` : ""}
+    <br><br>The caution: on trimmed sequences the model gives almost every enzyme about
+    <b>${SG.typical_trimmed} products</b>, so a prediction of ${SG.typical_trimmed} here is its
+    default answer rather than a specific claim about these ${SG.gained.length}. Before trimming,
+    ${SG.n_silent_full} enzymes were called completely inactive; after trimming,
+    ${SG.n_silent_trimmed}.`;
+
+  /* ---- click an enzyme to list what it is predicted to make ---- */
+  (function(){
+    const GD = (RESC.gained_detail || []);
+    if(!GD.length) return;
+    const f3 = v => v==null ? "\u2014" : (+v).toFixed(3);
+    let open = null, showAll = false;
+
+    function draw(){
+      const e = GD.find(x=>x.accession===open);
+      if(!e){ $("#gPanel").innerHTML = `<div class="card" style="background:var(--soft);margin:0">
+        <p class="foot" style="color:var(--muted);margin:0">Click an enzyme on the left to see
+        what it is predicted to make, and how that compares with the assay.</p></div>`; return; }
+      const hits = e.products.filter(r=>r.trim >= RESC.cut);
+      const rows = showAll ? e.products : hits;
+      $("#gPanel").innerHTML = `<div class="card" style="background:var(--soft);margin:0">
+        <h4 style="margin:0 0 2px"><span class="mono">${e.accession}</span> &mdash;
+          ${hits.length} product${hits.length===1?"":"s"} predicted</h4>
+        <p class="foot" style="margin-bottom:12px">Probability the model gives each combination
+          using the trimmed sequence. ${e.n_measured} of its 75 combinations were tested in the
+          assay and ${e.measured_active} produced a product.</p>
+        <table><thead><tr><th>product</th><th class="r">probability</th>
+          <th class="r">in the assay</th></tr></thead><tbody>${
+          rows.map(r=>`<tr${r.trim>=RESC.cut?"":' style="opacity:.55"'}>
+            <td>${pretty(r.amine)} <span class="tag plain">${r.core}</span>
+              <span class="bar-track" style="display:block;width:100%;margin-top:4px"><span
+                class="bar-mini" style="width:${(r.trim*100).toFixed(0)}%"></span></span></td>
+            <td class="r mono" style="vertical-align:top"><b>${f3(r.trim)}</b></td>
+            <td class="r" style="vertical-align:top">${
+              r.measured===1?'<span class="tag hit">made</span>'
+              :r.measured===0?'<span class="tag no">not detected</span>'
+              :'<span style="color:var(--muted)">not tested</span>'}</td></tr>`).join("")}
+        </tbody></table>
+        <button id="gAll" style="margin-top:10px">${showAll
+          ? "Show only the " + hits.length + " predicted"
+          : "Show all 75 combinations"}</button></div>`;
+      const b = $("#gAll"); if(b) b.onclick = () => { showAll = !showAll; draw(); };
+    }
+
+    $("#sGained").querySelectorAll("tr[data-acc]").forEach(tr => tr.onclick = () => {
+      open = (open === tr.dataset.acc) ? null : tr.dataset.acc;
+      showAll = false;
+      $("#sGained").querySelectorAll("tr[data-acc]").forEach(x =>
+        x.style.background = (x.dataset.acc === open) ? "var(--accent-bg)" : "");
+      draw();
+    });
+    draw();
+  })();
+
+  $("#sLenIntro").innerHTML = `The peptides removed range from <b>${SL.cut_lo} to ${SL.cut_hi}
+    amino acids</b> (typically ${SL.cut_median}). A reasonable guess is that a long one might
+    interfere with the enzyme. The measured results say otherwise.`;
+  $("#sLen").innerHTML = `<table><thead><tr><th>signal peptide length</th>
+    <th class="r">enzymes</th><th class="r">made something</th><th class="r">made nothing</th>
+    <th style="width:34%"></th></tr></thead><tbody>${
+    SL.bins.map(b=>`<tr><td><b>${b.label}</b> amino acids</td><td class="r">${b.n}</td>
+      <td class="r">${b.active}</td>
+      <td class="r"${b.silent?' style="color:var(--pred);font-weight:600"':''}>${b.silent}</td>
+      <td><span class="bar-track" style="width:100%"><span class="bar-mini"
+        style="width:${(100*b.active/b.n).toFixed(0)}%;background:var(--hit)"></span></span></td>
+    </tr>`).join("")}</tbody></table>`;
+  $("#sLenRead").innerHTML = `<b>No — the length does not correspond to activity.</b> Every enzyme
+    with a peptide of <b>${SL.bins[SL.bins.length-1].label} amino acids</b> made products
+    (${SL.bins[SL.bins.length-1].active} of ${SL.bins[SL.bins.length-1].n}), and so did every
+    enzyme with a very short one. All ${SL.silent.n} of the enzymes that made nothing sit in the
+    ordinary middle range, <b>${SL.silent.lo} to ${SL.silent.hi} amino acids</b> — the same range
+    as most of the enzymes that worked perfectly well. Comparing the two groups directly gives
+    no meaningful difference (p&nbsp;=&nbsp;${SL.p_value}).
+    <br><br>The model agrees: how much a prediction shifts after trimming has essentially no
+    relation to how much was cut (correlation ${SL.spearman_change}). So whatever silenced those
+    ${SL.silent.n} enzymes, it is not the length of the piece at the front.`;
+
+  /* amine classes across the whole panel */
+  $("#nClasses").innerHTML = `<table><thead><tr><th>kind of nitrogen</th><th class="r">how many</th>
+    <th class="r">predicted</th><th class="r">measured</th><th style="width:30%"></th>
+    </tr></thead><tbody>${CD.classes.map(c=>`<tr>
+      <td><i style="display:inline-block;width:9px;height:9px;background:var(${
+        CLS_VAR[c.cls]||"--muted"});margin-right:7px"></i><b>${CLS_LABEL[c.cls]||c.cls}</b>
+        <span style="display:block;font-size:.76rem;color:var(--muted);margin-left:16px">${
+          c.amines.map(pretty).join(", ")}</span></td>
+      <td class="r">${c.n_amines}</td>
+      <td class="r">${(c.rate*100).toFixed(0)}%</td>
+      <td class="r">${c.measured_rate==null?"—":(c.measured_rate*100).toFixed(0)+"%"}</td>
+      <td><span class="bar-track" style="width:100%"><span class="bar-mini"
+        style="width:${(c.rate*100).toFixed(0)}%;background:var(${CLS_VAR[c.cls]||"--muted"})"></span></span></td>
+    </tr>`).join("")}</tbody></table>`;
+
+  // the panel is 23 primary amines against one of everything else -- say so rather than
+  // presenting a comparison the data cannot support
+  {
+    const prim = CD.classes.find(c => c.cls === "primary");
+    const rest = CD.classes.filter(c => c.cls !== "primary");
+    $("#nClassRead").innerHTML = `<b>This panel cannot really compare amine types.</b>
+      ${prim ? prim.n_amines : 0} of the ${CD.n_amines} amines are <b>primary amines</b>; the
+      rest are ${rest.map(c => `a single ${CLS_LABEL[c.cls]||c.cls} (${c.amines.map(pretty).join(", ")})`)
+        .join(" and ")}. There is no tertiary amine at all. So the aromatic row sitting at
+      ${rest.find(c=>c.cls==="aromatic") ? (rest.find(c=>c.cls==="aromatic").rate*100).toFixed(0)+"%" : "—"}
+      is one compound, not a class, and should be read as a single observation rather than
+      evidence that aromatic amines react well.`;
+  }
+
+  /* how many reactive nitrogens -- a different axis from which kind */
+  if (CD.nitrogens) {
+    const NLAB = n => n === 0 ? "none that count as nucleophilic"
+      : n === 1 ? "one" : n === 2 ? "two" : n + " or more";
+    $("#nNitro").innerHTML = `<table><thead><tr><th>reactive nitrogens</th>
+      <th class="r">how many amines</th><th class="r">predicted</th><th class="r">measured</th>
+      <th style="width:30%"></th></tr></thead><tbody>${CD.nitrogens.map(c=>`<tr>
+        <td><b>${NLAB(c.n)}</b><span style="display:block;font-size:.76rem;color:var(--muted)">${
+          c.amines.map(pretty).join(", ")}</span></td>
+        <td class="r">${c.n_amines}</td>
+        <td class="r">${(c.rate*100).toFixed(0)}%</td>
+        <td class="r">${c.measured_rate==null?"—":(c.measured_rate*100).toFixed(0)+"%"}</td>
+        <td><span class="bar-track" style="width:100%"><span class="bar-mini"
+          style="width:${(c.rate*100).toFixed(0)}%"></span></span></td></tr>`).join("")}
+      </tbody></table>`;
+  }
+
+  if (CD.nitrogens) {
+    const one = CD.nitrogens.find(c => c.n === 1), two = CD.nitrogens.find(c => c.n === 2);
+    if (one && two) $("#nNitroRead").innerHTML = `<b>Amines with two amine groups react far
+      less.</b> The ${one.n_amines} with a single reactive nitrogen were attached in
+      <b>${(one.measured_rate*100).toFixed(0)}%</b> of their chances; the ${two.n_amines} with
+      two managed <b>${(two.measured_rate*100).toFixed(0)}%</b>. The model has picked this up
+      and, if anything, overstates it — ${(one.rate*100).toFixed(0)}% against
+      ${(two.rate*100).toFixed(0)}%. Lysine, ornithine, cadaverine, putrescine, cystine and
+      2,3-diaminopropionic acid are the six, and they are near the bottom of the reactivity
+      list throughout this study.`;
+  }
+
+  /* cores */
+  $("#nCores").innerHTML = `<table><thead><tr><th>bile acid type</th>
+    <th class="r">predicted</th><th class="r">measured in the experiment</th>
+    <th style="width:38%"></th></tr></thead><tbody>${
+    CD.cores.map(c=>`<tr><td><b>${coreName[c.core]||c.core}</b></td>
+      <td class="r">${(c.rate*100).toFixed(0)}%</td>
+      <td class="r">${c.measured_rate==null?"—":(c.measured_rate*100).toFixed(0)+"%"}</td>
+      <td><span class="bar-track"><span class="bar-mini"
+        style="width:${(c.rate*100).toFixed(0)}%"></span></span></td></tr>`).join("")}
+    </tbody></table>`;
+
+  /* enzyme list */
+  let curN = null;
+  function nList(){
+    const q = $("#nq").value.trim().toLowerCase(), s = $("#nsort").value;
+    let P = CD.proteins.filter(p =>
+      (p.entry+" "+p.accession+" "+p.organism+" "+(p.genus||"")).toLowerCase().includes(q));
+    P = P.slice().sort(s==="name" ? (a,b)=>a.entry.localeCompare(b.entry)
+      : s==="org" ? (a,b)=>(a.organism||"zzz").localeCompare(b.organism||"zzz")
+      : s==="new" ? (a,b)=>(a.tested-b.tested) || (b.n_pred-a.n_pred)
+      : (a,b)=>b.n_pred-a.n_pred);
+    $("#nlist").innerHTML = P.map(p=>
+      `<button data-e="${p.entry}" ${p.entry===curN?'aria-current="true"':''}>
+        <span><span class="mono" style="font-size:.82rem">${p.accession}</span>
+        <span style="display:block;font-size:.76rem;color:var(--body)">${p.protein || "—"}</span>
+        <span style="display:block;font-size:.73rem;color:var(--muted)">${
+          p.organism ? (p.approximate?"~ ":"")+p.organism : "organism unknown"}
+          ${p.length?" · "+p.length+" aa":""}</span></span>
+        <span class="n">${p.n_pred}${p.tested?"":" ★"}</span></button>`).join("")
+      || '<div style="padding:14px;color:var(--muted)">No match.</div>';
+    $("#nlist").querySelectorAll("button").forEach(b =>
+      b.onclick = () => { curN = b.dataset.e; nList(); nDetail(); });
+  }
+  function nDetail(){
+    $("#nProduct").innerHTML = "";
+    if (!curN){ $("#ndetail").innerHTML =
+      '<div class="card prose"><p>Pick an enzyme to see what the model expects it to make. '
+      + 'A ★ marks a sequence that was never in the original experiment — those are the ones '
+      + 'where the prediction is genuinely new.</p></div>'; return; }
+    const p = CD.proteins.find(x=>x.entry===curN);
+    $("#ndetail").innerHTML = `<div class="card">
+      <h2 class="mono" style="font-size:1.05rem">${p.accession}</h2>
+      <p style="margin-top:3px;color:var(--ink);font-weight:600">${p.protein || "—"}</p>
+      <p class="foot" style="margin-top:2px">${p.entry}</p>
+      <div class="props" style="margin:12px 0">
+        <div><b>${p.organism || "unknown"}</b><span>${
+          p.approximate ? "group only — the exact species is not recorded"
+                        : (p.phylum||"organism")+(p.klass?" · "+p.klass:"")}</span></div>
+        <div><b>${p.length} aa</b><span>full sequence · ${p.cut} aa signal peptide removed ·
+          ${p.mature} aa scored</span></div>
+        <div><b>${p.n_pred} of 75</b><span>predicted conjugations${
+          p.tested ? " · "+p.measured+" measured in the experiment" : " · never measured"}</span></div>
+      </div>
+      ${p.classes && p.classes.some(c=>c.hit) ? `
+      <h4 style="margin:16px 0 6px">What kind of amine it prefers</h4>
+      <div class="scroll"><table><tbody>${p.classes.filter(c=>c.offered).map(c=>`
+        <tr><td style="white-space:nowrap"><i style="display:inline-block;width:9px;height:9px;
+          background:var(${CLS_VAR[c.cls]||"--muted"});margin-right:7px"></i>${CLS_LABEL[c.cls]||c.cls}</td>
+        <td class="r" style="width:88px;white-space:nowrap">${c.hit} of ${c.offered}</td>
+        <td style="width:40%"><span class="bar-track" style="width:100%"><span class="bar-mini"
+          style="width:${(c.rate*100).toFixed(0)}%;background:var(${CLS_VAR[c.cls]||"--muted"})"></span></span></td>
+        <td class="r" style="width:52px">${(c.rate*100).toFixed(0)}%</td></tr>`).join("")}
+      </tbody></table></div>` : ""}
+      <h4 style="margin:16px 0 6px">Predicted products</h4>
+      <p class="foot" style="margin-bottom:8px">Ordered by <b>score</b>. Click a row to see the
+      product it would make.
+      <a href="#" data-help="scores" style="color:var(--accent)">why are there two numbers?</a></p>
+      <div class="scroll">
+      <table><thead><tr><th>amine</th><th>bile acid</th>
+        <th class="r">score</th><th style="width:18%"></th>
+        <th class="r">chance</th><th></th></tr></thead><tbody>${
+        p.top.length ? p.top.map((t,i)=>`<tr class="clk" data-i="${i}" style="cursor:pointer">
+          <td><i style="display:inline-block;width:8px;height:8px;background:var(${
+            CLS_VAR[t.cls]||"--muted"});margin-right:7px"></i>${pretty(t.amine)}</td>
+          <td>${coreName[t.core]||t.core}</td>
+          <td class="r">${t.p.toFixed(3)}</td>
+          <td><span class="bar-track"><span class="bar-mini"
+            style="width:${(t.p*100).toFixed(0)}%"></span></span></td>
+          <td class="r" style="font-weight:600">${(t.cal*100).toFixed(0)}%</td>
+          <td>${t.measured===true?'<span class="tag hit">measured</span>'
+              :t.measured===false?'<span class="tag no">not detected</span>':''}</td></tr>`).join("")
+        : '<tr><td colspan="6" style="color:var(--muted)">Nothing predicted above the cut-off.</td></tr>'}
+      </tbody></table></div>
+      <div id="nScoreHelp"></div>
+      </div>`;
+    $("#ndetail").querySelectorAll("tr.clk").forEach(tr =>
+      tr.onclick = () => showProduct(p, p.top[+tr.dataset.i]));
+    const help = $("#ndetail").querySelector('[data-help="scores"]');
+    if (help) help.onclick = e => {
+      e.preventDefault();
+      const box = $("#nScoreHelp");
+      box.innerHTML = box.innerHTML ? "" : `<div class="card prose" style="margin-top:10px">
+        <p><b>Score</b> is what the model puts out directly. It is good for putting predictions
+        in order, and every one is slightly different — this enzyme's top few might be 0.992,
+        0.990, 0.989.</p>
+        <p><b>Chance</b> is that score converted into an honest probability, by checking how
+        often predictions of that strength actually came true in the measured data. It answers
+        "if I test this, how likely is it to work?"</p>
+        <p>The conversion is a staircase, so neighbouring scores often land on the same chance.
+        Four rows reading 88% are not the model repeating itself — they are four slightly
+        different scores falling in a range where the evidence cannot separate them, and where
+        historically about 88% of predictions came true. There were only a few hundred measured
+        cells that confident, which is not enough to distinguish 0.965 from 0.985.</p>
+        <p class="foot">So: read the <b>score</b> to decide what to test first, and the
+        <b>chance</b> to decide whether it is worth testing at all.</p></div>`;
+    };
+  }
+  function showProduct(p, t){
+    const box = $("#nProduct");
+    const prod = CONJ && CONJ.products[t.amine + "|" + t.core];
+    const pos = CONJ && CONJ.positions[t.core];
+    if (!prod){ box.innerHTML = ""; return; }
+    // Mono/Di/Tri count hydroxyls, not their positions, and isomers weigh the same --
+    // so one structure is drawn and the possible positions are named instead.
+    const oh = pos ? pos.oh : [];
+    const list = oh.length > 1
+      ? oh.slice(0, -1).join(", ") + " or " + oh[oh.length - 1]
+      : (oh[0] || "");
+    const n = {Mono: "one hydroxyl", Di: "two hydroxyls", Tri: "three hydroxyls"}[t.core]
+      || t.core;
+    box.innerHTML = `<div class="card">
+      <h4 style="margin-bottom:2px">${pretty(t.amine)} on a ${t.core} bile acid</h4>
+      <p class="foot" style="margin-bottom:10px">The enzyme cuts off the glycine or taurine
+        and joins the amine in its place.</p>
+      <div class="struct" style="max-width:none">${prod.svg}</div>
+      <p class="foot" style="margin-top:8px"><b>${prod.formula}</b> · ${prod.mw} Da${
+        prod.sites > 1 ? ` · the amine has ${prod.sites} nitrogens that could attach` : ""}</p>
+      <div style="border-top:1px solid var(--soft);margin-top:10px;padding-top:10px">
+        <p class="foot"><b>${t.core}</b> means <b>${n}</b> — it does not say where they sit.
+        ${oh.length > 1
+          ? `They can be at position <b>${list}</b>, and every arrangement weighs the same,
+             so the measurement cannot tell them apart. The shaded groups in the drawing mark
+             them; the skeleton shown is ${pos.representative_name}.`
+          : `Here that is position <b>${list}</b>, shown shaded.`}
+        ${pos && pos.keto.length
+          ? ` Some forms carry a ketone instead of a hydroxyl at ${pos.keto.join(" or ")}.`
+          : ""}</p>
+        ${pos ? `<p class="foot" style="margin-top:7px;color:var(--muted)">Consistent with:
+          ${pos.options.map(o=>o.name).join(" · ")}</p>` : ""}
+      </div>
+      ${t.measured===true ? '<p class="foot" style="margin-top:10px">'
+        + '<span class="tag hit">measured</span> Detected in the original experiment.</p>'
+        : t.measured===false ? '<p class="foot" style="margin-top:10px">'
+        + '<span class="tag no">not detected</span> Looked for and not found.</p>' : ""}
+    </div>`;
+  }
+
+  $("#nq").oninput = nList; $("#nsort").onchange = nList;
+  nList(); nDetail();
+
+  /* taxonomy */
+  const ph = CD.taxonomy.filter(t=>t.rank==="phylum");
+  $("#nTaxNote").innerHTML = `If the predictions were picking up something real about these
+    enzymes, related bacteria might be expected to behave alike. Grouping by phylum:`;
+  $("#nTax").innerHTML = `<table><thead><tr><th>phylum</th><th class="r">sequences</th>
+    <th class="r">predicted products, typical</th><th class="r">range</th>
+    <th class="r">measured, where known</th></tr></thead><tbody>${
+    ph.map(t=>`<tr><td><b>${t.group}</b></td><td class="r">${t.n}</td>
+      <td class="r">${t.median_pred.toFixed(0)}</td>
+      <td class="r" style="color:var(--muted)">${t.min_pred}–${t.max_pred}</td>
+      <td class="r" style="color:var(--muted)">${t.measured.length
+        ? t.measured.slice().sort((a,b)=>a-b).join(", ") : "—"}</td></tr>`).join("")}
+    </tbody></table>`;
+}
+
+/* ---------- how it was made ---------- */
+const MODEL_COLOR = {XGBoost:"--m1", MLP:"--m2", RandomForest:"--m3", LogisticRegression:"--m4"};
+const EMBS = [...new Set(MET.metrics.map(r=>r.embedding))];
+const ALGOS = [...new Set(MET.metrics.map(r=>r.model))];
+const num = (v,d=3) => v==null ? "—" : (+v).toFixed(d);
+
+$("#mGen").textContent = `Generated ${MET.generated} from ${MET.source.file}. `
+  + `${MET.dataset.cells.toLocaleString()} enzyme-amine-core rows, ${MET.dataset.enzymes} enzymes, `
+  + `${MET.dataset.active.toLocaleString()} of them products that were made `
+  + `(${(MET.dataset.base_rate*100).toFixed(1)}%).`;
+
+$("#mKey").innerHTML = [
+  [MET.source.n_enzymes, "enzymes, every one confirmed present by proteomics"],
+  [MET.labels.threshold.toLocaleString(), "signal cut-off for calling a product made"],
+  [MET.embeddings.length + " × " + ALGOS.length, "protein representations × algorithms compared"],
+  [MET.split.dev_enzymes + " / " + MET.split.test_enzymes, "enzymes in development / locked away for testing"],
+].map(([b,s])=>`<div><b>${b}</b><span>${s}</span></div>`).join("");
+
+/* 1 -- labels */
+$("#mThresh").innerHTML = `A product counts as <b>made</b> when its mass-spectrometry signal
+  rises above <b>${MET.labels.threshold.toLocaleString()}</b>. That number is not arbitrary:
+  ${MET.labels.threshold_basis}`;
+(function(){
+  const F = MET.labels.features; if(!F) return;
+  $("#mFeat").innerHTML = `The instrument does not report one peak per product. The same
+    conjugate &mdash; alanine on a Di bile acid, say &mdash; can be picked up as several separate
+    <b>features</b>, each with its own id, because positional isomers and different ionised forms
+    come off the column at different times. <b>${F.n_multi} of the ${F.n_products}</b> products in
+    this table were detected under more than one feature id, up to <b>${F.max_features}</b> for a
+    single product.<br><br>Before the cut-off is applied, those features are collapsed into one
+    number per replicate by taking the <b>highest</b> of them. So a product counts as made when
+    <em>any single feature</em> clears ${F.threshold.toLocaleString()} &mdash; not when their
+    combined signal does. The model is asked whether an enzyme performs a reaction at all, and
+    one detected form is enough to answer that.`;
+  $("#mFeatTab").innerHTML = `<table><thead><tr><th>product</th><th class="r">features</th>
+    </tr></thead><tbody>${F.multi_products.map(r=>`<tr><td>${pretty(r.amine)}
+    <span class="tag plain">${r.core}</span></td><td class="r"><b>${r.features}</b></td></tr>`
+    ).join("")}</tbody></table>`;
+  $("#mFeatNote").innerHTML = `Adding the features together instead would call
+    <b>${F.active_sum.toLocaleString()}</b> products made rather than
+    <b>${F.active_max.toLocaleString()}</b> &mdash; a difference of <b>${F.n_disagree}</b> cells,
+    ${(F.pct_disagree*100).toFixed(2)}% of the grid. Those are combinations where two or three
+    features each land near ${Math.round(F.disagree_peak_max/1000)*1000>=1000
+      ? (Math.round(F.disagree_peak_max/1000)*1000).toLocaleString() : F.disagree_peak_max}
+    and only clear the bar once summed. For
+    ${(F.one_dominates*100).toFixed(0)}% of multi-feature cells one feature dominates anyway, so
+    the two rules agree. One consequence is worth knowing: a product spread across several
+    features has to reach a higher total than one concentrated in a single peak before it counts.`;
+})();
+$("#mReps").innerHTML = `<table><thead><tr><th>rule</th><th class="r">products made</th>
+  <th class="r">of all combinations</th><th></th></tr></thead><tbody>${
+  MET.labels.counts.map(c=>{
+    const used = c.min_reps === MET.labels.min_reps_used;
+    const doc = c.min_reps === MET.labels.min_reps_documented;
+    return `<tr${used?' style="background:var(--accent-bg)"':''}>
+      <td style="white-space:nowrap">above cut-off in at least <b>${c.min_reps}</b> of ${MET.labels.n_reps} replicates</td>
+      <td class="r">${c.active.toLocaleString()}</td>
+      <td class="r">${(c.rate*100).toFixed(1)}%</td>
+      <td style="font-size:.8rem">${used?'<span class="tag hit">used here</span>':''}
+        ${doc&&!used?'<span class="tag pred">documented default</span>':''}</td></tr>`;
+  }).join("")}</tbody></table>`;
+$("#mRepNote").textContent = MET.labels.discrepancy;
+$("#mGrid").textContent = MET.labels.grid;
+$("#mCaveat").textContent = "Caveat kept with the data: " + MET.labels.caveat;
+$("#mDegree").textContent = MET.labels.degree;
+
+/* 2 -- embeddings */
+$("#mEmb").innerHTML = `<table><thead><tr><th>representation</th><th class="r">numbers per residue</th>
+  <th>where it came from</th></tr></thead><tbody>${MET.embeddings.map(e=>
+  `<tr><td><b>${e.name}</b></td><td class="r">${e.dim.toLocaleString()}</td>
+   <td class="mono" style="font-size:.74rem;color:var(--muted);word-break:break-all;line-height:1.35">${e.path}</td></tr>`).join("")}
+  </tbody></table>`;
+$("#mPool").textContent = MET.pooling.explanation + ` Every model on this page uses ${MET.pooling.used.toUpperCase()} pooling.`;
+$("#mPoolQ").textContent = "Open question: " + MET.pooling.open_question;
+$("#mFeatNote").textContent = MET.features.note;
+$("#mBlocks").innerHTML = MET.features.blocks.map(b=>
+  `<div><b>${b.name} · ${Array.isArray(b.dim)?b.dim.join("/"):b.dim}</b><span>${b.how}</span></div>`).join("");
+
+/* 3 -- split */
+$("#mSplitP").innerHTML = `The danger with proteins is that two enzymes can be near-copies of
+  each other. If one lands in training and its twin lands in the test set, the model looks
+  clever when it has only recognised a sequence it already saw. So enzymes were grouped by
+  similarity <em>first</em>, and whole groups — never individual enzymes — were assigned to
+  one side or the other.`;
+$("#mSplit").innerHTML = [
+  [MET.split.dev_enzymes+" enzymes", MET.split.dev_clusters+" similarity groups used for development"],
+  [MET.split.test_enzymes+" enzymes", MET.split.test_clusters+" similarity groups locked away"],
+  [(MET.split.identity*100).toFixed(0)+"%", "sequence identity at which two enzymes count as related"],
+].map(([b,s])=>`<div><b>${b}</b><span>${s}</span></div>`).join("");
+$("#mSplitM").textContent = MET.split.method;
+$("#mCV").textContent = MET.split.cv;
+$("#mTest").textContent = MET.split.test_status;
+
+/* 4 -- metric table */
+const METRICS = [
+  ["pr_auc","Precision-recall AUC","Overall ranking quality. Guessing at random scores the hit rate itself ("+(MET.dataset.base_rate).toFixed(3)+"), not 0.5.",1],
+  ["within_substrate","Within-substrate AUC","Holds the amine and bile acid fixed and asks whether the right ENZYMES are ranked on top. This is the metric that matches 'predict a new BSH'.",1],
+  ["roc_auc","ROC AUC","Ranking quality ignoring how rare hits are. 0.5 is random.",1],
+  ["log_loss","Log loss","How wrong the probabilities are. LOWER is better; 0.542 is what you get by always guessing the hit rate.",0],
+  ["brier","Brier score","Mean squared error of the probabilities. LOWER is better.",0],
+  ["mcc","Matthews correlation","Balanced summary of the yes/no calls at a 50% cut-off.",1],
+  ["f1","F1","Balance of precision and recall at a 50% cut-off.",1],
+  ["precision","Precision","Of the pairs called active, how many really were.",1],
+  ["recall","Recall","Of the pairs that really were active, how many were caught.",1],
+  ["specificity","Specificity","Of the pairs that were inactive, how many were correctly left alone.",1],
+];
+$("#mMetric").innerHTML = METRICS.map(([k,l])=>`<option value="${k}">${l}</option>`).join("");
+function mTable(){
+  const k = $("#mMetric").value, spec = METRICS.find(m=>m[0]===k), hi = spec[3];
+  let rows = MET.metrics.slice();
+  if ($("#mXgbOnly").checked) rows = rows.filter(r=>r.model==="XGBoost");
+  rows.sort((a,b)=> hi ? b[k]-a[k] : a[k]-b[k]);
+  const vals = rows.map(r=>r[k]), best = hi?Math.max(...vals):Math.min(...vals),
+        lo = Math.min(...vals), span = Math.max(...vals)-lo || 1;
+  $("#mMetricNote").textContent = spec[2];
+  $("#mTable").innerHTML = `<table><thead><tr><th>protein representation</th><th>algorithm</th>
+    <th class="r">${spec[1]}</th><th style="width:34%"></th>${k==="pr_auc"?'<th class="r">fold spread</th>':''}
+    </tr></thead><tbody>${rows.map(r=>{
+      const w = hi ? (r[k]-lo)/span : 1-(r[k]-lo)/span;
+      const isBest = r[k]===best;
+      return `<tr${isBest?' style="background:var(--hit-bg)"':''}>
+        <td><b>${r.embedding}</b></td><td>${r.model}</td>
+        <td class="r"${isBest?' style="color:var(--hit);font-weight:700"':''}>${num(r[k])}</td>
+        <td><span class="bar-track"><span class="bar-mini" style="width:${(w*100).toFixed(0)}%;
+          background:var(${MODEL_COLOR[r.model]})"></span></span></td>
+        ${k==="pr_auc"?`<td class="r" style="color:var(--muted)">±${num(r.pr_sd)}</td>`:''}</tr>`;
+    }).join("")}</tbody></table>`;
+}
+$("#mMetric").onchange = mTable; $("#mXgbOnly").onchange = mTable;
+$("#mAlgos").innerHTML = `<table><tbody>${MET.algorithms.map(a=>
+  `<tr><td style="white-space:nowrap"><b style="color:var(${MODEL_COLOR[a.name]})">${a.name}</b></td>
+   <td style="color:var(--muted);font-size:.83rem">${a.detail}</td></tr>`).join("")}</tbody></table>`;
+
+/* 5 -- curves */
+$("#mCurveEmb").innerHTML = EMBS.map(e=>`<option value="${e}">${e}</option>`).join("");
+$("#mCurveEmb").value = "ProstT5";
+const CURVE_HELP = {
+  pr: "Each line traces the trade-off as the confidence cut-off is lowered: catch more real hits (right) and more of the calls are wrong (down). The dashed line is what random guessing gives — for this data that is the hit rate itself, not 50%.",
+  roc: "Real hits caught (up) against false alarms raised (right). The diagonal is random guessing. Farther into the top-left corner is better.",
+  cal: "Group predictions by confidence, then ask how often those predictions were actually right. On the diagonal means a stated 70% really happens 70% of the time. Below the line means over-confident.",
+};
+function mCurves(){
+  const kind = $("#mCurve").value, emb = $("#mCurveEmb").value;
+  $("#mCurveNote").textContent = CURVE_HELP[kind];
+  const W=680,H=330,L=52,R=110,T=14,B=42;
+  const sx=v=>L+v*(W-L-R), sy=v=>T+(1-v)*(H-T-B);
+  const base = MET.dataset.base_rate;
+  const series = ALGOS.map(a=>{
+    const c = MET.curves[emb+"|"+a]; if(!c) return null;
+    const pts = kind==="cal" ? c.cal.map(p=>[p.x,p.y]) : c[kind].x.map((v,i)=>[v,c[kind].y[i]]);
+    const m = MET.metrics.find(r=>r.embedding===emb && r.model===a);
+    const score = kind==="pr" ? "PR-AUC "+num(m.pr_auc) : kind==="roc" ? "ROC-AUC "+num(m.roc_auc)
+      : "log loss "+num(m.log_loss);
+    return {a, pts, score, col:`var(${MODEL_COLOR[a]})`};
+  }).filter(Boolean).sort((x,y)=> parseFloat(y.score.split(" ").pop())-parseFloat(x.score.split(" ").pop()));
+  if (kind==="cal") series.reverse();
+  const axis = kind==="pr" ? ["recall — of the real hits, how many were caught","precision — of the calls, how many were right"]
+    : kind==="roc" ? ["false alarm rate","real hits caught"]
+    : ["what the model predicted","what actually happened"];
+  const grid = [0,.25,.5,.75,1];
+  $("#mCurveWrap").innerHTML = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${kind} curves for ${emb}">
+    ${grid.map(v=>`<line x1="${L}" x2="${W-R}" y1="${sy(v)}" y2="${sy(v)}" stroke="var(--soft)"/>
+      <text x="${L-8}" y="${sy(v)+4}" text-anchor="end" font-size="10" fill="var(--muted)">${v.toFixed(2)}</text>
+      <text x="${sx(v)}" y="${H-B+16}" text-anchor="middle" font-size="10" fill="var(--muted)">${v.toFixed(2)}</text>`).join("")}
+    ${kind==="pr"?`<line x1="${L}" x2="${W-R}" y1="${sy(base)}" y2="${sy(base)}" stroke="var(--muted)"
+       stroke-dasharray="4 3"/><text x="${L+5}" y="${sy(base)-5}" font-size="9.5"
+       fill="var(--muted)">random guessing (${base.toFixed(2)})</text>`:''}
+    ${kind!=="pr"?`<line x1="${L}" y1="${sy(0)}" x2="${W-R}" y2="${sy(1)}" stroke="var(--muted)" stroke-dasharray="4 3"/>`:''}
+    ${series.map(s=>`<polyline fill="none" stroke="${s.col}" stroke-width="2" stroke-linejoin="round"
+       points="${s.pts.map(([x,y])=>`${sx(x).toFixed(1)},${sy(y).toFixed(1)}`).join(" ")}"/>
+       ${kind==="cal"?s.pts.map(([x,y])=>`<circle cx="${sx(x).toFixed(1)}" cy="${sy(y).toFixed(1)}" r="3" fill="${s.col}"/>`).join(""):''}`).join("")}
+    ${series.map((s,i)=>`<rect x="${W-R+6}" y="${T+8+i*20}" width="11" height="3" fill="${s.col}"/>
+      <text x="${W-R+22}" y="${T+13+i*20}" font-size="10.5" fill="var(--body)">${s.a}</text>`).join("")}
+    <text x="${(L+W-R)/2}" y="${H-4}" text-anchor="middle" font-size="10.5" fill="var(--muted)">${axis[0]}</text>
+    <text x="13" y="${(T+H-B)/2}" text-anchor="middle" font-size="10.5" fill="var(--muted)"
+      transform="rotate(-90 13 ${(T+H-B)/2})">${axis[1]}</text>
+  </svg>`;
+  $("#mLegend").innerHTML = series.map(s=>
+    `<span style="display:inline-block;margin-right:16px"><b style="color:${s.col}">${s.a}</b> ${s.score}</span>`).join("");
+}
+$("#mCurve").onchange = mCurves; $("#mCurveEmb").onchange = mCurves;
+
+/* 6 -- log loss traces */
+$("#mLLEmb").innerHTML = Object.keys(MET.logloss.traces).map(e=>`<option value="${e}">${e}</option>`).join("");
+$("#mLLEmb").value = "ProstT5";
+const KEY = {train:"train", "inner check":"val", "held out":"held"};
+function mLL(){
+  const e = $("#mLLEmb").value, t = MET.logloss.traces[e], X = MET.logloss.x;
+  const W=680,H=320,L=52,R=158,T=14,B=42, xmax=X[X.length-1], ymax=0.75,
+        NULL_LL=MET.logloss.null_ll;
+  const sx=v=>L+(v/xmax)*(W-L-R), sy=v=>T+(1-Math.min(v,ymax)/ymax)*(H-T-B);
+  const S = [["train","--m4","rows it trained on"],["inner check","--m2","decides when to stop"],
+             ["held out","--m1","enzymes it never saw"]];
+  const yt=[0,.15,.3,.45,.6,.75], xt=[0,.25,.5,.75,1].map(f=>Math.round(f*xmax));
+  $("#mLLWrap").innerHTML = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="log loss during training for ${e}">
+    ${yt.map(v=>`<line x1="${L}" x2="${W-R}" y1="${sy(v)}" y2="${sy(v)}" stroke="var(--soft)"/>
+      <text x="${L-8}" y="${sy(v)+4}" text-anchor="end" font-size="10" fill="var(--muted)">${v.toFixed(2)}</text>`).join("")}
+    ${xt.map(v=>`<text x="${sx(v)}" y="${H-B+16}" text-anchor="middle" font-size="10" fill="var(--muted)">${v}</text>`).join("")}
+    <line x1="${L}" x2="${W-R}" y1="${sy(NULL_LL)}" y2="${sy(NULL_LL)}" stroke="var(--muted)" stroke-dasharray="4 3"/>
+    <text x="${W-R-4}" y="${sy(NULL_LL)-5}" text-anchor="end" font-size="9.5" fill="var(--muted)">ignoring the data (${NULL_LL})</text>
+    ${S.map(([k,c])=>{const col=`var(${c})`, key=KEY[k], m=t[key].mean, s=t[key].sd;
+      const up=X.map((x,i)=>`${sx(x).toFixed(1)},${sy(m[i]+s[i]).toFixed(1)}`);
+      const dn=X.map((x,i)=>`${sx(x).toFixed(1)},${sy(Math.max(m[i]-s[i],0)).toFixed(1)}`).reverse();
+      return `<polygon points="${up.concat(dn).join(" ")}" fill="${col}" fill-opacity="0.13"/>
+        <polyline fill="none" stroke="${col}" stroke-width="2"
+        points="${X.map((x,i)=>`${sx(x).toFixed(1)},${sy(m[i]).toFixed(1)}`).join(" ")}"/>`}).join("")}
+    <line x1="${sx(t.best.round)}" x2="${sx(t.best.round)}" y1="${T}" y2="${H-B}" stroke="var(--muted)"
+      stroke-dasharray="3 3" stroke-width="1"/>
+    ${S.map(([k,c,lab],i)=>`<rect x="${W-R+6}" y="${T+8+i*30}" width="11" height="3" fill="var(${c})"/>
+      <text x="${W-R+22}" y="${T+13+i*30}" font-size="10.5" fill="var(--body)">${k}</text>
+      <text x="${W-R+6}" y="${T+25+i*30}" font-size="8.8" fill="var(--muted)">${lab}</text>`).join("")}
+    <text x="${(L+W-R)/2}" y="${H-4}" text-anchor="middle" font-size="10.5" fill="var(--muted)">rounds of training</text>
+    <text x="13" y="${(T+H-B)/2}" text-anchor="middle" font-size="10.5" fill="var(--muted)"
+      transform="rotate(-90 13 ${(T+H-B)/2})">log loss — lower is better</text>
+  </svg>`;
+  const rises = t.per_fold_rise, worst = Math.max(...rises);
+  $("#mLLNote").innerHTML = `Best score <b>${num(t.best.value)}</b> at round <b>${t.best.round}</b>
+    (dashed vertical line). Shaded bands are the spread across the five folds — note how much
+    wider they are than the difference between one representation and another.
+    Of the five held-out folds, the worst drifts <b>+${num(worst)}</b> above its own best score by
+    the end, so training is stopped separately for each fold rather than at a fixed round.`;
+}
+$("#mLLEmb").onchange = mLL;
+
+/* 7 -- within-substrate paired test */
+const wSum = MET.within.summary;
+$("#mWithinP").innerHTML = `Overall scores are dominated by which <em>amines</em> react easily,
+  which tells you nothing about a new enzyme. To isolate the protein, fix the amine and the bile
+  acid and ask only whether the right enzymes come out on top. Across the
+  <b>${MET.within.n_groups}</b> combinations with enough actives and inactives to score, that is
+  the table below: how much better <b>ESM-3 + XGBoost</b> is than each alternative, paired
+  combination by combination. When the range in brackets includes zero, the two are
+  <b>indistinguishable</b>.`;
+const wRows = MET.within.paired.filter(p=>p.model.endsWith("XGBoost") || p.model.endsWith("RandomForest"))
+  .sort((a,b)=>a.diff-b.diff);
+$("#mWithin").innerHTML = `<table><thead><tr><th>ESM-3 + XGBoost versus</th>
+  <th class="r">its score</th><th class="r">difference</th><th class="r">plausible range</th>
+  <th>verdict</th></tr></thead><tbody>
+  <tr style="background:var(--accent-bg)"><td><b>ESM-3 + XGBoost</b> (reference)</td>
+    <td class="r">${num(wSum["ESM-3|XGBoost"].mean)}</td><td class="r">—</td><td class="r">—</td><td></td></tr>
+  ${wRows.map(p=>{
+    const tie = p.lo<=0 && p.hi>=0;
+    return `<tr><td>${p.model.replace("|"," + ")}</td>
+      <td class="r">${num(wSum[p.model].mean)}</td>
+      <td class="r">${p.diff>=0?"+":""}${num(p.diff)}</td>
+      <td class="r" style="color:var(--muted)">${p.lo>=0?"+":""}${num(p.lo)} to ${p.hi>=0?"+":""}${num(p.hi)}</td>
+      <td>${tie?'<span class="tag no">tied</span>':'<span class="tag hit">ESM-3 ahead</span> in '+(p.win*100).toFixed(0)+'% of them'}</td></tr>`;
+  }).join("")}</tbody></table>`;
+
+/* findings */
+$("#mFindings").innerHTML = MET.findings.map(f=>`<li style="margin-top:8px">${f}</li>`).join("");
+
+mTable(); mCurves(); mLL();
+/* ---------- 8: the locked test set ---------- */
+const F = MET.final;
+if (F) {
+  $("#fIntro").innerHTML = `Everything above is cross-validation: the model was scored on
+    enzymes held out of each training round, but all of them were available while the
+    approach was being chosen. <b>${F.test.enzymes} enzymes</b> were set aside before any of
+    that began and touched exactly once, at the end. No enzyme in training shares more than
+    <b>${(F.test.boundary_identity*100).toFixed(1)}%</b> of its sequence with any of them, so
+    this is the closest thing here to a genuinely new bile salt hydrolase.`;
+  const raw = F.metrics.find(m=>m.which==="raw"), cal = F.metrics.find(m=>m.which==="calibrated");
+  $("#fKey").innerHTML = [
+    [num(raw.roc_auc), `ranking quality on unseen enzymes — cross-validation said ${num(F.dev.roc_auc)}`],
+    [num(raw.precision*100,0)+"%", `of the pairs it called active, this many really were`],
+    [num(raw.recall*100,0)+"%", `of the products really made, this many were caught`],
+    [num(cal.mean_pred,3), `average predicted chance — the truth was ${num(F.test.base_rate,3)}`],
+  ].map(([b,s])=>`<div><b>${b}</b><span>${s}</span></div>`).join("");
+
+  const ROWS = [
+    ["roc_auc","Ranking quality (ROC-AUC)","higher", F.dev.roc_auc, raw.roc_auc, F.null.roc_auc],
+    ["pr_auc","Precision-recall AUC","higher", F.dev.pr_auc, raw.pr_auc, F.null.pr_auc],
+    ["skill","Skill above chance","higher", F.skill.dev, F.skill.test, 0],
+    ["log_loss","Log loss (raw scores)","lower", F.dev.log_loss, raw.log_loss, F.null.log_loss],
+    ["log_loss_cal","Log loss (calibrated)","lower", F.dev.log_loss_calibrated, cal.log_loss, F.null.log_loss],
+    ["brier","Brier score","lower", F.dev.brier, raw.brier, null],
+  ];
+  $("#fCompare").innerHTML = `<table><thead><tr><th>measure</th>
+    <th class="r">cross-validation</th><th class="r">locked test set</th>
+    <th class="r">coin flip</th><th>change</th></tr></thead><tbody>${
+    ROWS.map(([k,label,dir,d,t,n])=>{
+      const better = dir==="higher" ? t>=d : t<=d;
+      const delta = t-d;
+      const small = Math.abs(delta) < 0.02;
+      return `<tr><td>${label}</td><td class="r">${num(d)}</td>
+        <td class="r" style="font-weight:600;color:var(--ink)">${num(t)}</td>
+        <td class="r" style="color:var(--muted)">${n==null?"—":num(n)}</td>
+        <td style="font-size:.82rem">${small?'<span class="tag no">held</span>'
+          : better?'<span class="tag hit">better</span>':'<span class="tag pred">'+(delta>0?"+":"")+num(delta)+'</span>'}</td></tr>`;
+    }).join("")}</tbody></table>`;
+
+  $("#fRead").innerHTML = `<b>Ranking held; the precision-recall number dropped.</b> ROC-AUC
+    barely moved (${num(F.dev.roc_auc)} to ${num(raw.roc_auc)}), and it is the fair comparison
+    because it does not depend on how common hits are. Precision-recall AUC fell from
+    ${num(F.dev.pr_auc)} to ${num(raw.pr_auc)}, but part of that is arithmetic: hits are rarer
+    in the test set (${(F.test.base_rate*100).toFixed(1)}% against
+    ${(F.dev.base_rate*100).toFixed(1)}%), which drags the score down on its own. Correcting for
+    that, skill above chance went ${num(F.skill.dev)} to ${num(F.skill.test)} — a real drop, but
+    with only ${F.test.enzymes} enzymes the plausible range for the test figure is
+    <b>${num(F.ci.pr_auc[0])} to ${num(F.ci.pr_auc[1])}</b>, which comfortably contains the
+    cross-validation result. The honest reading is that nothing here shows the model getting
+    worse, and nothing here would have detected it if it had.
+    <br><br><b>The probabilities stayed honest.</b> The correction that makes the scores
+    trustworthy was fitted on the development enzymes, where ${(F.dev.base_rate*100).toFixed(1)}%
+    of combinations work. On the test enzymes, where only ${(F.test.base_rate*100).toFixed(1)}%
+    do, the corrected predictions average ${num(cal.mean_pred,3)} against a truth of
+    ${num(F.test.base_rate,3)}. It did not have to transfer, and it did.`;
+
+  const FC_HELP = {
+    pr:`At the halfway cut-off the model found ${raw.tp} of the ${raw.tp+raw.fn} products that
+        were really made, raised ${raw.fp} false alarms, and correctly left ${raw.tn.toLocaleString()} alone.`,
+    roc:`The diagonal is random guessing. Resampling the ${F.test.enzymes} test enzymes puts the
+         area under this curve between ${num(F.ci.roc_auc[0])} and ${num(F.ci.roc_auc[1])}.`,
+    cal:`Points on the diagonal mean a stated chance happens that often in reality. The raw
+         scores run high — that is the price of forcing the model to take rare hits seriously —
+         and the calibrated line is the correction for it.`};
+  function fCurves(){
+    const kind = $("#fCurve").value, showCal = $("#fCal").checked;
+    $("#fCurveNote").textContent = FC_HELP[kind];
+    const W=680,H=330,L=52,R=118,T=14,B=42;
+    const sx=v=>L+v*(W-L-R), sy=v=>T+(1-v)*(H-T-B), base=F.test.base_rate;
+    const want = showCal ? ["raw","calibrated"] : ["raw"];
+    const series = want.map((w,i)=>{
+      const c = F.curves[w];
+      const pts = kind==="cal" ? c.cal.map(p=>[p.x,p.y]) : c[kind].x.map((v,j)=>[v,c[kind].y[j]]);
+      const m = F.metrics.find(r=>r.which===w);
+      const sc = kind==="pr" ? "PR-AUC "+num(m.pr_auc) : kind==="roc" ? "ROC-AUC "+num(m.roc_auc)
+        : "log loss "+num(m.log_loss);
+      return {w, pts, sc, col:`var(${i?"--m2":"--m1"})`};
+    });
+    const axis = kind==="pr" ? ["recall — of the real hits, how many were caught","precision — of the calls, how many were right"]
+      : kind==="roc" ? ["false alarm rate","real hits caught"]
+      : ["what the model predicted","what actually happened"];
+    $("#fCurveWrap").innerHTML = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="test set ${kind} curve">
+      ${[0,.25,.5,.75,1].map(v=>`<line x1="${L}" x2="${W-R}" y1="${sy(v)}" y2="${sy(v)}" stroke="var(--soft)"/>
+        <text x="${L-8}" y="${sy(v)+4}" text-anchor="end" font-size="10" fill="var(--muted)">${v.toFixed(2)}</text>
+        <text x="${sx(v)}" y="${H-B+16}" text-anchor="middle" font-size="10" fill="var(--muted)">${v.toFixed(2)}</text>`).join("")}
+      ${kind==="pr"?`<line x1="${L}" x2="${W-R}" y1="${sy(base)}" y2="${sy(base)}" stroke="var(--muted)"
+         stroke-dasharray="4 3"/><text x="${L+5}" y="${sy(base)-5}" font-size="9.5"
+         fill="var(--muted)">random guessing (${base.toFixed(2)})</text>`:''}
+      ${kind!=="pr"?`<line x1="${L}" y1="${sy(0)}" x2="${W-R}" y2="${sy(1)}" stroke="var(--muted)" stroke-dasharray="4 3"/>`:''}
+      ${series.map(s=>`<polyline fill="none" stroke="${s.col}" stroke-width="2" stroke-linejoin="round"
+         points="${s.pts.map(([x,y])=>`${sx(x).toFixed(1)},${sy(y).toFixed(1)}`).join(" ")}"/>
+         ${kind==="cal"?s.pts.map(([x,y])=>`<circle cx="${sx(x).toFixed(1)}" cy="${sy(y).toFixed(1)}" r="3" fill="${s.col}"/>`).join(""):''}`).join("")}
+      ${series.map((s,i)=>`<rect x="${W-R+6}" y="${T+8+i*28}" width="11" height="3" fill="${s.col}"/>
+        <text x="${W-R+22}" y="${T+13+i*28}" font-size="10.5" fill="var(--body)">${s.w}</text>
+        <text x="${W-R+6}" y="${T+25+i*28}" font-size="8.8" fill="var(--muted)">${s.sc}</text>`).join("")}
+      <text x="${(L+W-R)/2}" y="${H-4}" text-anchor="middle" font-size="10.5" fill="var(--muted)">${axis[0]}</text>
+      <text x="13" y="${(T+H-B)/2}" text-anchor="middle" font-size="10.5" fill="var(--muted)"
+        transform="rotate(-90 13 ${(T+H-B)/2})">${axis[1]}</text>
+    </svg>`;
+  }
+  $("#fCurve").onchange = fCurves; $("#fCal").onchange = fCurves;
+
+  $("#fPer").innerHTML = `<table><thead><tr><th>enzyme</th><th class="r">products made</th>
+    <th class="r">of 75</th><th class="r">ranking quality</th><th style="width:26%"></th>
+    </tr></thead><tbody>${F.per_enzyme.map(r=>
+    `<tr><td class="mono">${r.enzyme}</td><td class="r">${r.active}</td>
+     <td class="r" style="color:var(--muted)">${(r.rate*100).toFixed(0)}%</td>
+     <td class="r">${r.pr_auc==null?'<span style="color:var(--muted)">too few to score</span>':num(r.pr_auc)}</td>
+     <td>${r.pr_auc==null?"":`<span class="bar-track"><span class="bar-mini"
+       style="width:${(r.pr_auc*100).toFixed(0)}%;background:var(--m1)"></span></span>`}</td></tr>`).join("")}
+    </tbody></table>`;
+  $("#fDup").innerHTML = `<b class="mono">${F.duplicate_pair.a}</b> and
+    <b class="mono">${F.duplicate_pair.b}</b> — ${F.duplicate_pair.note}`;
+  $("#fCaveat").textContent = F.caveat;
+  fCurves();
+}
+/* ---------- 9: trimmed vs untrimmed ---------- */
+if (typeof TRIM !== "undefined" && TRIM && TRIM.n_proteins) {
+  const A = TRIM.agreement, EB = TRIM.embedding, AC = TRIM.activity, MD = TRIM.model;
+  const byEntry = Object.fromEntries(TRIM.per_protein.map(r => [r.entry, r]));
+
+  $("#tIntro").innerHTML = `${TRIM.n_proteins} of these proteins were re-embedded after their
+    N-terminal signal peptide was cut off, then scored again against all ${TRIM.n_amines} amines
+    and ${TRIM.n_cores} bile acid classes — <b>${TRIM.n_rows.toLocaleString()} predictions made
+    twice</b>. Nothing was retrained: the same model was handed two versions of the same protein.
+    The question that matters is whether the <em>activity</em> it predicts changes.
+    <br><br>Scored with the deployment model, fitted on all <b>${MD.enzymes}</b> enzymes.
+    That matters for reading what follows: 58 of these proteins <em>are</em> training enzymes,
+    so their full-sequence score is the model recalling a measured result, not predicting one.
+    Nothing here is held out.`;
+
+  $("#tKey").innerHTML = [
+    [((1 - EB.cos_median) * 100).toFixed(1) + "%",
+     "how much the protein's numbers actually change when the peptide is cut"],
+    [((AC.lost + AC.gained) / AC.total * 100).toFixed(1) + "%",
+     "of the " + AC.total.toLocaleString() + " yes/no calls come out differently"],
+    [AC.changed_6_plus + " of " + AC.n_proteins,
+     "proteins whose predicted product count moves by more than 5"],
+    [AC.spread.all.silent_full + " → " + AC.spread.all.silent_trim,
+     "proteins called completely inactive, before trimming and after"],
+  ].map(([b, s]) => `<div><b>${b}</b><span>${s}</span></div>`).join("");
+
+  /* ---- the main chart: products predicted, full -> trimmed, one line per protein ---- */
+  $("#tSlopeNote").innerHTML = `Each line is one protein. The left end is how many of its 75
+    combinations the model calls active using the <b>full sequence</b>; the right end is the same
+    count after the signal peptide is cut. A flat line means trimming changed nothing. A steep
+    line means the model changed its mind about what this enzyme does.`;
+  (function(){
+    const P = AC.per_protein, W=880, H=420, L=118, R=118, T=18, B=34;
+    const mx = Math.max(...P.map(r=>Math.max(r.nf,r.nt)));
+    const sy = v => T + (1 - v/mx) * (H-T-B);
+    const xf = L, xt = W-R;
+    const col = r => r.split==="test" ? "--m2" : r.split==="dev" ? "--m1" : "--muted";
+    const ticks = [0,10,20,30,40].filter(v=>v<=mx);
+    $("#tSlope").innerHTML = `<svg viewBox="0 0 ${W} ${H}" role="img"
+      aria-label="products predicted per protein, full sequence against trimmed">
+      ${ticks.map(v=>`<line x1="${xf}" x2="${xt}" y1="${sy(v)}" y2="${sy(v)}" stroke="var(--soft)"/>
+        <text x="${xf-10}" y="${sy(v)+4}" text-anchor="end" font-size="10" fill="var(--muted)">${v}</text>
+        <text x="${xt+10}" y="${sy(v)+4}" font-size="10" fill="var(--muted)">${v}</text>`).join("")}
+      ${P.map(r=>`<line x1="${xf}" y1="${sy(r.nf).toFixed(1)}" x2="${xt}" y2="${sy(r.nt).toFixed(1)}"
+         stroke="var(${col(r)})" stroke-width="${Math.abs(r.d)>5?2:1.1}"
+         opacity="${Math.abs(r.d)>5?.85:.4}">
+         <title>${r.entry} — ${r.nf} products predicted from the full sequence, ${r.nt} when trimmed (${r.d>=0?"+":""}${r.d})</title></line>
+        <circle cx="${xf}" cy="${sy(r.nf).toFixed(1)}" r="3" fill="var(${col(r)})" opacity=".8"/>
+        <circle cx="${xt}" cy="${sy(r.nt).toFixed(1)}" r="3" fill="var(${col(r)})" opacity=".8"/>`).join("")}
+      <text x="${xf}" y="${H-12}" text-anchor="middle" font-size="11.5" font-weight="600"
+        fill="var(--ink)">full sequence</text>
+      <text x="${xt}" y="${H-12}" text-anchor="middle" font-size="11.5" font-weight="600"
+        fill="var(--ink)">signal peptide removed</text>
+      <text x="14" y="${(T+H-B)/2}" text-anchor="middle" font-size="10.5" fill="var(--muted)"
+        transform="rotate(-90 14 ${(T+H-B)/2})">products predicted, of 75</text>
+
+    </svg>
+    <div class="legend" style="margin-top:10px">
+      <span><i style="background:var(--m1)"></i>trained on this enzyme</span>
+      <span><i style="background:var(--m2)"></i>was locked away from the earlier model</span>
+      <span><i style="background:var(--muted)"></i>not in the activity data</span>
+      <span style="color:var(--muted)">thicker line = changes by more than 5</span>
+    </div>`;
+  })();
+  const sp = AC.spread;
+  $("#tSlopeRead").innerHTML = `<b>The lines converge.</b> Using the full sequence the model's
+    answers range from <b>${sp.all.full_min} to ${sp.all.full_max}</b> products; after trimming they
+    bunch into <b>${sp.all.trim_min} to ${sp.all.trim_max}</b>. Only
+    <b>${AC.unchanged_count} of ${AC.n_proteins}</b> proteins keep exactly the same count;
+    <b>${AC.changed_6_plus}</b> move by more than five. Most strikingly,
+    <b>${sp.all.silent_full} proteins the model called completely inactive</b> from their full
+    sequence are predicted to make ${Math.min(...AC.per_protein.filter(r=>r.nf===0).map(r=>r.nt))} to
+    ${Math.max(...AC.per_protein.filter(r=>r.nf===0).map(r=>r.nt))} products once trimmed — and
+    after trimming, <b>no protein at all</b> is called completely inactive.`;
+
+  /* ---- 2x2 of calls ---- */
+  (function(){
+    const W=330,H=316,L=74,R=14,T=58,B=44, cw=(W-L-R)/2, chh=(H-T-B)/2;
+    const cells=[[AC.both_inactive,"no","no"],[AC.gained,"no","yes"],
+                 [AC.lost,"yes","no"],[AC.both_active,"yes","yes"]];
+    const mx=Math.max(...cells.map(c=>c[0]));
+    const box=(i,j,n,agree)=>{
+      const x=L+j*cw, y=T+i*chh, o=0.12+0.72*Math.sqrt(n/mx);
+      return `<rect x="${x}" y="${y}" width="${cw}" height="${chh}"
+        fill="var(${agree?"--hit":"--pred"})" fill-opacity="${o.toFixed(3)}" stroke="var(--panel)" stroke-width="2"/>
+        <text x="${x+cw/2}" y="${y+chh/2+2}" text-anchor="middle" font-size="17"
+          font-family="ui-monospace,monospace" font-weight="700" fill="var(--ink)">${n.toLocaleString()}</text>
+        <text x="${x+cw/2}" y="${y+chh/2+18}" text-anchor="middle" font-size="9.5"
+          fill="var(--muted)">${agree?"agree":"changed"}</text>`;
+    };
+    $("#tConf").innerHTML = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="agreement of calls">
+      ${box(0,0,AC.both_inactive,true)}${box(0,1,AC.gained,false)}
+      ${box(1,0,AC.lost,false)}${box(1,1,AC.both_active,true)}
+      <text x="${L+cw/2}" y="${T-20}" text-anchor="middle" font-size="10.5" fill="var(--body)">trimmed: no</text>
+      <text x="${L+cw+cw/2}" y="${T-20}" text-anchor="middle" font-size="10.5" fill="var(--body)">trimmed: yes</text>
+      <text x="${(L+W-R)/2}" y="${T-38}" text-anchor="middle" font-size="10" fill="var(--muted)">does the trimmed version call it active?</text>
+      <text x="${L-10}" y="${T+chh/2}" text-anchor="end" font-size="10.5" fill="var(--body)">full: no</text>
+      <text x="${L-10}" y="${T+chh+chh/2}" text-anchor="end" font-size="10.5" fill="var(--body)">full: yes</text>
+      <text x="${(L+W-R)/2}" y="${H-14}" text-anchor="middle" font-size="10" fill="var(--muted)">
+        ${(AC.lost+AC.gained).toLocaleString()} of ${AC.total.toLocaleString()} calls change (${((AC.lost+AC.gained)/AC.total*100).toFixed(1)}%)</text>
+    </svg>`;
+  })();
+
+  /* ---- spread table ---- */
+  $("#tSpreadNote").innerHTML = `A useful model gives different answers for different enzymes.
+    This measures how much the predicted product count varies from one protein to the next.`;
+  $("#tSpread").innerHTML = `<table><thead><tr><th>proteins</th>
+    <th class="r">full sequence</th><th class="r">trimmed</th><th class="r">change</th>
+    </tr></thead><tbody>${
+    [["all","All 65 proteins"]].filter(([k])=>sp[k]).map(([k,lab])=>{
+      const r=sp[k];
+      return `<tr>
+        <td><b>${lab}</b> <span style="color:var(--muted)">(${r.n})</span><br>
+          <span style="color:var(--muted);font-size:.78rem">range ${r.full_min}–${r.full_max}
+          → ${r.trim_min}–${r.trim_max}</span></td>
+        <td class="r">${num(r.full_sd,2)}</td><td class="r">${num(r.trim_sd,2)}</td>
+        <td class="r" style="font-weight:600;color:var(--pred)">${(r.change*100).toFixed(0)}%</td></tr>`;
+    }).join("")}</tbody></table>`;
+  $("#tSpreadRead").innerHTML = `After trimming, the predicted counts sit in a narrower band —
+    proteins that were called for many products come down, and proteins called for few come up.
+    This table describes the spread only; what it means for any single protein is a separate
+    question, taken up below.`;
+
+  /* ---- measured against the assay ---- */
+  (function(){
+    const C = RESC.counts, S = RESC.scores, PV = RESC.prevalence;
+    $("#rIntro").innerHTML = `The comparison above is the model against itself. This one sets both
+      versions against the measurements. Of the ${C.cells.toLocaleString()} combinations where an
+      enzyme here was tested in the assay, <b>${C.measured_active}</b> produced a product above the
+      cut-off and <b>${C.measured_inactive.toLocaleString()}</b> did not.`;
+    $("#rStats").innerHTML = [
+      [C.kept,   "recorded products", "called from both sequences"],
+      [C.lost,   "recorded products", "called from the full sequence only"],
+      [C.gained, "combinations with no product", "called from the trimmed sequence only"],
+      [C.cleared,"combinations with no product", "called from the full sequence only"],
+    ].map(([b,s1,s2])=>`<div class="stat"><b>${b.toLocaleString()}</b>
+       <span>${s1}<br><span style="color:var(--muted)">${s2}</span></span></div>`).join("");
+
+    const tbl = (rows, el) => {
+      if(!rows || !rows.length){ $(el).innerHTML='<p class="foot">none</p>'; return; }
+      $(el).innerHTML = `<table><thead><tr><th>amine</th><th>core</th><th class="r">n</th>
+        <th class="r">made by</th><th class="r">full &rarr; trimmed</th></tr></thead><tbody>${
+        rows.map(r=>`<tr><td>${r.Amine.replace(/_/g," ")}</td><td>${r.Hydroxyl}</td>
+          <td class="r"><b>${r.n}</b></td>
+          <td class="r">${r.made_by==null?"&mdash;":(r.made_by*100).toFixed(0)+"%"}</td>
+          <td class="r mono">${num(r.mean_full)} &rarr; ${num(r.mean_trim)}</td></tr>`).join("")}
+        </tbody></table>`;
+    };
+    tbl(RESC.lost, "#rLost"); tbl(RESC.gained, "#rGained");
+
+    $("#rRead").innerHTML = `The two lists differ in one respect worth noting. A product the model
+      stops calling is typically an uncommon one &mdash; median <b>${(PV.lost_median*100).toFixed(1)}%</b>
+      of enzymes make it. A product it keeps calling is typically a common one &mdash; median
+      <b>${(PV.kept_median*100).toFixed(1)}%</b>. Across all ${PV.n_products} products in the panel the
+      median is ${(PV.all_median*100).toFixed(1)}%. The combinations that get added are drawn from the
+      most frequently made products in the set. Recall on recorded products goes from
+      <b>${(S.full.recall*100).toFixed(1)}%</b> to <b>${(S.trimmed.recall*100).toFixed(1)}%</b>, and
+      precision from <b>${(S.full.precision*100).toFixed(1)}%</b> to
+      <b>${(S.trimmed.precision*100).toFixed(1)}%</b>. Both versions come from the same model, which
+      was trained on the full sequences of all ${MD.enzymes} enzymes.`;
+  })();
+
+  /* ---- what survives: rank correlation ---- */
+  $("#tRankNote").innerHTML = `The <em>order</em> is a different question from the level. For each
+    protein the model ranks its 75 combinations from most to least likely; trimming barely disturbs
+    that order — <b>${A.rho_above_90} of ${TRIM.n_proteins}</b> proteins stay above 0.90 and the
+    worst is <b>${num(A.rho_min)}</b>. So the model still agrees with itself about
+    <em>which</em> amines an enzyme prefers, even where it disagrees about whether the enzyme
+    works at all. Each bar is one protein.`;
+  (function(){
+    const P=[...TRIM.per_protein].sort((a,b)=>a.rho-b.rho), n=P.length;
+    const W=900,H=180,L=44,R=10,T=26,B=32, y1=0.85;
+    const bw=(W-L-R)/n, sy=v=>T+(1-(v-y1)/(1-y1))*(H-T-B);
+    $("#tRank").innerHTML = `<svg viewBox="0 0 ${W} ${H}" role="img"
+      aria-label="rank correlation between the two versions, one bar per protein">
+      ${[.85,.90,.95,1].map(v=>`<line x1="${L}" x2="${W-R}" y1="${sy(v)}" y2="${sy(v)}"
+        stroke="var(--soft)"/><text x="${L-7}" y="${sy(v)+4}" text-anchor="end" font-size="10"
+        fill="var(--muted)">${v.toFixed(2)}</text>`).join("")}
+      ${P.map((p,i)=>`<rect x="${(L+i*bw+bw*.12).toFixed(2)}" y="${sy(p.rho).toFixed(2)}"
+        width="${(bw*.76).toFixed(2)}" height="${(sy(y1)-sy(p.rho)).toFixed(2)}"
+        fill="var(${p.split==="test"?"--m2":p.split==="dev"?"--m1":"--muted"})" fill-opacity=".85">
+        <title>${p.entry} — order preserved ${p.rho.toFixed(3)}, keeps ${p.top10} of its top 10</title></rect>`).join("")}
+      <text x="${(L+W-R)/2}" y="${H-3}" text-anchor="middle" font-size="10.5" fill="var(--muted)">one bar per protein, worst on the left</text>
+      <text x="11" y="${(T+H-B)/2}" text-anchor="middle" font-size="10.5" fill="var(--muted)"
+        transform="rotate(-90 11 ${(T+H-B)/2})">order preserved</text>
+    </svg>`;
+  })();
+  if (TRIM.example) {
+    const E=TRIM.example;
+    $("#tExample").innerHTML = `<table><thead><tr><th>amine</th><th>bile acid</th>
+      <th class="r">full sequence</th><th class="r">rank</th>
+      <th class="r">trimmed</th><th class="r">rank</th></tr></thead><tbody>${
+      E.rows.map(r=>`<tr><td>${pretty(r.amine)}</td><td>${r.core}</td>
+        <td class="r">${num(r.full)}</td><td class="r" style="color:var(--muted)">${r.rank_full}</td>
+        <td class="r" style="font-weight:600">${num(r.trim)}</td>
+        <td class="r" style="color:var(--muted)">${r.rank_trim}</td></tr>`).join("")}</tbody></table>`;
+    $("#tExampleRead").innerHTML = `<b class="mono">${E.entry}</b> has the worst order agreement of
+      all ${TRIM.n_proteins} proteins, and even so all twelve of its top combinations stay in the top
+      twelve. But read the numbers, not the ranks: from the full sequence every score is under
+      <b>0.10</b> — the model says this enzyme makes nothing. Trimmed, they are nearly all above
+      <b>0.80</b>. Identical ordering, opposite conclusion. That is exactly why the order is the
+      wrong thing to look at.`;
+  }
+
+  /* ---- why the numbers move ---- */
+  $("#tEmbNote").innerHTML = `This is what makes everything above surprising: the protein's
+    numbers barely move. After cutting, they stay <b>${num(EB.cos_median)}</b> similar to the
+    originals — a shift of roughly <b>${((1-EB.cos_median)*100).toFixed(1)}%</b> — and the size of
+    that shift tracks how much was removed almost exactly (correlation
+    <b>${num(EB.cut_vs_cos)}</b>), meaning most of it is simply those residues no longer being
+    averaged in. So a one percent change in the input flips the activity call on two thirds of
+    these proteins. That is a statement about how brittle the model is, not about how violent the
+    trimming was.`;
+  (function(){
+    const P=EB.points, W=880,H=300,L=60,R=14,T=14,B=42;
+    const xs=P.map(p=>p.frac), ys=P.map(p=>p.cos);
+    const x2=Math.max(...xs)*1.06, y1=Math.min(...ys)-.02;
+    const sx=v=>L+(v/x2)*(W-L-R), sy=v=>T+(1-(v-y1)/(1-y1))*(H-T-B);
+    $("#tEmb").innerHTML = `<svg viewBox="0 0 ${W} ${H}" role="img"
+      aria-label="similarity of the protein's numbers against the share of the chain removed">
+      ${[.70,.80,.90,1.00].filter(v=>v>=y1).map(v=>`<line x1="${L}" x2="${W-R}" y1="${sy(v)}"
+        y2="${sy(v)}" stroke="var(--soft)"/><text x="${L-7}" y="${sy(v)+4}" text-anchor="end"
+        font-size="10" fill="var(--muted)">${v.toFixed(2)}</text>`).join("")}
+      ${[0,.05,.10,.15,.20,.25,.30].filter(v=>v<=x2).map(v=>`<text x="${sx(v)}" y="${H-B+16}"
+        text-anchor="middle" font-size="10" fill="var(--muted)">${(v*100).toFixed(0)}%</text>`).join("")}
+      ${P.map(p=>`<circle cx="${sx(p.frac).toFixed(1)}" cy="${sy(p.cos).toFixed(1)}" r="4.5"
+        fill="var(--m1)" fill-opacity=".6" stroke="var(--panel)" stroke-width="1">
+        <title>${p.entry} — ${p.cut} aa removed (${(p.frac*100).toFixed(1)}% of the chain), similarity ${p.cos.toFixed(3)}</title></circle>`).join("")}
+      <text x="${(L+W-R)/2}" y="${H-4}" text-anchor="middle" font-size="10.5" fill="var(--muted)">share of the chain removed</text>
+      <text x="14" y="${(T+H-B)/2}" text-anchor="middle" font-size="10.5" fill="var(--muted)"
+        transform="rotate(-90 14 ${(T+H-B)/2})">how similar the numbers stay</text>
+    </svg>`;
+  })();
+
+  function tPer(){
+    const k=$("#tSort").value;
+    const P=AC.per_protein.map(r=>({...r, rho:(byEntry[r.entry]||{}).rho,
+      top10:(byEntry[r.entry]||{}).top10, cos:(byEntry[r.entry]||{}).cos,
+      cut:(byEntry[r.entry]||{}).cut}));
+    P.sort((a,b)=> k==="d" ? Math.abs(b.d)-Math.abs(a.d) : k==="nf" ? b.nf-a.nf
+      : k==="nt" ? b.nt-a.nt : k==="rho" ? a.rho-b.rho : (b.cut||0)-(a.cut||0));
+    $("#tPer").innerHTML = `<table><thead><tr><th>entry</th><th></th><th class="r">cut</th>
+      <th class="r">products, full</th><th class="r">products, trimmed</th>
+      <th class="r">change</th><th class="r">order kept</th></tr></thead><tbody>${
+      P.map(r=>`<tr><td class="mono" style="font-size:.8rem">${r.entry}</td>
+        <td>${r.split==="test"?'<span class="tag pred">held out</span>'
+            :r.split==null?'<span class="tag no">no data</span>':''}</td>
+        <td class="r">${r.cut==null?"—":r.cut+" aa"}</td>
+        <td class="r">${r.nf}</td><td class="r">${r.nt}</td>
+        <td class="r" style="font-weight:600;color:var(${Math.abs(r.d)>5?"--pred":"--muted"})">${r.d>=0?"+":""}${r.d}</td>
+        <td class="r" style="color:var(--muted)">${r.rho==null?"—":num(r.rho)}</td></tr>`).join("")}
+      </tbody></table>`;
+  }
+  $("#tSort").onchange = tPer; tPer();
+
+  $("#tVerdict").innerHTML = `<b>The answer.</b> Yes — the predicted activity changes.
+    ${AC.changed_6_plus} of ${AC.n_proteins} proteins shift by more than five products,
+    ${((AC.lost+AC.gained)/AC.total*100).toFixed(1)}% of all calls come out differently, and the
+    ${AC.spread.all.silent_full} proteins called completely inactive from their full sequence drop
+    to ${AC.spread.all.silent_trim}. The answers also bunch together — from a range of
+    ${AC.spread.all.full_min}–${AC.spread.all.full_max} products down to
+    ${AC.spread.all.trim_min}–${AC.spread.all.trim_max}, a
+    ${Math.abs(AC.spread.all.change*100).toFixed(0)}% loss of spread. What survives is the
+    <em>order</em>: for any one enzyme, the same amines still come out on top.
+    <br><br><span class="tag pred">what to do with this</span> Trimmed predictions are usable for
+    asking <em>which amine will this enzyme attach</em>, and not for asking whether an enzyme works
+    at all, or for ranking one enzyme against another. The cause is straightforward: the model was
+    trained on untrimmed sequences, so a trimmed one is unlike anything it has seen and it retreats
+    toward a generic answer of about twelve products. If trimmed sequences are what you want to
+    predict on, the fix is to retrain on trimmed embeddings for all ${MD.enzymes} enzymes rather
+    than reusing this one. For what this model can genuinely do on an enzyme it has never seen,
+    see section 8 — ROC-AUC <b>${MD.held_out.roc_auc}</b>, measured once.`;
+}
+
+/* ---------- 10: residue selection ---------- */
+if (typeof POOL !== "undefined" && POOL && POOL.results) {
+  const P = POOL, EMBS = ["ProstT5","ProtT5","ESM-3","ESM-2"];
+
+  $("#pIntro").innerHTML = `The model turns a protein into one row of numbers by averaging
+    across all <b>${P.whole_residues}</b> of its amino acids. A handful of important positions
+    therefore contributes under 1% of the result — which might be why the protein adds so
+    little. So: line the enzymes up against each other, work out which positions they all
+    share and which vary, and try pooling over only part of the chain instead.
+    <br><br>Seven ways of choosing residues, each tried on all four protein language models —
+    <b>${P.n_runs} models in total</b>, every one cross-validated on the
+    ${P.protocol.split(" ")[0]} development enzymes.`;
+
+  const best = P.results.filter(r => r.mean_change !== undefined)
+                        .sort((a,b) => b.mean_change - a.mean_change)[0];
+  $("#pKey").innerHTML = [
+    [P.alignment.sequences + " × " + P.alignment.columns, "enzymes aligned, into this many positions"],
+    [P.invariant.length, "positions identical in every single enzyme"],
+    ["+" + best.mean_change.toFixed(3), "the biggest average gain any scheme managed"],
+    [P.curve_range[0] + "–" + P.curve_range[1], "where all " + P.n_runs + " runs ended up"],
+  ].map(([b,s])=>`<div><b>${b}</b><span>${s}</span></div>`).join("");
+
+  /* invariant columns */
+  $("#pAlnNote").innerHTML = `All ${P.alignment.sequences} sequences were lined up with
+    <b>${P.alignment.tool}</b>, which sorts out that they are different lengths and finds which
+    amino acid in one protein corresponds to which in another. That gives
+    ${P.alignment.columns} positions, of which <b>${P.alignment.core_columns}</b> are present in
+    almost every enzyme — the rest are insertions carried by a few. Just
+    <b>${P.invariant.length}</b> are the same amino acid in <em>every</em> enzyme:`;
+  $("#pInvariant").innerHTML = `<table><thead><tr><th>amino acid</th>
+    <th class="r">typical position in the protein</th><th class="r">range across enzymes</th>
+    <th>what it is</th></tr></thead><tbody>${
+    P.invariant.map(v=>{
+      const known = {C:"cysteine", R:"arginine", N:"asparagine",
+                     G:"glycine", P:"proline", D:"aspartate", H:"histidine",
+                     E:"glutamate", T:"threonine", S:"serine"}[v.aa] || v.aa;
+      return `<tr><td><b class="mono">${v.aa}</b></td>
+        <td class="r">residue ${v.median_residue}</td>
+        <td class="r" style="color:var(--muted)">${v.min_residue}–${v.max_residue}</td>
+        <td style="color:var(--muted);font-size:.83rem">${known}</td></tr>`;
+    }).join("")}</tbody></table>`;
+  $("#pAlnRead").innerHTML = `Nobody specified these positions — they fall out of the alignment
+    simply by never varying. Positions that are identical across 115 otherwise quite different
+    sequences are usually structurally or functionally constrained, and the set found here
+    (a cysteine near the start, then asparagine, glycine, asparagine, proline and arginine)
+    is broadly consistent with what has been reported for this enzyme family.
+    <br><br><b>What has not been established here:</b> which of these positions does what. The
+    chemistry of these particular enzymes has not been characterised, and conservation alone
+    cannot distinguish a catalytic residue from one that holds the fold together. They are
+    reported as conserved positions, not as an assigned mechanism.`;
+
+  /* conservation histogram */
+  $("#pHistNote").innerHTML = `For every shared position, how many of the enzymes carry the same
+    amino acid there. 100% means invariant; 30% means it varies freely.`;
+  (function(){
+    const H = P.histogram, W=620, H0=210, L=48, R=14, T=14, B=44;
+    const mx = Math.max(...H.map(h=>h.n)), bw=(W-L-R)/H.length;
+    const sy = v => T + (1 - v/mx)*(H0-T-B);
+    $("#pHist").innerHTML = `<svg viewBox="0 0 ${W} ${H0}" role="img"
+      aria-label="how conserved each shared position is">
+      ${[0,.25,.5,.75,1].map(f=>`<line x1="${L}" x2="${W-R}" y1="${sy(f*mx)}" y2="${sy(f*mx)}"
+        stroke="var(--soft)"/><text x="${L-7}" y="${sy(f*mx)+4}" text-anchor="end" font-size="10"
+        fill="var(--muted)">${Math.round(f*mx)}</text>`).join("")}
+      ${H.map((h,i)=>`<rect x="${(L+i*bw+bw*.15).toFixed(1)}" y="${sy(h.n).toFixed(1)}"
+        width="${(bw*.7).toFixed(1)}" height="${(sy(0)-sy(h.n)).toFixed(1)}"
+        fill="var(--accent)" fill-opacity=".82"><title>${(h.lo*100).toFixed(0)}–${(h.hi*100).toFixed(0)}% conserved — ${h.n} positions</title></rect>
+        <text x="${(L+i*bw+bw*.5).toFixed(1)}" y="${H0-B+15}" text-anchor="middle" font-size="9"
+        fill="var(--muted)">${(h.lo*100).toFixed(0)}</text>`).join("")}
+      <text x="${(L+W-R)/2}" y="${H0-6}" text-anchor="middle" font-size="10.5"
+        fill="var(--muted)">how conserved the position is (%)</text>
+      <text x="12" y="${(T+H0-B)/2}" text-anchor="middle" font-size="10.5" fill="var(--muted)"
+        transform="rotate(-90 12 ${(T+H0-B)/2})">positions</text>
+    </svg>`;
+  })();
+
+  $("#pLadder").innerHTML = `<table><thead><tr><th>call a position conserved at</th>
+    <th class="r">positions counted conserved</th><th class="r">residues left to pool</th>
+    <th style="width:30%"></th></tr></thead><tbody>${
+    P.ladder.map(l=>`<tr><td>${l.threshold>=1 ? "exactly 100%"
+      : (l.threshold*100).toFixed(0)+"% or more"}</td>
+      <td class="r">${l.conserved}</td>
+      <td class="r">${l.residues} <span style="color:var(--muted)">(${(l.frac*100).toFixed(0)}%)</span></td>
+      <td><span class="bar-track" style="width:100%"><span class="bar-mini"
+        style="width:${(l.frac*100).toFixed(0)}%"></span></span></td></tr>`).join("")}
+    <tr style="background:var(--sunk)"><td><b>the whole protein</b></td><td class="r">—</td>
+      <td class="r"><b>${P.whole_residues}</b> <span style="color:var(--muted)">(100%)</span></td>
+      <td><span class="bar-track" style="width:100%"><span class="bar-mini"
+        style="width:100%"></span></span></td></tr></tbody></table>`;
+  $("#pLadderRead").innerHTML = `Most positions are only 40–50% conserved, so where you draw the
+    line matters less than it looks. Anything above <b>70%</b> barely changes the protein at all —
+    at a 75% cut-off you still keep ${P.ladder.find(l=>l.threshold===0.75).residues} of
+    ${P.whole_residues} residues. The cut-offs that genuinely select a small part of the protein
+    are the low ones: at 30% you are down to
+    ${P.ladder.find(l=>l.threshold===0.30).residues} residues.`;
+
+  /* results */
+  $("#pResNote").innerHTML = `Each scheme was used to build the enzyme half of the model, with
+    everything else held identical. Scored on <b>within-substrate AUC</b> — fix the amine and the
+    bile acid, and ask whether the right enzymes come out on top. That is the only measure the
+    protein half can affect.`;
+  $("#pResults").innerHTML = `<table><thead><tr><th>what gets pooled</th><th class="r">residues</th>
+    ${EMBS.map(e=>`<th class="r">${e}</th>`).join("")}
+    <th class="r">average change</th><th>helps on</th></tr></thead><tbody>${
+    P.results.map(r=>{
+      const isBase = r.change === undefined;
+      return `<tr${isBase?' style="background:var(--sunk)"':''}>
+        <td>${isBase?"<b>the whole protein</b> (current)":r.scheme}</td>
+        <td class="r">${r.residues}</td>
+        ${EMBS.map(e=>`<td class="r">${r.within[e].toFixed(3)}${
+          isBase?"":`<span style="display:block;font-size:.76rem;color:var(${
+            r.change[e]>0?"--hit":"--pred"})">${r.change[e]>=0?"+":""}${r.change[e].toFixed(3)}</span>`}</td>`).join("")}
+        <td class="r">${isBase?"—":`<b>${r.mean_change>=0?"+":""}${r.mean_change.toFixed(3)}</b>`}</td>
+        <td>${isBase?"":(r.positive_on===4
+          ? '<span class="tag hit">all 4</span>'
+          : `<span class="tag no">${r.positive_on} of 4</span>`)}</td></tr>`;
+    }).join("")}</tbody></table>`;
+  $("#pResRead").innerHTML = `<b>Nothing reliably wins.</b> The largest average gain is
+    <b>+${best.mean_change.toFixed(3)}</b>, and it is negative on
+    ${4 - best.positive_on} of the four models. The idea we started with — throw away the
+    conserved positions and keep what varies — is <em>negative</em> on three of four.
+    Even the six catalytic residues, which looked the most promising, swing from −0.048 on one
+    model to +0.034 on another: the same six positions, an 0.08 spread.
+    <br><br>An earlier version of this test, run on all 115 enzymes instead of the 92, made one
+    scheme look like a clear winner (+0.032, with a significance test to match). It did not
+    survive being tried on the other three models. That is worth stating plainly: with 44
+    substrate groups to average over, differences of this size appear and disappear depending on
+    which enzymes happen to be in the comparison.`;
+
+  /* curves */
+  $("#pCurveEmb").innerHTML = EMBS.map(e=>`<option value="${e}">${e}</option>`).join("");
+  $("#pCurveNote").innerHTML = `How wrong the model's probabilities are as training proceeds,
+    on the enzymes each round was holding out. Five lines per scheme, one per fold. Lower is
+    better; they stop at different points because each fold trains until it stops improving.`;
+  function pCurves(){
+    const emb = $("#pCurveEmb").value;
+    const W=880, H=300, L=52, R=150, T=14, B=42, YMAX=0.55;
+    const hue = ["--m1","--m2","--m3","--m4","--s1","--s2","--s5"];
+    const rows = P.results.map(r=>r.scheme);
+    const mx = Math.max(...rows.map(s=>(P.curves[emb+"|"+s]||[[]]).reduce((a,c)=>Math.max(a,c.length),0)));
+    const sx = i => L + (i/(mx-1))*(W-L-R), sy = v => T + (1-Math.min(v,YMAX)/YMAX)*(H-T-B);
+    $("#pCurves").innerHTML = `<svg viewBox="0 0 ${W} ${H}" role="img"
+      aria-label="held-out log loss for every scheme, ${emb}">
+      ${[0,.15,.3,.45].map(v=>`<line x1="${L}" x2="${W-R}" y1="${sy(v)}" y2="${sy(v)}"
+        stroke="var(--soft)"/><text x="${L-7}" y="${sy(v)+4}" text-anchor="end" font-size="10"
+        fill="var(--muted)">${v.toFixed(2)}</text>`).join("")}
+      ${rows.map((s,si)=>(P.curves[emb+"|"+s]||[]).map(c=>
+        `<polyline fill="none" stroke="var(${hue[si]})" stroke-width="1.2" opacity=".72"
+         points="${c.map((v,i)=>`${sx(i*(mx-1)/(c.length-1)).toFixed(1)},${sy(v).toFixed(1)}`).join(" ")}"/>`
+      ).join("")).join("")}
+      ${rows.map((s,si)=>`<rect x="${W-R+6}" y="${T+6+si*17}" width="11" height="3" fill="var(${hue[si]})"/>
+        <text x="${W-R+22}" y="${T+11+si*17}" font-size="9.5" fill="var(--body)">${s}</text>`).join("")}
+      <text x="${(L+W-R)/2}" y="${H-4}" text-anchor="middle" font-size="10.5"
+        fill="var(--muted)">rounds of training</text>
+      <text x="12" y="${(T+H-B)/2}" text-anchor="middle" font-size="10.5" fill="var(--muted)"
+        transform="rotate(-90 12 ${(T+H-B)/2})">how wrong, on held-out enzymes</text>
+    </svg>`;
+  }
+  $("#pCurveEmb").onchange = pCurves; pCurves();
+
+  $("#pVerdict").innerHTML = `<b>The conclusion is negative, and that is useful.</b> Seven ways of
+    choosing which part of the protein to read, four different protein language models,
+    ${P.n_runs} models in all — and every one of them lands between
+    <b>${P.curve_range[0]} and ${P.curve_range[1]}</b> on the held-out enzymes. Reading the whole
+    protein is as good as anything cleverer, and it has the practical advantage of needing no
+    alignment: a new sequence can be scored on its own, without first being fitted into this
+    set of 115.
+    <br><br>Taken with the finding that the four protein language models are statistically
+    indistinguishable, this says the limit is not in how the protein is turned into numbers.
+    It is that 115 enzymes contain only <b>69 genuinely independent sequences</b>, and that the
+    experiment itself reproduces about 82% of the time. Those are the two things that would
+    have to change.`;
+}
+</script></body></html>

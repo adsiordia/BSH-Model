@@ -1,0 +1,23 @@
+{
+  "embedding": "ProstT5",
+  "pooling": "mean",
+  "n_estimators": 750,
+  "rounds_per_fold": [
+    812,
+    494,
+    750,
+    720,
+    1096
+  ],
+  "pr_auc": 0.8108,
+  "roc_auc": 0.9268,
+  "log_loss_raw": 0.2955,
+  "log_loss_calibrated": 0.2713,
+  "brier_raw": 0.0872,
+  "brier_calibrated": 0.0815,
+  "within_substrate_mean": 0.6935,
+  "within_substrate_median": 0.679,
+  "mean_prediction_raw": 0.2705,
+  "mean_prediction_calibrated": 0.2314,
+  "base_rate": 0.2314
+}
