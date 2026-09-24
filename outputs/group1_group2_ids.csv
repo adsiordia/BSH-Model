@@ -1,0 +1,17 @@
+group,accession,fasta_id,organism,phylum,signal_peptide_aa,assay_products,predicted_trimmed
+GROUP 1 never assayed,A0A0P0LK75,cluster4_A0A0P0LK75,Bacteroides vulgatus,Bacteroidota,37,NOT MEASURED,9
+GROUP 1 never assayed,A0A1N6ECR1,Halodesulfovibrio_A0A1N6ECR1,Halodesulfovibrio marinisediminis DSM 17456,Thermodesulfobacteriota,69,NOT MEASURED,2
+GROUP 1 never assayed,A0A1Y3YYW1,cluster395_A0A1Y3YYW1,Bacteroides clarus,Bacteroidota,25,NOT MEASURED,10
+GROUP 1 never assayed,A0A1Y4QH48,A0A1Y4QH48,[Clostridium] spiroforme,Bacillota,61,NOT MEASURED,9
+GROUP 1 never assayed,A0A6N3FX58,cluster362_A0A6N3FX58,Paraprevotella clara,,30,NOT MEASURED,12
+GROUP 1 never assayed,B1C4T2,B1C4T2,Thomasclavelia spiroformis DSM 1552,Bacillota,4,NOT MEASURED,10
+GROUP 1 never assayed,H1DEM8,cluster674_H1DEM8,Odoribacter laneus YIT 12061,Bacteroidota,21,NOT MEASURED,12
+GROUP 1 never assayed,M7X2M2,Mariniradius_M7X2M2,Mariniradius saccharolyticus AK6,Bacteroidota,16,NOT MEASURED,7
+GROUP 2 assayed inactive,A0A069S9I0,cluster54_A0A069S9I0,Bacteroides vulgatus str. 3975 RP4,Bacteroidota,22,0,9
+GROUP 2 assayed inactive,A0A0P0FKS2,cluster21_A0A0P0FKS2,Bacteroides cellulosilyticus,Bacteroidota,26,0,4
+GROUP 2 assayed inactive,A0A1Q6E5Z9,cluster424_A0A1Q6E5Z9,Alistipes sp. 56_11,,24,0,10
+GROUP 2 assayed inactive,A0A3D3YKZ5,cluster838_A0A3D3YKZ5,Alistipes obesi,,25,0,3
+GROUP 2 assayed inactive,A0A6B3MYR8,Moorena_SIO4A1_A0A6B3MYR8,Moorea sp. SIO4A1,,28,0,8
+GROUP 2 assayed inactive,A6LC91,cluster18_A6LC91,Parabacteroides distasonis (strain ATCC 8503 / DSM 20701 / CIP 104284 / JCM 5825 / NCTC 11152),Bacteroidota,38,0,10
+GROUP 2 assayed inactive,A7A5K1,cluster5_A7A5K1,Bifidobacterium adolescentis L2-32,Actinomycetota,32,0,8
+GROUP 2 assayed inactive,B5D243,cluster111_B5D243,Bacteroides plebeius DSM 17135,Bacteroidota,25,0,12

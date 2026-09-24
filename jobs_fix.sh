@@ -5,7 +5,7 @@
 #SBATCH --cpus-per-task=4
 #SBATCH --mem=16G
 #SBATCH --partition=all
-cd /home/adsiordia/BSH-Model-v2
-export LD_PRELOAD=/home/adsiordia/miniconda3/lib/libstdc++.so.6
+cd "${SLURM_SUBMIT_DIR:-$(dirname "$0")}"
+[ -f "$HOME/miniconda3/lib/libstdc++.so.6" ] && export LD_PRELOAD="$HOME/miniconda3/lib/libstdc++.so.6"
 python -u src/export_data_tab.py
 python -u src/export_limits.py

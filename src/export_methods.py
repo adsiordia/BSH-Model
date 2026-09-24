@@ -104,6 +104,27 @@ def logloss(base_rate):
                 null_ll=round(float(null_ll), 4), base_rate=round(b, 4))
 
 
+def production_summary():
+    """The shipped model's cross-validated numbers, with PR-AUC normalised.
+
+    Raw PR-AUC cannot be compared across label rules or splits because its floor
+    is the base rate. (PR - base) / (1 - base) rescales it so 0 is chance and 1
+    is perfect, whatever the prevalence.
+    """
+    f = OUT / "production_model.json"
+    if not f.exists():
+        return None
+    d = json.loads(f.read_text())
+    b = float(d["base_rate"])
+    d["cv_pr_auc_norm"] = round((d["cv_pr_auc"] - b) / (1 - b), 4)
+    d["null_log_loss"] = round(float(-(b * np.log(b) + (1 - b) * np.log(1 - b))), 4)
+    d["note"] = ("Cross-validated over all 115 enzymes with cluster-grouped folds, "
+                 "not a held-out test. PR-AUC is also given normalised, "
+                 "(PR - base) / (1 - base), because its floor is the base rate and "
+                 "so raw values are not comparable across splits or label rules.")
+    return d
+
+
 def final_model():
     """The production model: its config, dev-vs-test metrics, and test curves."""
     f = ROOT / "outputs/test_final_predictions.csv"
@@ -302,10 +323,14 @@ def main():
                  "standardised inputs"),
             dict(name="LogisticRegression", detail="L2, C=0.1, balanced class weights, "
                  "standardised inputs")],
-        metrics=json.loads(mt.to_json(orient="records")),
+        metrics=json.loads(mt.assign(
+            pr_auc_norm=((mt.pr_auc - float(meta.active.mean()))
+                         / (1 - float(meta.active.mean()))).round(4)
+            ).to_json(orient="records")),
         curves=curves(z, meta),
         within=within_substrate(z, meta),
         logloss=logloss(float(meta.active.mean())),
+        production=production_summary(),
         final=final_model(),
         findings=[
             "The algorithm matters more than the embedding. XGBoost wins on all four "

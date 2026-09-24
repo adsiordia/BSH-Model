@@ -433,7 +433,7 @@ details > *{margin-top:10px}
     <details>
       <summary>One product, several peaks &mdash; how they are combined before the cut-off</summary>
       <div class="prose"><p id="mFeat"></p><div class="scroll" id="mFeatTab"
-        style="margin-top:10px"></div><p class="foot" id="mFeatNote"
+        style="margin-top:10px"></div><p class="foot" id="mFeatCollapse"
         style="margin-top:10px"></p></div>
     </details>
     <p>Each enzyme was run in <b>three replicates</b>. How many of the three have to clear the
@@ -471,6 +471,13 @@ details > *{margin-top:10px}
     <p style="margin-top:14px" id="mSplitM"></p>
     <p id="mCV"></p>
     <p><span class="tag pred">status</span> <span id="mTest"></span></p>
+  </div>
+
+  <div class="card">
+    <h3 style="margin-bottom:4px">The model that ships</h3>
+    <p class="prose foot" style="margin-bottom:12px" id="mProdNote"></p>
+    <div class="grid" id="mProd"></div>
+    <p class="foot" id="mProdRead" style="margin-top:12px"></p>
   </div>
 
   <div class="card">
@@ -1718,7 +1725,7 @@ $("#mThresh").innerHTML = `A product counts as <b>made</b> when its mass-spectro
     </tr></thead><tbody>${F.multi_products.map(r=>`<tr><td>${pretty(r.amine)}
     <span class="tag plain">${r.core}</span></td><td class="r"><b>${r.features}</b></td></tr>`
     ).join("")}</tbody></table>`;
-  $("#mFeatNote").innerHTML = `Adding the features together instead would call
+  $("#mFeatCollapse").innerHTML = `Adding the features together instead would call
     <b>${F.active_sum.toLocaleString()}</b> products made rather than
     <b>${F.active_max.toLocaleString()}</b> &mdash; a difference of <b>${F.n_disagree}</b> cells,
     ${(F.pct_disagree*100).toFixed(2)}% of the grid. Those are combinations where two or three
@@ -1774,11 +1781,35 @@ $("#mCV").textContent = MET.split.cv;
 $("#mTest").textContent = MET.split.test_status;
 
 /* 4 -- metric table */
+(function(){
+  const P = MET.production; if(!P) return;
+  $("#mProdNote").innerHTML = `This is the model in <span class="mono">models/${"bsh_prostt5_xgb_production.pkl"}</span>,
+    trained on all <b>${P.enzymes}</b> enzymes. The numbers below are cross-validated with
+    cluster-grouped folds &mdash; they are not a held-out test.`;
+  $("#mProd").innerHTML = [
+    [num(P.cv_pr_auc), "precision-recall AUC", `chance is ${P.base_rate.toFixed(3)}`],
+    [num(P.cv_pr_auc_norm), "the same, normalised", "0 is chance, 1 is perfect"],
+    [num(P.cv_roc_auc), "ROC AUC", "chance is 0.5"],
+    [num(P.cv_within_substrate), "within-substrate AUC", "can it pick the right ENZYME"],
+  ].map(([b,s1,s2])=>`<div class="stat"><b>${b}</b><span>${s1}<br>
+     <span style="color:var(--muted)">${s2}</span></span></div>`).join("");
+  $("#mProdRead").innerHTML = `Raw precision-recall AUC has a floor equal to the hit rate, so
+    <b>${num(P.cv_pr_auc)}</b> against a floor of ${P.base_rate.toFixed(3)} is not comparable with
+    the same number measured on a different split or under a different cut-off. The normalised
+    form, (PR &minus; base) / (1 &minus; base) = <b>${num(P.cv_pr_auc_norm)}</b>, is.
+    <br><br>Read the <b>within-substrate AUC of ${num(P.cv_within_substrate)}</b> before the others.
+    It fixes the amine and bile acid and asks only whether the right enzymes rank on top, so it is
+    the one metric the protein sequence alone controls &mdash; and at a floor of 0.5 it says the
+    model tells enzymes apart modestly. The higher figures are carried largely by learning which
+    <em>products</em> are commonly made.`;
+})();
+
 const METRICS = [
   ["pr_auc","Precision-recall AUC","Overall ranking quality. Guessing at random scores the hit rate itself ("+(MET.dataset.base_rate).toFixed(3)+"), not 0.5.",1],
+  ["pr_auc_norm","Precision-recall AUC, normalised","The same ranking quality rescaled so that 0 is chance and 1 is perfect: (PR &minus; base rate) / (1 &minus; base rate). Raw PR-AUC cannot be compared across splits or label rules because its floor moves with how common hits are; this can.",1],
   ["within_substrate","Within-substrate AUC","Holds the amine and bile acid fixed and asks whether the right ENZYMES are ranked on top. This is the metric that matches 'predict a new BSH'.",1],
   ["roc_auc","ROC AUC","Ranking quality ignoring how rare hits are. 0.5 is random.",1],
-  ["log_loss","Log loss","How wrong the probabilities are. LOWER is better; 0.542 is what you get by always guessing the hit rate.",0],
+  ["log_loss","Log loss","How wrong the probabilities are. LOWER is better; "+MET.logloss.null_ll.toFixed(3)+" is what you get by always guessing the hit rate.",0],
   ["brier","Brier score","Mean squared error of the probabilities. LOWER is better.",0],
   ["mcc","Matthews correlation","Balanced summary of the yes/no calls at a 50% cut-off.",1],
   ["f1","F1","Balance of precision and recall at a 50% cut-off.",1],
@@ -1796,7 +1827,7 @@ function mTable(){
         lo = Math.min(...vals), span = Math.max(...vals)-lo || 1;
   $("#mMetricNote").textContent = spec[2];
   $("#mTable").innerHTML = `<table><thead><tr><th>protein representation</th><th>algorithm</th>
-    <th class="r">${spec[1]}</th><th style="width:34%"></th>${k==="pr_auc"?'<th class="r">fold spread</th>':''}
+    <th class="r">${spec[1]}</th><th style="width:30%"></th>${k==="pr_auc"?'<th class="r">normalised</th><th class="r">fold spread</th>':''}
     </tr></thead><tbody>${rows.map(r=>{
       const w = hi ? (r[k]-lo)/span : 1-(r[k]-lo)/span;
       const isBest = r[k]===best;
@@ -1805,7 +1836,8 @@ function mTable(){
         <td class="r"${isBest?' style="color:var(--hit);font-weight:700"':''}>${num(r[k])}</td>
         <td><span class="bar-track"><span class="bar-mini" style="width:${(w*100).toFixed(0)}%;
           background:var(${MODEL_COLOR[r.model]})"></span></span></td>
-        ${k==="pr_auc"?`<td class="r" style="color:var(--muted)">±${num(r.pr_sd)}</td>`:''}</tr>`;
+        ${k==="pr_auc"?`<td class="r mono">${num(r.pr_auc_norm)}</td>
+          <td class="r" style="color:var(--muted)">±${num(r.pr_sd)}</td>`:''}</tr>`;
     }).join("")}</tbody></table>`;
 }
 $("#mMetric").onchange = mTable; $("#mXgbOnly").onchange = mTable;

@@ -85,13 +85,20 @@ Cluster-grouped 5-fold CV, where clusters are connected components of a >=70%
 identity graph so no near-duplicate spans a fold. These are cross-validated numbers,
 not a held-out test:
 
-| metric | value |
-|---|---|
-| PR-AUC | 0.7642 |
-| ROC-AUC | 0.9341 |
-| log loss | 0.2371 (0.2093 after isotonic calibration) |
-| Brier | 0.0596 (on calibrated predictions) |
-| **within-substrate AUC** | **0.6362** |
+| metric | value | chance |
+|---|---|---|
+| PR-AUC | 0.7642 | 0.1601 |
+| **PR-AUC, normalised** | **0.7193** | **0** |
+| ROC-AUC | 0.9341 | 0.5 |
+| log loss | 0.2371 (0.2093 after isotonic calibration) | 0.4398 |
+| Brier | 0.0596 (on calibrated predictions) | — |
+| **within-substrate AUC** | **0.6362** | **0.5** |
+
+**Quote the normalised PR-AUC when comparing across splits or label rules.** Raw
+PR-AUC has a floor equal to the base rate, so a number measured where 16.0% of cells
+are active is not comparable with one measured where 13.9% are. The normalised form
+is (PR - base) / (1 - base): 0 is chance, 1 is perfect, whatever the prevalence.
+ROC-AUC is already base-rate independent and needs no adjustment.
 
 Within-substrate AUC is averaged over substrate groups holding at least 5 positives
 and 5 negatives. Including the sparse groups too gives 0.572 over all 48 — the
@@ -203,9 +210,16 @@ tied.
 - `src/labels.py` documents `MIN_REPS = 2`, but every caller passes `min_reps=1`
   (1,381 active vs 997). The looser rule is what ran; the discrepancy is unresolved
   and is stated on the site.
-- The locked-test figures (ROC-AUC 0.924, precision 0.699, recall 0.701 on 23 held-out
-  enzymes) were measured **before** the cut-off moved to 50,000 and have not been
-  re-run.
+- The locked-test figures were measured **before** the cut-off moved to 50,000 and have
+  not been re-run. Quote **ROC-AUC 0.924** from that evaluation: it is base-rate
+  independent, so it survives both that caveat and the next one intact. PR-AUC was
+  0.69 raw, **0.6194 normalised** against its own base rate of 0.1843.
+- The dev/test split is grouped by sequence cluster but **not stratified on activity**.
+  The test side is somewhat less active (13.9% of cells vs 16.5% in dev), which shifts
+  the PR-AUC floor between them. At the enzyme level the difference is not significant
+  (median breadth 9 vs 12, Mann-Whitney p = 0.214, n = 23), so the split was left as
+  it is rather than invalidating the one held-out measurement — but any future split
+  should stratify clusters by breadth before assigning them.
 - Predictions on signal-peptide-trimmed sequences come from a model trained on
   untrimmed ones. Settling whether the mature sequence predicts better requires
   retraining on trimmed embeddings for all 115 enzymes.
