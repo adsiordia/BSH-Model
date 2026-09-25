@@ -64,8 +64,11 @@ payload = dict(
     note=("58 of these 66 proteins were in the training set of the model that scores "
           "them here, so their columns are retrodictions, not predictions: the model "
           "has already seen the right answer. They are shown to compare the two sequence "
-          "versions against a known result, not as new discoveries. Only the 8 never "
-          "assayed carry genuinely new information."))
+          "versions against a known result, not as new discoveries. Only the 8 removed "
+          "by proteomics carry genuinely new information."),
+    removed_note=("These 8 are absent from the proteomics table -- they were removed at "
+                  "that step rather than never attempted, so there is no assay result to "
+                  "compare their predictions against."))
 (SITE/"candgrid.json").write_text(json.dumps(payload, allow_nan=False))
 kb = (SITE/"candgrid.json").stat().st_size/1024
 print(f"wrote {SITE/'candgrid.json'}  ({kb:.0f} kB)")

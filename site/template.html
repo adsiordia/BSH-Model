@@ -667,7 +667,7 @@ details > *{margin-top:10px}
       </select>
       <input type="search" id="cgq" placeholder="Find an accession, e.g. A0A1N6ECR1"
         aria-label="Filter proteins by accession" style="min-width:250px">
-      <label class="chk"><input type="checkbox" id="cgOnlyNew"> only the 8 never assayed</label>
+      <label class="chk"><input type="checkbox" id="cgOnlyNew"> only the 8 removed by proteomics</label>
     </div>
     <p class="foot" id="cgqNote" style="margin:6px 0 0"></p>
     <div id="cgKey" class="foot" style="margin-bottom:10px;font-size:.76rem;
@@ -801,7 +801,7 @@ details > *{margin-top:10px}
         <option value="pred">Sort: most products predicted</option>
         <option value="name">Sort: name</option>
         <option value="org">Sort: organism</option>
-        <option value="new">Sort: never measured first</option>
+        <option value="new">Sort: removed by proteomics first</option>
       </select>
     </div>
     <div class="trio">
@@ -1558,7 +1558,7 @@ if (typeof CAND !== "undefined" && CAND && CAND.n_proteins) {
           title="measured ${(meas*100).toFixed(0)}%"></span>`:""}
       </div>
       <span class="sub"><span>predicted <b>${(a.rate*100).toFixed(0)}%</b></span>
-        <span>${meas!=null?`measured ${(meas*100).toFixed(0)}%`:"not measured"}</span></span>
+        <span>${meas!=null?`measured ${(meas*100).toFixed(0)}%`:"no assay data"}</span></span>
       ${ch?`<span class="sub" style="color:var(--muted)"><span>${ch.formula}</span></span>
         <span class="sub" style="color:var(--muted);display:block;text-align:left;
           font-size:.7rem;line-height:1.35">${ch.label || kindOf(ch.cls)}</span>`:""}
@@ -1580,7 +1580,7 @@ if (typeof CAND !== "undefined" && CAND && CAND.n_proteins) {
       <td class="mono">${r.accession} <span style="color:var(--accent);font-size:.75rem">&#9656;</span></td>
       <td class="r">${r.cut} aa</td><td class="r">${r.full}</td>
       <td class="r" style="font-weight:600;color:var(--hit)">${r.trimmed}</td>
-      <td class="r">${r.measured==null?"not measured"
+      <td class="r">${r.measured==null?"removed by proteomics"
         :r.measured===0?'<span class="tag no">0 — nothing detected</span>':r.measured}</td>
     </tr>`).join("")}</tbody></table>`;
   const allSilent = SG.gained.every(r => r.measured === 0);
@@ -1618,8 +1618,10 @@ if (typeof CAND !== "undefined" && CAND && CAND.n_proteins) {
     $("#cgWarn").innerHTML = `<b>These are mostly not predictions.</b> ${G.trained_on} of the
       ${G.n_proteins} were in the training set of the model scoring them here, so for those the
       model has already been shown the right answer &mdash; their columns are a check on the
-      method, not a discovery. Only the <b>${G.n_untested}</b> proteins that were never assayed
-      carry genuinely new information; tick the box above to see just those.`;
+      method, not a discovery. Only the <b>${G.n_untested}</b> proteins <b>removed by
+      proteomics</b> carry genuinely new information &mdash; they are absent from the assay
+      table, so there is no measured result to compare them against. Tick the box above to see
+      just those.`;
 
     const shade = (v, view) => {
       if (view === "m") return v==null ? "var(--soft)"
@@ -1662,7 +1664,7 @@ if (typeof CAND !== "undefined" && CAND && CAND.n_proteins) {
             const v = view==="m" ? mv : view==="f" ? fv : view==="t" ? tv : (tv-fv);
             const pr = G.products[j];
             const tip = `${r.acc} · ${pretty(pr[0])} · ${pr[1]}\n`
-              + `assay: ${mv==null?"not tested":mv===1?"made":"not detected"}\n`
+              + `assay: ${mv==null?"removed by proteomics":mv===1?"made":"not detected"}\n`
               + `model, full: ${f3(fv)}   trimmed: ${f3(tv)}`;
             return `<td><div style="background:${shade(v,view)}" title="${tip}"></div></td>`;
           }).join("")}</tr>`;
@@ -1671,7 +1673,7 @@ if (typeof CAND !== "undefined" && CAND && CAND.n_proteins) {
       $("#cgKey").innerHTML = view==="m"
         ? `<span><i style="background:var(--hit)"></i> made</span>
            <span><i style="background:var(--sunk)"></i> looked for, not found</span>
-           <span><i style="background:var(--soft)"></i> never assayed</span>`
+           <span><i style="background:var(--soft)"></i> removed by proteomics</span>`
         : view==="d"
         ? (()=>{
             // swatches drawn with the same shade() the map uses, so they cannot drift
@@ -1700,7 +1702,7 @@ if (typeof CAND !== "undefined" && CAND && CAND.n_proteins) {
 
       const shown = rows.length;
       $("#cgRead").innerHTML = `Showing <b>${shown}</b> protein${shown===1?"":"s"}.
-        Rows marked &#10022; were never assayed. ${
+        Rows marked &#10022; were removed by proteomics, so they have no assay result. ${
         view==="d" ? `This view is the clearest way to see the pattern. Trimming pulls almost
           every protein toward the same middling answer: enzymes the model was confident about
           come down (orange), enzymes it had written off come up (green). The two directions are
@@ -1747,7 +1749,7 @@ if (typeof CAND !== "undefined" && CAND && CAND.n_proteins) {
             <td class="r" style="vertical-align:top">${
               r.measured===1?'<span class="tag hit">made</span>'
               :r.measured===0?'<span class="tag no">not detected</span>'
-              :'<span style="color:var(--muted)">not tested</span>'}</td></tr>`).join("")}
+              :'<span style="color:var(--muted)">removed by proteomics</span>'}</td></tr>`).join("")}
         </tbody></table>
         <button id="gAll" style="margin-top:10px">${showAll
           ? "Show only the " + hits.length + " predicted"
@@ -1839,7 +1841,7 @@ if (typeof CAND !== "undefined" && CAND && CAND.n_proteins) {
         <div><b>${p.length} aa</b><span>full sequence · ${p.cut} aa signal peptide removed ·
           ${p.mature} aa scored</span></div>
         <div><b>${p.n_pred} of 75</b><span>predicted conjugations${
-          p.tested ? " · "+p.measured+" measured in the experiment" : " · never measured"}</span></div>
+          p.tested ? " · "+p.measured+" measured in the experiment" : " · removed by proteomics"}</span></div>
       </div>
       ${p.classes && p.classes.some(c=>c.hit) ? `
       <h4 style="margin:16px 0 6px">What kind of amine it prefers</h4>
