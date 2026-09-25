@@ -977,14 +977,14 @@ if (typeof TD !== "undefined" && TD && TD.assay) {
       classes. The enzyme cuts the glycine or taurine off the bile acid and joins one of these in
       its place, through the nitrogen marked in the structure.`;
     $("#pnAmines").innerHTML = names.map(a=>{
-      const c = CH[a] || {}, i = AM[a] || {};
+      const c = CH[a] || {};
       return `<figure style="margin:0">
         ${c.svg?`<div class="struct"><div class="lt">${c.svg}</div>
           <div class="dk">${c.svg_dark}</div></div>`:""}
         <figcaption style="text-align:center">
           <b style="font-size:.85rem">${pretty(a)}</b>
           <span style="display:block;font-size:.74rem;color:var(--muted)">
-            ${c.formula||""}${i.nuc!=null?` · ${i.nuc} reactive N`:""}</span>
+            ${c.formula||""}</span>
         </figcaption></figure>`;
     }).join("");
   })();
