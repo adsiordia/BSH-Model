@@ -1273,13 +1273,23 @@ function enzDetail(){
     <p class="foot">Made <b>${made}</b> of <b>${tested}</b> products that were searched for.
       ${EN[curE].split==="test" ? "Held out of model training entirely." : "Used in model development."}</p>
     <div class="scroll"><table><thead><tr><th>Amine</th><th>Bile acid</th><th>Result</th>
-      <th class="r">Model confidence</th><th>Signal in the 3 runs</th></tr></thead><tbody>
+      <th class="r">Model confidence</th>
+      <th>Signal in each of the 3 runs<span style="display:block;font-weight:400;
+        color:var(--muted);font-size:.72rem">rep1 &middot; rep2 &middot; rep3 &mdash; not averaged</span></th>
+      </tr></thead><tbody>
     ${rows.map(r=>`<tr><td>${pretty(r.Amine)}</td><td><span class="tag plain">${r.Hydroxyl}</span></td>
       <td>${pill(r)}</td><td class="r">${conf(r.p)}</td><td class="mono" style="font-size:.78rem">${reps(r)}</td></tr>`).join("")}
     </tbody></table></div>
-    <p class="foot">Signal values are the peak intensity in each of the three repeat runs;
-      bold means above the ${DATA.meta.threshold.toLocaleString()} cut-off. "Model confidence"
-      is the model's own estimate, computed without ever seeing this enzyme during training.</p>
+    <p class="foot">The three signal values are the separate replicates, left to right
+      &mdash; <b>not an average</b>, so you can see the spread. Each one is the peak intensity
+      recorded in that run: where a product maps to several LC-MS features, it is the
+      <b>highest of those features within that replicate</b>, not their sum. <b>Bold</b> marks a
+      replicate above the ${DATA.meta.threshold.toLocaleString()} cut-off, and a product counts
+      as made when <b>at least one</b> of the three clears it &mdash; so
+      "61,000 &middot; 0 &middot; 0" and "74,000 &middot; 90,000 &middot; 64,000" are both
+      called made, while only the second reproduces.
+      <br><br>"Model confidence" is the model's own estimate, computed without ever seeing this
+      enzyme during training.</p>
   </div>`;
 }
 $("#eq").oninput = enzList; $("#esort").onchange = enzList; enzList(); enzDetail();
