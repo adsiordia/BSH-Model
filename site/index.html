@@ -992,9 +992,18 @@ if (typeof TD !== "undefined" && TD && TD.assay) {
   $("#dIntro").innerHTML = `Each of the <b>${A.enzymes} enzymes</b> was given every amine and
     every bile acid at once — one pooled mix per well — and run <b>${A.replicates} times</b>.
     Mass spectrometry then looked for each possible product. That makes
-    <b>${A.combinations.toLocaleString()}</b> enzyme-and-product combinations
-    (${A.enzymes} × ${A.amines} × ${A.cores}) from ${A.samples} wells — ${A.enzymes} enzymes
-    × ${A.replicates} runs. A further 21 wells held controls, 366 in all.
+    <b>${A.combinations.toLocaleString()}</b> enzyme-and-product combinations:
+    ${A.enzymes} enzymes × ${A.amines} amines × ${A.cores} bile acid classes
+    (Mono, Di, Tri).
+    <br><br>Those were measured in <b>${A.samples} wells</b> &mdash; ${A.enzymes} enzymes
+    × ${A.replicates} replicate runs. Note the two threes are different things: one counts
+    the bile acid classes offered, the other counts how many times each enzyme was run.
+    Because both master mixes went into every well, one well reports all
+    ${A.amines * A.cores} products at once. So the instrument produces
+    ${A.samples} × ${A.amines * A.cores} =
+    ${(A.samples * A.amines * A.cores).toLocaleString()} readings, which collapse across the
+    ${A.replicates} replicates into the ${A.combinations.toLocaleString()} enzyme-and-product
+    combinations above. A further 21 wells held controls, 366 samples in all.
     <br><br>Everything the model knows comes from this. It is worth seeing what it looks like
     before seeing what a model made of it.`;
 
