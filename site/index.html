@@ -422,8 +422,11 @@ details > *{margin-top:10px}
     <select id="mcore"><option value="all">All bile acid types</option>
       <option value="Mono">Mono only</option><option value="Di">Di only</option>
       <option value="Tri">Tri only</option></select>
+    <input type="search" id="mq" placeholder="Find an accession, e.g. A0A1N6ECR1"
+      aria-label="Filter enzymes by accession" style="min-width:250px">
     <label class="chk"><input type="checkbox" id="mpred"> show what the model predicts, instead of what was measured</label>
   </div>
+  <p class="foot" id="mqNote" style="margin:-4px 0 8px"></p>
   <div class="hm" id="heat"></div>
   <div class="legend" id="heatKey"></div>
   <p class="foot">Rows are enzymes, columns are amine + bile acid type. Hover any cell to see
@@ -662,8 +665,11 @@ details > *{margin-top:10px}
         <option value="trim">Sort: most predicted, trimmed</option>
         <option value="phy">Sort: phylum</option>
       </select>
+      <input type="search" id="cgq" placeholder="Find an accession, e.g. A0A1N6ECR1"
+        aria-label="Filter proteins by accession" style="min-width:250px">
       <label class="chk"><input type="checkbox" id="cgOnlyNew"> only the 8 never assayed</label>
     </div>
+    <p class="foot" id="cgqNote" style="margin:6px 0 0"></p>
     <div id="cgKey" class="foot" style="margin-bottom:10px;font-size:.76rem;
       color:var(--muted);line-height:1.5"></div>
     <div class="scroll"><div id="cgHeat"></div></div>
@@ -908,6 +914,13 @@ document.querySelectorAll("nav button").forEach(b => b.onclick = () => {
   document.querySelectorAll("nav button").forEach(x => x.setAttribute("aria-current", x===b));
   document.querySelectorAll(".view").forEach(v => v.hidden = v.id !== "v"+"-"+b.dataset.v);
   if (b.dataset.v === "matrix") drawHeat();
+});
+
+$("#mq").oninput = drawHeat;
+document.addEventListener("click", e => {
+  if (e.target && e.target.id === "mqClear") { e.preventDefault(); $("#mq").value = ""; drawHeat(); }
+  if (e.target && e.target.id === "cgqClear") { e.preventDefault(); $("#cgq").value = "";
+    if (typeof window.cgDraw === "function") window.cgDraw(); }
 });
 
 /* ---------- overview ---------- */
@@ -1382,7 +1395,19 @@ function drawHeat(){
   const cols = [];
   for (const a of amineNames) for (const c of CORES)
     if ((core==="all"||c===core) && key[enzNames[0]+"|"+a+"|"+c]) cols.push([a,c]);
-  const order = enzNames.slice().sort((x,y)=>EN[y].n_active-EN[x].n_active);
+  const q = ($("#mq").value || "").trim().toLowerCase();
+  let order = enzNames.slice().sort((x,y)=>EN[y].n_active-EN[x].n_active);
+  if (q) order = order.filter(e => e.toLowerCase().includes(q));
+  $("#mqNote").innerHTML = !q ? ""
+    : order.length ? `Showing <b>${order.length}</b> of ${enzNames.length} enzymes matching
+        &ldquo;${q}&rdquo;. <a href="#" id="mqClear">show all</a>`
+    : (typeof CGRID !== "undefined" && CGRID.proteins &&
+       CGRID.proteins.some(r => r.acc.toLowerCase().includes(q)))
+      ? `No enzyme here matches &ldquo;${q}&rdquo; &mdash; this map is the ${enzNames.length}
+         enzymes that were assayed. That accession is in the signal-peptide set, so look on
+         <a href="#" data-goto="new">New predictions</a>.
+         <a href="#" id="mqClear">show all</a>`
+      : `No enzyme matches &ldquo;${q}&rdquo;. <a href="#" id="mqClear">show all</a>`;
   const cell = (e,[a,c]) => {
     const k = key[e+"|"+a+"|"+c]; if(!k) return '<td></td>';
     // measured view: made or not. model view: every cell shaded by how sure the model is.
@@ -1610,7 +1635,14 @@ if (typeof CAND !== "undefined" && CAND && CAND.n_proteins) {
     function draw(){
       const view = $("#cgView").value, sort = $("#cgSort").value,
             onlyNew = $("#cgOnlyNew").checked;
+      const q = ($("#cgq").value || "").trim().toLowerCase();
       let rows = G.proteins.filter(r => !onlyNew || !r.tested);
+      if (q) rows = rows.filter(r =>
+        (r.acc + " " + (r.org || "") + " " + (r.phy || "")).toLowerCase().includes(q));
+      $("#cgqNote").innerHTML = !q ? ""
+        : rows.length ? `Showing <b>${rows.length}</b> of ${G.proteins.length} matching
+            &ldquo;${q}&rdquo;. <a href="#" id="cgqClear">show all</a>`
+        : `Nothing matches &ldquo;${q}&rdquo;. <a href="#" id="cgqClear">show all</a>`;
       rows = rows.slice().sort((a,b)=>
           sort==="full"     ? b.n_full - a.n_full
         : sort==="trim"     ? b.n_trim - a.n_trim
@@ -1680,6 +1712,8 @@ if (typeof CAND !== "undefined" && CAND && CAND.n_proteins) {
           "not found", it is calling something that was looked for and not seen.`}`;
     }
     $("#cgView").onchange = draw; $("#cgSort").onchange = draw; $("#cgOnlyNew").onchange = draw;
+    $("#cgq").oninput = draw;
+    window.cgDraw = draw;          // the "show all" link lives outside this closure
     draw();
   })();
 
