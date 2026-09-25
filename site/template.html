@@ -428,7 +428,13 @@ details > *{margin-top:10px}
   <div class="legend" id="heatKey"></div>
   <p class="foot">Rows are enzymes, columns are amine + bile acid type. Hover any cell to see
   both the measurement and what the model thought. Enzymes are ordered by how many products
-  they make.</p>
+  they make.
+  <br><br><b>The model scores here are out-of-fold.</b> Every enzyme is scored by a model
+  trained on folds that excluded it, so no score on this map comes from a model that had
+  already seen that enzyme. This is the honest view of how well it generalises &mdash; and it
+  is why these numbers are lower, sometimes much lower, than the ones on the
+  <a href="#" data-goto="new">New predictions</a> map, which come from the production model
+  trained on all 115.</p>
 </section>
 
 <!-- PREDICTIONS -->
@@ -1553,7 +1559,13 @@ if (typeof CAND !== "undefined" && CAND && CAND.n_proteins) {
       the most commonly made to the least, so a broad enzyme fills in from the left.
       <br><br>The predictions shown are made from the <b>signal-peptide-removed</b> sequences,
       which is what this tab is about. The full-sequence view is there to compare against, and the
-      measured view to check both against the assay.`;
+      measured view to check both against the assay.
+      <br><br><b>These scores are not the same ones as on the Full map tab.</b> There they are
+      out-of-fold: each enzyme is scored by a model that never saw it. Here every score comes from
+      the production model, which trained on all 115 enzymes &mdash; so for the ${G.trained_on}
+      proteins that were assayed it is partly recalling an answer it was taught. The two differ by
+      0.08 on average, and much more on individual cells. Use the Full map numbers to judge how
+      well the model generalises; use these to compare one sequence version against the other.`;
 
     $("#cgWarn").innerHTML = `<b>These are mostly not predictions.</b> ${G.trained_on} of the
       ${G.n_proteins} were in the training set of the model scoring them here, so for those the
@@ -1589,7 +1601,8 @@ if (typeof CAND !== "undefined" && CAND && CAND.n_proteins) {
       $("#cgHeat").innerHTML = `<table class="hm"><thead>${head}</thead><tbody>${rows.map(r=>{
         const c = G.cells[r.acc];
         return `<tr><th title="${r.org||""}${r.phy?" · "+r.phy:""}">
-          ${r.tested?"":"\u2726 "}${r.acc}</th>${
+          ${r.tested?"":"\u2726 "}${r.acc}<span style="display:block;font-weight:400;
+            font-size:.62rem;color:var(--muted)">${r.phy||"unclassified"}</span></th>${
           c.m.map((mv,j)=>{
             const fv=c.f[j], tv=c.t[j];
             const v = view==="m" ? mv : view==="f" ? fv : view==="t" ? tv : (tv-fv);
