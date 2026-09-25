@@ -222,9 +222,10 @@ details > *{margin-top:10px}
   <div class="grid" id="stats"></div>
   <div class="card prose">
     <h2>What you're looking at</h2>
-    <p>Bile salt hydrolases (BSH) are gut bacterial enzymes. They snip the glycine or taurine
-    off a bile acid and can then attach a <em>different</em> amine in its place — making
-    conjugates that don't normally occur in the body.</p>
+    <p>Bile salt hydrolases (BSH) are gut bacterial enzymes. A bile acid normally carries
+    glycine or taurine joined to it by an <b>amide bond</b> at C24. BSH hydrolyses that bond,
+    and can re-form it with a <em>different</em> amine &mdash; <b>transamidation</b> &mdash;
+    forming new amine conjugates.</p>
     <p>All 25 amines and all the bile acids went into every well together, with one enzyme,
     in triplicate. So every enzyme had the opportunity to make every combination. What limits
     the data is the readout: mass spectrometry searched for a fixed list of product masses, and
@@ -1938,8 +1939,8 @@ if (typeof CAND !== "undefined" && CAND && CAND.n_proteins) {
       || t.core;
     box.innerHTML = `<div class="card">
       <h4 style="margin-bottom:2px">${pretty(t.amine)} on a ${t.core} bile acid</h4>
-      <p class="foot" style="margin-bottom:10px">The enzyme cuts off the glycine or taurine
-        and joins the amine in its place.</p>
+      <p class="foot" style="margin-bottom:10px">The enzyme hydrolyses the glycine or taurine
+        amide and re-forms it with this amine in their place.</p>
       <div class="struct" style="max-width:none">${prod.svg}</div>
       <p class="foot" style="margin-top:8px"><b>${prod.formula}</b> · ${prod.mw} Da${
         prod.sites > 1 ? ` · the amine has ${prod.sites} nitrogens that could attach` : ""}</p>
