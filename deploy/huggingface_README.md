@@ -7,7 +7,7 @@ sdk: static
 app_file: index.html
 pinned: false
 license: mit
-short_description: Which bile salt hydrolases attach which amines to which bile acids
+short_description: Which bile salt hydrolases attach which amines
 ---
 
 # BSH Conjugation Explorer

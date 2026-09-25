@@ -49,15 +49,33 @@ if [ "$NS" != "$WHO" ] && [[ ",$ORGS," != *",$NS,"* ]]; then
 fi
 
 echo "==> build is $(awk "BEGIN{printf \"%.2f\", $(stat -c%s "$SITE")/1048576}") MB"
-echo "==> creating the Space if it does not exist"
-hf repos create "$REPO" --repo-type space --space-sdk static --exist-ok
+# Private by default: the page inlines the full assay data and unpublished
+# predictions. Flip it on the Hub (Settings -> Change visibility), or:
+#   VISIBILITY=public ./deploy/sync_huggingface.sh <user>/<space>
+VIS="${VISIBILITY:-private}"
+echo "==> creating the Space if it does not exist  (visibility: $VIS)"
+if [ "$VIS" = "private" ]; then
+  hf repos create "$REPO" --repo-type space --space-sdk static --private --exist-ok
+else
+  hf repos create "$REPO" --repo-type space --space-sdk static --exist-ok
+fi
 
-echo "==> uploading index.html"
-hf upload "$REPO" "$SITE" index.html --repo-type space \
-  --commit-message "Update explorer build ($(date -u +%Y-%m-%d))"
-echo "==> uploading the Space card"
-hf upload "$REPO" "$CARD" README.md --repo-type space \
-  --commit-message "Update Space card"
+# Uploaded through the Python API rather than `hf upload`: the CLI re-runs
+# create_repo() without a space_sdk, which defaults to Gradio and fails with
+# 402 (Gradio Spaces need PRO). Static Spaces are free; upload_file() does not
+# touch repo creation at all.
+echo "==> uploading index.html and the Space card"
+REPO="$REPO" SITE="$SITE" CARD="$CARD" python - <<'PYEOF'
+import os
+from huggingface_hub import HfApi
+api, repo = HfApi(), os.environ["REPO"]
+msg = "Update explorer build"
+for local, remote in ((os.environ["SITE"], "index.html"),
+                      (os.environ["CARD"], "README.md")):
+    api.upload_file(path_or_fileobj=local, path_in_repo=remote,
+                    repo_id=repo, repo_type="space", commit_message=msg)
+    print(f"    uploaded {remote}")
+PYEOF
 
 echo
 echo "==> live at https://huggingface.co/spaces/$REPO"

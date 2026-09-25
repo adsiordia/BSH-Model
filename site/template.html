@@ -155,6 +155,14 @@ tbody tr:hover{background:var(--soft)}
 @media(max-width:1180px){.trio{grid-template-columns:minmax(200px,264px) 1fr}.trio .sticky{grid-column:1/-1}}
 @media(max-width:780px){.trio{grid-template-columns:1fr}}
 .sticky{position:sticky;top:14px}
+.note{border-left:3px solid var(--pred);background:var(--soft);padding:10px 14px;
+  border-radius:0 8px 8px 0;font-size:.86rem;line-height:1.5}
+.hm{border-collapse:collapse}
+.hm td{padding:0}
+.hm td div{width:9px;height:9px}
+.hm th{font-size:.7rem;font-weight:500;color:var(--muted);text-align:right;
+  padding-right:6px;white-space:nowrap}
+
 .sticky .struct{max-width:none}
 .sticky svg{width:100%;height:auto}
 tr.clk:hover{background:var(--soft)}
@@ -604,6 +612,31 @@ details > *{margin-top:10px}
   <div class="keyfig" id="nKey" style="margin-bottom:18px"></div>
 
   <div class="card">
+    <h3 style="margin-bottom:4px">The map: measured against predicted</h3>
+    <p class="prose foot" style="margin-bottom:4px" id="cgIntro"></p>
+    <div class="note" id="cgWarn" style="margin:12px 0"></div>
+    <div class="controls">
+      <select id="cgView">
+        <option value="m">What the assay measured</option>
+        <option value="f">What the model says &mdash; full sequence</option>
+        <option value="t">What the model says &mdash; signal peptide removed</option>
+        <option value="d">Difference: trimmed minus full</option>
+      </select>
+      <select id="cgSort">
+        <option value="measured">Sort: most products measured</option>
+        <option value="full">Sort: most predicted, full sequence</option>
+        <option value="trim">Sort: most predicted, trimmed</option>
+        <option value="phy">Sort: phylum</option>
+        <option value="untested">Sort: never assayed first</option>
+      </select>
+      <label class="chk"><input type="checkbox" id="cgOnlyNew"> only the 8 never assayed</label>
+    </div>
+    <div id="cgKey" class="foot" style="margin:10px 0"></div>
+    <div class="scroll"><div id="cgHeat"></div></div>
+    <p class="prose foot" id="cgRead" style="margin-top:12px"></p>
+  </div>
+
+  <div class="card">
     <h3 style="margin-bottom:4px">Which sequence the predictions are built on</h3>
     <p class="prose foot" style="margin-bottom:10px">Many of these proteins start with a <b>signal peptide</b> &mdash; a short tag that directs the protein out of the cell and is cut off once it arrives. It is not part of the working enzyme, so the predictions on this page are made from the <b>trimmed</b> sequences. Before relying on that, we checked what trimming actually changes.</p>
     <p class="prose foot" style="margin-bottom:14px" id="tIntro"></p>
@@ -803,6 +836,7 @@ const TR = /*__TRENDS__*/{};
 const MET = /*__METHODS__*/{};
 const TRIM = /*__TRIMMING__*/{};
 const RESC = /*__RESCUE__*/{};
+const CGRID = /*__CANDGRID__*/{};
 const POOL = /*__POOLING__*/{};
 const TD = /*__THEDATA__*/{};
 const CAND = /*__CANDIDATES__*/{};
@@ -1392,6 +1426,87 @@ if (typeof CAND !== "undefined" && CAND && CAND.n_proteins) {
     default answer rather than a specific claim about these ${SG.gained.length}. Before trimming,
     ${SG.n_silent_full} enzymes were called completely inactive; after trimming,
     ${SG.n_silent_trimmed}.`;
+
+  /* ---- heatmap: the 66, measured vs predicted ---- */
+  (function(){
+    const G = CGRID; if(!G || !G.proteins) return;
+    const f3 = v => v==null ? "\u2014" : (+v).toFixed(3);
+
+    $("#cgIntro").innerHTML = `All <b>${G.n_proteins}</b> proteins that carry a signal peptide,
+      against all <b>${G.n_products}</b> amine &times; bile-acid combinations. Products are ordered
+      left to right from the most commonly made to the least, so a broad enzyme fills in from the
+      left. Switch between what the assay recorded and what the model says from each version of
+      the sequence.`;
+
+    $("#cgWarn").innerHTML = `<b>These are mostly not predictions.</b> ${G.trained_on} of the
+      ${G.n_proteins} were in the training set of the model scoring them here, so for those the
+      model has already been shown the right answer &mdash; their columns are a check on the
+      method, not a discovery. Only the <b>${G.n_untested}</b> proteins that were never assayed
+      carry genuinely new information; tick the box above to see just those.`;
+
+    const shade = (v, view) => {
+      if (view === "m") return v==null ? "var(--soft)"
+        : v===1 ? "var(--hit)" : "var(--sunk)";
+      if (view === "d") {
+        if (v==null) return "var(--soft)";
+        const a = Math.min(Math.abs(v),1)*90+6;
+        return `color-mix(in srgb, var(${v>=0?"--hit":"--pred"}) ${a.toFixed(0)}%, var(--panel))`;
+      }
+      return `color-mix(in srgb, var(--accent) ${(v*92+4).toFixed(0)}%, var(--panel))`;
+    };
+
+    function draw(){
+      const view = $("#cgView").value, sort = $("#cgSort").value,
+            onlyNew = $("#cgOnlyNew").checked;
+      let rows = G.proteins.filter(r => !onlyNew || !r.tested);
+      rows = rows.slice().sort((a,b)=>
+          sort==="full"     ? b.n_full - a.n_full
+        : sort==="trim"     ? b.n_trim - a.n_trim
+        : sort==="phy"      ? (a.phy||"zz").localeCompare(b.phy||"zz") || b.n_full-a.n_full
+        : sort==="untested" ? (a.tested-b.tested) || b.n_full-a.n_full
+        : (b.measured==null?-1:b.measured) - (a.measured==null?-1:a.measured));
+
+      $("#cgHeat").innerHTML = `<table class="hm"><tbody>${rows.map(r=>{
+        const c = G.cells[r.acc];
+        return `<tr><th title="${r.org||""}${r.phy?" · "+r.phy:""}">
+          ${r.tested?"":"\u2726 "}${r.acc}</th>${
+          c.m.map((mv,j)=>{
+            const fv=c.f[j], tv=c.t[j];
+            const v = view==="m" ? mv : view==="f" ? fv : view==="t" ? tv : (tv-fv);
+            const pr = G.products[j];
+            const tip = `${r.acc} · ${pretty(pr[0])} · ${pr[1]}\n`
+              + `assay: ${mv==null?"not tested":mv===1?"made":"not detected"}\n`
+              + `model, full: ${f3(fv)}   trimmed: ${f3(tv)}`;
+            return `<td><div style="background:${shade(v,view)}" title="${tip}"></div></td>`;
+          }).join("")}</tr>`;
+      }).join("")}</tbody></table>`;
+
+      $("#cgKey").innerHTML = view==="m"
+        ? `<span><i style="background:var(--hit)"></i> made</span>
+           <span><i style="background:var(--sunk)"></i> looked for, not found</span>
+           <span><i style="background:var(--soft)"></i> never assayed</span>`
+        : view==="d"
+        ? `<span><i style="background:color-mix(in srgb, var(--hit) 90%, var(--panel))"></i> trimming raises it</span>
+           <span><i style="background:var(--panel)"></i> no change</span>
+           <span><i style="background:color-mix(in srgb, var(--pred) 90%, var(--panel))"></i> trimming lowers it</span>`
+        : `<span><i style="background:color-mix(in srgb, var(--accent) 96%, var(--panel))"></i> model is confident</span>
+           <span><i style="background:color-mix(in srgb, var(--accent) 50%, var(--panel))"></i> unsure</span>
+           <span><i style="background:color-mix(in srgb, var(--accent) 6%, var(--panel))"></i> confident not</span>`;
+
+      const shown = rows.length;
+      $("#cgRead").innerHTML = `Showing <b>${shown}</b> protein${shown===1?"":"s"}.
+        Rows marked &#10022; were never assayed. ${
+        view==="d" ? `The difference view is the clearest way to see the pattern: trimming pulls
+          almost every protein toward the same middling answer, so broad enzymes lose products
+          (pink) while silent ones gain them (green).`
+        : view==="m" ? `Grey columns on the right are products almost nobody makes. The left edge
+          is the shared core that nearly every working enzyme produces.`
+        : `Compare this against the measured view: where the model is dark but the assay says
+          "not found", it is calling something that was looked for and not seen.`}`;
+    }
+    $("#cgView").onchange = draw; $("#cgSort").onchange = draw; $("#cgOnlyNew").onchange = draw;
+    draw();
+  })();
 
   /* ---- click an enzyme to list what it is predicted to make ---- */
   (function(){
