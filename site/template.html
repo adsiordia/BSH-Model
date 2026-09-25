@@ -428,13 +428,25 @@ details > *{margin-top:10px}
   <div class="legend" id="heatKey"></div>
   <p class="foot">Rows are enzymes, columns are amine + bile acid type. Hover any cell to see
   both the measurement and what the model thought. Enzymes are ordered by how many products
-  they make.
-  <br><br><b>The model scores here are out-of-fold.</b> Every enzyme is scored by a model
-  trained on folds that excluded it, so no score on this map comes from a model that had
-  already seen that enzyme. This is the honest view of how well it generalises &mdash; and it
-  is why these numbers are lower, sometimes much lower, than the ones on the
-  <a href="#" data-goto="new">New predictions</a> map, which come from the production model
-  trained on all 115.</p>
+  they make.</p>
+  <div class="note" style="margin-top:14px">
+    <b>Where these scores come from &mdash; and why they are trustworthy</b>
+    <p style="margin:8px 0">No model on this page was ever asked about an enzyme it had
+    studied. The 115 enzymes were divided into five groups, and five separate models were
+    trained. Each learned from four groups and was then asked about the fifth, which it had
+    never seen. Every score on this map is the answer from the model that had <b>not</b> seen
+    that enzyme:</p>
+    <div id="foldFig" style="margin:10px 0"></div>
+    <p style="margin:8px 0">The split is by <b>sequence similarity</b>, not at random. When an
+    enzyme is set aside, every protein more than 70% identical to it is set aside with it &mdash;
+    so the model is not merely missing that one protein, it is missing its whole family. It
+    cannot score an enzyme by recognising a close relative it was trained on.</p>
+    <p style="margin:8px 0 0">This is why the numbers here are lower, sometimes far lower, than
+    on the <a href="#" data-goto="new">New predictions</a> map. Those come from the final model,
+    which was trained on all 115 enzymes &mdash; so for any enzyme that was assayed, it is partly
+    recalling an answer it was taught rather than working it out. The same cell can read 0.47
+    here and 0.99 there. <b>These are the honest numbers.</b></p>
+  </div>
 </section>
 
 <!-- PREDICTIONS -->
@@ -1354,6 +1366,24 @@ $("#aq").oninput = amList; $("#asort").onchange = amList; amList(); amDetail();
 
 /* ---------- heat map ---------- */
 let heatDrawn = false;
+/* a plain-language picture of the five-fold split, for readers new to it */
+(function(){
+  const el = $("#foldFig"); if(!el) return;
+  const rows = [1,2,3,4,5].map(m=>{
+    const cells = [1,2,3,4,5].map(g => g===m
+      ? `<td style="background:var(--accent-bg);color:var(--accent);font-weight:600;
+           border:1px solid var(--accent);padding:3px 8px;text-align:center">asked about</td>`
+      : `<td style="background:var(--soft);color:var(--muted);padding:3px 8px;
+           text-align:center">learned from</td>`).join("");
+    return `<tr><th style="text-align:right;padding-right:10px;font-weight:500;
+      color:var(--muted);white-space:nowrap">model ${m}</th>${cells}</tr>`;
+  }).join("");
+  el.innerHTML = `<table style="border-collapse:separate;border-spacing:3px;font-size:.74rem">
+    <thead><tr><th></th>${[1,2,3,4,5].map(g=>
+      `<th style="font-weight:500;color:var(--muted);font-size:.7rem">group ${g}</th>`).join("")}
+    </tr></thead><tbody>${rows}</tbody></table>`;
+})();
+
 function drawHeat(){
   const core = $("#mcore").value, shade = $("#mpred").checked;
   const cols = [];
