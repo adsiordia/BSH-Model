@@ -1275,15 +1275,21 @@ function enzDetail(){
     <div class="scroll"><table><thead><tr><th>Amine</th><th>Bile acid</th><th>Result</th>
       <th class="r">Model confidence</th>
       <th>Signal in each of the 3 runs<span style="display:block;font-weight:400;
-        color:var(--muted);font-size:.72rem">rep1 &middot; rep2 &middot; rep3 &mdash; not averaged</span></th>
+        color:var(--muted);font-size:.72rem">rep1 &middot; rep2 &middot; rep3 &mdash; each the
+        <b>max</b> across that product&rsquo;s features, never averaged or summed</span></th>
       </tr></thead><tbody>
     ${rows.map(r=>`<tr><td>${pretty(r.Amine)}</td><td><span class="tag plain">${r.Hydroxyl}</span></td>
       <td>${pill(r)}</td><td class="r">${conf(r.p)}</td><td class="mono" style="font-size:.78rem">${reps(r)}</td></tr>`).join("")}
     </tbody></table></div>
-    <p class="foot">The three signal values are the separate replicates, left to right
-      &mdash; <b>not an average</b>, so you can see the spread. Each one is the peak intensity
-      recorded in that run: where a product maps to several LC-MS features, it is the
-      <b>highest of those features within that replicate</b>, not their sum. <b>Bold</b> marks a
+    <p class="foot">Two things are worth being exact about here.
+      <br><br><b>Across runs: nothing is combined.</b> The three values are the separate
+      replicates, left to right, so you can see the spread for yourself.
+      <br><b>Within a run: the maximum is taken.</b> One product can be picked up as several
+      LC-MS features${(typeof MET!=="undefined" && MET.labels && MET.labels.features)
+        ? ` &mdash; ${MET.labels.features.n_multi} of the ${MET.labels.features.n_products}
+            products are, up to ${MET.labels.features.max_features}` : ""} &mdash; and the value
+      shown is the <b>single highest of those features</b> in that replicate. Their intensities
+      are never pooled or added together. <b>Bold</b> marks a
       replicate above the ${DATA.meta.threshold.toLocaleString()} cut-off, and a product counts
       as made when <b>at least one</b> of the three clears it &mdash; so
       "61,000 &middot; 0 &middot; 0" and "74,000 &middot; 90,000 &middot; 64,000" are both
@@ -1317,8 +1323,7 @@ function amDetail(){
   const ch = CHEM.amines[curA] || {};
   $("#adetail").innerHTML = `<div class="card">
     <h2>${pretty(curA)}</h2>
-    <p class="foot">${kindOf(info.cls)} · ${ch.formula||""} · ${info.mw.toFixed(1)} g/mol ·
-      ${info.nuc} reactive nitrogen${info.nuc===1?"":"s"}
+    <p class="foot">${kindOf(info.cls)} · ${ch.formula||""} · ${info.mw.toFixed(1)} g/mol
       ${info.inferred?' · <span class="tag pred">structure inferred</span>':""}</p>
     ${ch.svg?`<div class="struct"><div class="lt">${ch.svg}</div><div class="dk">${ch.svg_dark}</div></div>`:""}
     ${ch.props?`<div class="props">${CHEM.desc_labels.map(d=>
