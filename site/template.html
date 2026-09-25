@@ -644,7 +644,6 @@ details > *{margin-top:10px}
         <option value="full">Sort: most predicted, full sequence</option>
         <option value="trim">Sort: most predicted, trimmed</option>
         <option value="phy">Sort: phylum</option>
-        <option value="untested">Sort: never assayed first</option>
       </select>
       <label class="chk"><input type="checkbox" id="cgOnlyNew"> only the 8 never assayed</label>
     </div>
@@ -1592,7 +1591,6 @@ if (typeof CAND !== "undefined" && CAND && CAND.n_proteins) {
           sort==="full"     ? b.n_full - a.n_full
         : sort==="trim"     ? b.n_trim - a.n_trim
         : sort==="phy"      ? (a.phy||"zz").localeCompare(b.phy||"zz") || b.n_full-a.n_full
-        : sort==="untested" ? (a.tested-b.tested) || b.n_full-a.n_full
         : (b.measured==null?-1:b.measured) - (a.measured==null?-1:a.measured));
 
       const head = `<tr><th></th>${G.products.map((pr,j)=>
