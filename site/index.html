@@ -1438,8 +1438,10 @@ function drawHeat(){
        <span><i style="background:color-mix(in srgb, var(--accent) 50%, var(--panel))"></i> unsure</span>
        <span><i style="background:color-mix(in srgb, var(--accent) 4%, var(--panel))"></i>
          confident it does not</span>`
-    : `<span><i style="background:var(--hit)"></i> product was made</span>
-       <span><i style="background:var(--sunk)"></i> was not made</span>`;
+    : `<span><i style="background:var(--hit)"></i> product was made*</span>
+       <span><i style="background:var(--sunk)"></i> was not made</span>
+       <span style="color:var(--muted)">*above
+       ${DATA.meta.threshold.toLocaleString()} in at least 1 of 3 runs</span>`;
   const head = `<tr><th class="rowh"></th>${cols.map(([a,c])=>
     `<td class="hmlab"><div><span>${pretty(a)} &middot; ${c}</span></div></td>`).join("")}</tr>`;
   $("#heat").innerHTML = `<table class="cghm"><thead>${head}</thead><tbody>${
