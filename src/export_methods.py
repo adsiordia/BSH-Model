@@ -118,6 +118,33 @@ def production_summary():
     b = float(d["base_rate"])
     d["cv_pr_auc_norm"] = round((d["cv_pr_auc"] - b) / (1 - b), 4)
     d["null_log_loss"] = round(float(-(b * np.log(b) + (1 - b) * np.log(1 - b))), 4)
+    # the exact recipe, read off the shipped pickle rather than restated
+    mp = ROOT / "models/bsh_prostt5_xgb_production.pkl"
+    if mp.exists():
+        k = pickle.load(open(mp, "rb"))
+        layout = {b.split(":")[0]: int(b.split(":")[1]) for b in k["feature_layout"]}
+        d["spec"] = dict(
+            file="models/" + mp.name,
+            algorithm="XGBoost (gradient-boosted trees)",
+            params=k["params"],
+            rounds=int(k["n_estimators"]),
+            scale_pos_weight=round(float(k["scale_pos_weight"]), 3),
+            calibration="isotonic regression, fitted on the out-of-fold predictions",
+            width=sum(layout.values()),
+            blocks=[
+                dict(name="enzyme", dim=layout["enzyme"],
+                     how=f"{k['embedding']} protein language model, {k['pooling']}-pooled over "
+                         "every residue of the whole protein, then standardised"),
+                dict(name="amine", dim=layout["amine"],
+                     how="Morgan fingerprint, radius 2, 512 bits, from curated SMILES"),
+                dict(name="core", dim=layout["core"],
+                     how="one-hot over the three hydroxyl classes (Mono, Di, Tri)")],
+            trained_on=k["trained_on"], label_rule=k["label_rule"],
+            chosen_because=(
+                "The four protein language models are statistically tied, so ProstT5 was taken "
+                "on the strength of its XGBoost result rather than a meaningful margin. XGBoost "
+                "beat the other three algorithms on all four embeddings. Mean pooling over the "
+                "whole protein was not beaten by any of seven pooling schemes."))
     d["note"] = ("Cross-validated over all 115 enzymes with cluster-grouped folds, "
                  "not a held-out test. PR-AUC is also given normalised, "
                  "(PR - base) / (1 - base), because its floor is the base rate and "

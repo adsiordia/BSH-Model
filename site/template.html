@@ -513,8 +513,13 @@ details > *{margin-top:10px}
   <div class="card">
     <h3 style="margin-bottom:4px">The model that ships</h3>
     <p class="prose foot" style="margin-bottom:12px" id="mProdNote"></p>
+    <div id="mSpec" style="margin-bottom:16px"></div>
     <div class="grid" id="mProd"></div>
     <p class="foot" id="mProdRead" style="margin-top:12px"></p>
+    <details style="margin-top:12px">
+      <summary>Why this combination and not another</summary>
+      <div class="prose foot" id="mWhy" style="margin-top:8px"></div>
+    </details>
   </div>
 
   <div class="card">
@@ -2013,6 +2018,37 @@ $("#mTest").textContent = MET.split.test_status;
   $("#mProdNote").innerHTML = `This is the model in <span class="mono">models/${"bsh_prostt5_xgb_production.pkl"}</span>,
     trained on all <b>${P.enzymes}</b> enzymes. The numbers below are cross-validated with
     cluster-grouped folds &mdash; they are not a held-out test.`;
+  const S = P.spec;
+  if (S) {
+    const row = (k,v) => `<tr><th style="text-align:left;vertical-align:top;padding:5px 14px 5px 0;
+      white-space:nowrap;font-weight:600;color:var(--body)">${k}</th>
+      <td style="padding:5px 0;color:var(--muted)">${v}</td></tr>`;
+    const pr = S.params;
+    $("#mSpec").innerHTML = `<div class="note"><table style="border-collapse:collapse;
+      font-size:.82rem;line-height:1.5;width:100%">
+      ${row("what it answers", `Will <b>this enzyme</b> attach <b>this amine</b> to a bile acid
+        of <b>this hydroxyl class</b>? One yes/no probability per combination.`)}
+      ${row("algorithm", `${S.algorithm}, <b>${S.rounds}</b> rounds`)}
+      ${S.blocks.map((b,i)=>row(i===0?"input, 3 blocks":"",
+        `<b>${b.name}</b> &mdash; ${b.dim} numbers &mdash; ${b.how}`)).join("")}
+      ${row("total width", `${S.width} numbers per row`)}
+      ${row("trained on", `all <b>${S.trained_on.enzymes}</b> enzymes,
+        ${S.trained_on.rows.toLocaleString()} rows, ${S.trained_on.active.toLocaleString()}
+        of them products that were made`)}
+      ${row("label rule", `a product counts as made when its signal clears
+        <b>${S.label_rule.threshold.toLocaleString()}</b> in at least
+        ${S.label_rule.min_reps} of ${S.label_rule.n_reps} replicates`)}
+      ${row("calibration", S.calibration)}
+      ${row("settings", `depth ${pr.max_depth} · learning rate ${pr.learning_rate} ·
+        subsample ${pr.subsample} · colsample ${pr.colsample_bytree} ·
+        alpha ${pr.reg_alpha} · lambda ${pr.reg_lambda} ·
+        positive weight ${S.scale_pos_weight}`)}
+      ${row("file", `<span class="mono">${S.file}</span> &mdash; carries its own scaler,
+        calibrator, amine fingerprints and label rule, so it is self-describing`)}
+    </table></div>`;
+    $("#mWhy").innerHTML = S.chosen_because;
+  }
+
   $("#mProd").innerHTML = [
     [num(P.cv_pr_auc), "precision-recall AUC", `chance is ${P.base_rate.toFixed(3)}`],
     [num(P.cv_pr_auc_norm), "the same, normalised", "0 is chance, 1 is perfect"],

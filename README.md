@@ -75,11 +75,22 @@ replicate** before thresholding. Summing instead would change 20 cells (0.35%).
 `models/bsh_prostt5_xgb_production.pkl` — XGBoost, 825 rounds, trained on all 115
 enzymes. Features are three blocks:
 
-| block | how |
-|---|---|
-| enzyme | ProstT5 whole-protein embedding, mean-pooled over residues, standardised |
-| amine  | Morgan fingerprint, radius 2, 512 bits |
-| core   | one-hot over Mono / Di / Tri (counts hydroxyls, not positions) |
+| block | width | how |
+|---|---|---|
+| enzyme | 1024 | ProstT5 whole-protein embedding, mean-pooled over every residue, standardised |
+| amine  | 512  | Morgan fingerprint, radius 2, 512 bits, from curated SMILES |
+| core   | 3    | one-hot over Mono / Di / Tri (counts hydroxyls, not positions) |
+| | **1539** | total per row |
+
+Settings: depth 4, learning rate 0.05, subsample 0.8, colsample 0.8, alpha 1, lambda 5,
+positive weight 5.245, 825 rounds, isotonic calibration fitted on the out-of-fold
+predictions. Trained on all 115 enzymes, 8,625 rows, 1,381 active.
+
+**Why this combination.** The four protein language models are statistically tied, so
+ProstT5 was taken on the strength of its XGBoost result rather than a meaningful margin.
+XGBoost beat the other three algorithms on all four embeddings. Mean pooling over the
+whole protein was not beaten by any of seven pooling schemes. All three comparisons are
+in `site/methods.json` and on the site's "How it was made" tab.
 
 Cluster-grouped 5-fold CV, where clusters are connected components of a >=70%
 identity graph so no near-duplicate spans a fold. These are cross-validated numbers,
