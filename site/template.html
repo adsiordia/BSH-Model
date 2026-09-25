@@ -167,6 +167,12 @@ tbody tr:hover{background:var(--soft)}
 .hm td.hmlab span{writing-mode:vertical-rl;transform:rotate(180deg);font-size:8.5px;
   line-height:11px;color:var(--muted);white-space:nowrap;letter-spacing:.2px}
 .hm tbody td div{width:11px;height:11px}
+.trio3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;align-items:start}
+@media(max-width:820px){.trio3{grid-template-columns:1fr}}
+.corecard{border:1px solid var(--soft);border-radius:10px;padding:12px;background:var(--panel)}
+.corecard h5{margin:0 0 2px;font-size:.95rem}
+.corecard .struct{max-width:none;margin:4px 0}
+
 
 .sticky .struct{max-width:none}
 .sticky svg{width:100%;height:auto}
@@ -804,6 +810,19 @@ details > *{margin-top:10px}
   </div>
   <div class="keyfig" id="dKey" style="margin-bottom:18px"></div>
 
+  <div class="card">
+    <h3 style="margin-bottom:4px">What went into the assay</h3>
+    <p class="prose foot" style="margin-bottom:14px" id="pnIntro"></p>
+
+    <h4 style="margin:18px 0 2px">The three bile acid cores</h4>
+    <p class="prose foot" style="margin-bottom:12px" id="pnCoreNote"></p>
+    <div class="trio3" id="pnCores"></div>
+
+    <h4 style="margin:24px 0 2px">The <span id="pnNA"></span> amines offered</h4>
+    <p class="prose foot" style="margin-bottom:12px" id="pnAmNote"></p>
+    <div class="gallery" id="pnAmines"></div>
+  </div>
+
   <div class="duo">
     <div class="chartbox">
       <h3>How big the enzymes are</h3>
@@ -903,6 +922,67 @@ const reps = c => c.r1<0 ? "—" :
 /* ---------- the data ---------- */
 if (typeof TD !== "undefined" && TD && TD.assay) {
   const A = TD.assay, S = TD.sequences, I = TD.intensity;
+
+  /* ---- what went into the assay: the cores and the amines ---- */
+  (function(){
+    const CJ = (typeof CONJUGATES !== "undefined") ? CONJUGATES : null;
+    const CH = (typeof CHEM !== "undefined" && CHEM.amines) ? CHEM.amines : null;
+    if(!CJ || !CH) return;
+    const AM = DATA.amines, names = Object.keys(AM).sort();
+
+    $("#pnIntro").innerHTML = `Every enzyme met every combination. The amines were pooled into
+      one master mix and the bile acids into another, and both went into each well, so the panel
+      is complete by construction &mdash; <b>${names.length} amines &times; 3 bile acid
+      classes</b> for each of the ${A.enzymes} enzymes.`;
+
+    /* the three cores */
+    const POS = CJ.positions;
+    const mp = (POS.Tri && POS.Tri.measured_positions) || [3,7,12];
+    const list = a => a.length>1 ? a.slice(0,-1).join(", ")+" or "+a[a.length-1] : String(a[0]);
+    $("#pnCoreNote").innerHTML = `A bile acid is one steroid scaffold carrying a variable number
+      of hydroxyl groups. <b>Mono, Di and Tri count how many there are &mdash; not where they
+      sit.</b> Isomers of the same count weigh the same, so mass spectrometry cannot tell them
+      apart, and the model was reduced to the hydroxylation <em>number</em> for that reason, even
+      though individual positional products were detected. Across the whole assay the only
+      positions its labels ever resolve are <b>${list(mp)}</b>. Each drawing below is one
+      representative of the class, with the hydroxyls shaded.`;
+
+    $("#pnCores").innerHTML = ["Mono","Di","Tri"].map(deg=>{
+      const v = POS[deg]; if(!v) return "";
+      const n = {Mono:"one hydroxyl",Di:"two hydroxyls",Tri:"three hydroxyls"}[deg];
+      // reuse a drawn conjugate and show the acid it is built on
+      const k = Object.keys(CJ.products).find(x=>x.endsWith("|"+deg));
+      const pr = k ? CJ.products[k] : null;
+      return `<div class="corecard">
+        <h5>${deg} <span style="color:var(--muted);font-weight:400">&mdash; ${n}</span></h5>
+        <p class="foot" style="margin:0 0 6px">shown as <b>${v.representative_name}</b></p>
+        ${pr && pr.svg ? `<div class="struct">${pr.svg}</div>` : ""}
+        <p class="foot" style="margin-top:6px">
+          <b>potential hydroxyl positions:</b> ${list(v.oh)}
+          ${v.keto && v.keto.length ? `<br><b>may carry a ketone instead at:</b> ${list(v.keto)}` : ""}
+        </p>
+        <p class="foot" style="color:var(--muted);margin-top:6px">consistent with
+          ${v.options.map(o=>o.name).join(" · ")}</p>
+      </div>`;
+    }).join("");
+
+    /* the amines */
+    $("#pnNA").textContent = names.length;
+    $("#pnAmNote").innerHTML = `Each of these was offered to every enzyme against all three core
+      classes. The enzyme cuts the glycine or taurine off the bile acid and joins one of these in
+      its place, through the nitrogen marked in the structure.`;
+    $("#pnAmines").innerHTML = names.map(a=>{
+      const c = CH[a] || {}, i = AM[a] || {};
+      return `<figure style="margin:0">
+        ${c.svg?`<div class="struct"><div class="lt">${c.svg}</div>
+          <div class="dk">${c.svg_dark}</div></div>`:""}
+        <figcaption style="text-align:center">
+          <b style="font-size:.85rem">${pretty(a)}</b>
+          <span style="display:block;font-size:.74rem;color:var(--muted)">
+            ${c.formula||""}${i.nuc!=null?` · ${i.nuc} reactive N`:""}</span>
+        </figcaption></figure>`;
+    }).join("");
+  })();
 
   $("#dIntro").innerHTML = `Each of the <b>${A.enzymes} enzymes</b> was given every amine and
     every bile acid at once — one pooled mix per well — and run <b>${A.replicates} times</b>.
