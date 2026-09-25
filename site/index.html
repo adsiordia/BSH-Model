@@ -1442,11 +1442,17 @@ function drawHeat(){
        <span><i style="background:var(--sunk)"></i> was not made</span>
        <span style="color:var(--muted)">*above
        ${DATA.meta.threshold.toLocaleString()} in at least 1 of 3 runs</span>`;
+  // in the model view the sub-label counts what the model calls, not what was measured
+  const nPred = e => cols.reduce((n,[a,c]) => {
+    const k = key[e+"|"+a+"|"+c]; return n + (k && k.p >= 0.5 ? 1 : 0); }, 0);
+  const sub = e => shade
+    ? `${nPred(e)} of ${cols.length} predicted`
+    : `${EN[e].n_active} of ${EN[e].n_tested} made`;
   const head = `<tr><th class="rowh"></th>${cols.map(([a,c])=>
     `<td class="hmlab"><div><span>${pretty(a)} &middot; ${c}</span></div></td>`).join("")}</tr>`;
   $("#heat").innerHTML = `<table class="cghm"><thead>${head}</thead><tbody>${
     order.map(e=>`<tr><th class="rowh">${e}<span style="display:block;font-weight:400;
-      font-size:.62rem;color:var(--muted)">${EN[e].n_active} of ${EN[e].n_tested} made</span></th>${
+      font-size:.62rem;color:var(--muted)">${sub(e)}</span></th>${
       cols.map(c=>cell(e,c)).join("")}</tr>`).join("")}</tbody></table>`;
   heatDrawn = true;
 }
