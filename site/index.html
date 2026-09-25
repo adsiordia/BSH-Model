@@ -1647,9 +1647,33 @@ if (typeof CAND !== "undefined" && CAND && CAND.n_proteins) {
            <span><i style="background:var(--sunk)"></i> looked for, not found</span>
            <span><i style="background:var(--soft)"></i> never assayed</span>`
         : view==="d"
-        ? `<span><i style="background:color-mix(in srgb, var(--hit) 90%, var(--panel))"></i> trimming raises it</span>
-           <span><i style="background:var(--panel)"></i> no change</span>
-           <span><i style="background:color-mix(in srgb, var(--pred) 90%, var(--panel))"></i> trimming lowers it</span>`
+        ? (()=>{
+            // swatches drawn with the same shade() the map uses, so they cannot drift
+            const steps = [-1,-0.5,-0.25,0,0.25,0.5,1];
+            const bar = steps.map(v=>`<span style="display:inline-block;width:30px;height:13px;
+              background:${shade(v,"d")};border:1px solid var(--rule);
+              border-right:${v===1?"1px solid var(--rule)":"0"}"></span>`).join("");
+            return `<div style="line-height:1.5">
+              <b>Each cell is the trimmed score minus the full-sequence score.</b>
+              Both are the model&rsquo;s confidence that this enzyme makes this product, from
+              0 to 1, so the difference runs from &minus;1 to +1.
+              <div style="margin:8px 0 3px;white-space:nowrap">${bar}</div>
+              <div style="display:flex;justify-content:space-between;max-width:212px;
+                font-size:.7rem;color:var(--muted)">
+                <span>&minus;1</span><span>0</span><span>+1</span></div>
+              <div style="margin-top:6px">
+                <b style="color:var(--pred)">Orange &mdash; trimming LOWERED the score.</b>
+                The model was more confident from the full sequence; removing the signal peptide
+                made it doubt the product. Most broad enzymes go orange.<br>
+                <b style="color:var(--hit)">Green &mdash; trimming RAISED the score.</b>
+                The model became more confident once the peptide was gone. The eight enzymes it
+                called silent from the full sequence go green.<br>
+                <b>Pale &mdash; barely moved.</b> The two sequence versions agree on this cell.
+              </div>
+              <div style="margin-top:6px;color:var(--muted)">Stronger colour means a bigger
+                shift; a full-strength cell moved by almost the whole 0-to-1 range.</div>
+            </div>`;
+          })()
         : `<span><i style="background:color-mix(in srgb, var(--accent) 96%, var(--panel))"></i> model is confident</span>
            <span><i style="background:color-mix(in srgb, var(--accent) 50%, var(--panel))"></i> unsure</span>
            <span><i style="background:color-mix(in srgb, var(--accent) 6%, var(--panel))"></i> confident not</span>`;
@@ -1657,9 +1681,11 @@ if (typeof CAND !== "undefined" && CAND && CAND.n_proteins) {
       const shown = rows.length;
       $("#cgRead").innerHTML = `Showing <b>${shown}</b> protein${shown===1?"":"s"}.
         Rows marked &#10022; were never assayed. ${
-        view==="d" ? `The difference view is the clearest way to see the pattern: trimming pulls
-          almost every protein toward the same middling answer, so broad enzymes lose products
-          (pink) while silent ones gain them (green).`
+        view==="d" ? `This view is the clearest way to see the pattern. Trimming pulls almost
+          every protein toward the same middling answer: enzymes the model was confident about
+          come down (orange), enzymes it had written off come up (green). The two directions are
+          the same effect, not two findings &mdash; which is why a green row here is weak
+          evidence that removing the peptide revealed anything real.`
         : view==="m" ? `Grey columns on the right are products almost nobody makes. The left edge
           is the shared core that nearly every working enzyme produces.`
         : `Compare this against the measured view: where the model is dark but the assay says
