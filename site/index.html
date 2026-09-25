@@ -659,8 +659,9 @@ details > *{margin-top:10px}
       </select>
       <label class="chk"><input type="checkbox" id="cgOnlyNew"> only the 8 never assayed</label>
     </div>
-    <div id="cgKey" class="foot" style="margin:10px 0"></div>
     <div class="scroll"><div id="cgHeat"></div></div>
+    <div id="cgKey" class="foot" style="margin-top:10px;font-size:.76rem;
+      color:var(--muted);line-height:1.5"></div>
     <p class="prose foot" id="cgRead" style="margin-top:12px"></p>
   </div>
 
@@ -1653,25 +1654,21 @@ if (typeof CAND !== "undefined" && CAND && CAND.n_proteins) {
             const bar = steps.map(v=>`<span style="display:inline-block;width:30px;height:13px;
               background:${shade(v,"d")};border:1px solid var(--rule);
               border-right:${v===1?"1px solid var(--rule)":"0"}"></span>`).join("");
-            return `<div style="line-height:1.5">
-              <b>Each cell is the trimmed score minus the full-sequence score.</b>
-              Both are the model&rsquo;s confidence that this enzyme makes this product, from
-              0 to 1, so the difference runs from &minus;1 to +1.
-              <div style="margin:8px 0 3px;white-space:nowrap">${bar}</div>
-              <div style="display:flex;justify-content:space-between;max-width:212px;
-                font-size:.7rem;color:var(--muted)">
-                <span>&minus;1</span><span>0</span><span>+1</span></div>
-              <div style="margin-top:6px">
-                <b style="color:var(--pred)">Orange &mdash; trimming LOWERED the score.</b>
-                The model was more confident from the full sequence; removing the signal peptide
-                made it doubt the product. Most broad enzymes go orange.<br>
-                <b style="color:var(--hit)">Green &mdash; trimming RAISED the score.</b>
-                The model became more confident once the peptide was gone. The eight enzymes it
-                called silent from the full sequence go green.<br>
-                <b>Pale &mdash; barely moved.</b> The two sequence versions agree on this cell.
+            return `<div style="display:flex;gap:14px;align-items:flex-start;flex-wrap:wrap">
+              <div style="white-space:nowrap">
+                <div>${bar}</div>
+                <div style="display:flex;justify-content:space-between;max-width:212px;
+                  font-size:.68rem;margin-top:2px">
+                  <span>&minus;1</span><span>0</span><span>+1</span></div>
               </div>
-              <div style="margin-top:6px;color:var(--muted)">Stronger colour means a bigger
-                shift; a full-strength cell moved by almost the whole 0-to-1 range.</div>
+              <div style="flex:1;min-width:260px">
+                Each cell is the trimmed score minus the full-sequence score &mdash; both the
+                model&rsquo;s confidence, 0 to 1.
+                <b style="color:var(--pred)">Orange</b> = trimming lowered it (most broad
+                enzymes). <b style="color:var(--hit)">Green</b> = trimming raised it (the eight
+                it had called silent). Pale = the two versions agree. Stronger colour, bigger
+                shift.
+              </div>
             </div>`;
           })()
         : `<span><i style="background:color-mix(in srgb, var(--accent) 96%, var(--panel))"></i> model is confident</span>
