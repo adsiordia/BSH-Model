@@ -659,9 +659,9 @@ details > *{margin-top:10px}
       </select>
       <label class="chk"><input type="checkbox" id="cgOnlyNew"> only the 8 never assayed</label>
     </div>
-    <div class="scroll"><div id="cgHeat"></div></div>
-    <div id="cgKey" class="foot" style="margin-top:10px;font-size:.76rem;
+    <div id="cgKey" class="foot" style="margin-bottom:10px;font-size:.76rem;
       color:var(--muted);line-height:1.5"></div>
+    <div class="scroll"><div id="cgHeat"></div></div>
     <p class="prose foot" id="cgRead" style="margin-top:12px"></p>
   </div>
 
@@ -1661,13 +1661,11 @@ if (typeof CAND !== "undefined" && CAND && CAND.n_proteins) {
                   font-size:.68rem;margin-top:2px">
                   <span>&minus;1</span><span>0</span><span>+1</span></div>
               </div>
-              <div style="flex:1;min-width:260px">
-                Each cell is the trimmed score minus the full-sequence score &mdash; both the
-                model&rsquo;s confidence, 0 to 1.
-                <b style="color:var(--pred)">Orange</b> = trimming lowered it (most broad
-                enzymes). <b style="color:var(--hit)">Green</b> = trimming raised it (the eight
-                it had called silent). Pale = the two versions agree. Stronger colour, bigger
-                shift.
+              <div style="flex:1;min-width:260px;align-self:center">
+                Trimmed score minus full-sequence score:
+                <b style="color:var(--pred)">orange</b> means trimming lowered the model&rsquo;s
+                confidence, <b style="color:var(--hit)">green</b> that it raised it, pale that
+                the two agree &mdash; and the stronger the colour, the bigger the shift.
               </div>
             </div>`;
           })()
