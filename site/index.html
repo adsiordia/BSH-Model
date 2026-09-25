@@ -1414,15 +1414,7 @@ function drawHeat(){
       ? `color-mix(in srgb, var(--accent) ${(k.p*92+4).toFixed(0)}%, var(--panel))`
       : (k.active===1 ? "var(--hit)" : "var(--sunk)");
     const st = k.active===1 ? "made" : "not detected";
-    const sig = k.r1 < 0 ? "no signal recorded"
-      : [k.r1, k.r2, k.r3].map(v => v.toLocaleString()).join(" · ");
-    const tip = [
-      `${e} · ${pretty(a)} · ${c}`,
-      `measured: ${st}`,
-      `signal (3 runs): ${sig}`,
-      `model score: ${k.p.toFixed(4)}   (held-out, ${(k.p*100).toFixed(1)}%)`,
-    ].join("&#10;");
-    return `<td><div style="background:${bg}" title="${tip}"></div></td>`;
+    return `<td><div style="background:${bg}" title="${e} · ${pretty(a)} · ${c}&#10;measured: ${st}&#10;model: ${(k.p*100).toFixed(0)}% sure"></div></td>`;
   };
   $("#heatKey").innerHTML = shade
     ? `<span><i style="background:color-mix(in srgb, var(--accent) 96%, var(--panel))"></i>
@@ -1670,15 +1662,9 @@ if (typeof CAND !== "undefined" && CAND && CAND.n_proteins) {
             const fv=c.f[j], tv=c.t[j];
             const v = view==="m" ? mv : view==="f" ? fv : view==="t" ? tv : (tv-fv);
             const pr = G.products[j];
-            const made = G.prevalence ? G.prevalence[j] : null;
-            const tip = [
-              `${r.acc} · ${pretty(pr[0])} · ${pr[1]}`,
-              `assay: ${mv==null?"removed by proteomics":mv===1?"made":"not detected"}`,
-              `model, full sequence: ${f3(fv)}`,
-              `model, trimmed:       ${f3(tv)}`,
-              `difference:           ${(tv-fv>=0?"+":"")}${f3(tv-fv)}`,
-              made==null ? "" : `made by ${(made*100).toFixed(0)}% of the 115 enzymes`,
-            ].filter(Boolean).join("\n");
+            const tip = `${r.acc} · ${pretty(pr[0])} · ${pr[1]}\n`
+              + `assay: ${mv==null?"removed by proteomics":mv===1?"made":"not detected"}\n`
+              + `model, full: ${f3(fv)}   trimmed: ${f3(tv)}`;
             return `<td><div style="background:${shade(v,view)}" title="${tip}"></div></td>`;
           }).join("")}</tr>`;
       }).join("")}</tbody></table>`;
