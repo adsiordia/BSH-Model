@@ -166,6 +166,13 @@ tbody tr:hover{background:var(--soft)}
 .cghm td.hmlab span{writing-mode:vertical-rl;transform:rotate(180deg);font-size:8.5px;
   line-height:11px;color:var(--muted);white-space:nowrap;letter-spacing:.2px}
 .cghm tbody td div{width:11px;height:11px}
+/* the Full map uses the same table inside a scrolling box, so its row and
+   column headers stay pinned -- 115 rows needs that, 66 does not */
+.hm .cghm th.rowh{position:sticky;left:0;z-index:3;background:var(--panel);
+  text-align:left;font-family:ui-monospace,monospace;padding:0 8px 0 6px;
+  border-right:1px solid var(--rule)}
+.hm .cghm thead td.hmlab{position:sticky;top:0;z-index:2;background:var(--panel)}
+.hm .cghm thead th.rowh{top:0;z-index:4}
 .trio3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;align-items:start}
 @media(max-width:820px){.trio3{grid-template-columns:1fr}}
 .corecard{border:1px solid var(--soft);border-radius:10px;padding:12px;background:var(--panel)}
@@ -423,14 +430,20 @@ details > *{margin-top:10px}
       <option value="Tri">Tri only</option></select>
     <input type="search" id="mq" placeholder="Find an accession, e.g. A0A1N6ECR1"
       aria-label="Filter enzymes by accession" style="min-width:250px">
-    <label class="chk"><input type="checkbox" id="mpred"> show what the model predicts, instead of what was measured</label>
+    <select id="mview">
+      <option value="m">What the assay measured</option>
+      <option value="p">What the model predicts</option>
+    </select>
   </div>
   <p class="foot" id="mqNote" style="margin:-4px 0 8px"></p>
+  <div id="heatKey" class="foot" style="margin-bottom:10px;font-size:.76rem;
+    color:var(--muted);line-height:1.5"></div>
   <div class="hm" id="heat"></div>
-  <div class="legend" id="heatKey"></div>
-  <p class="foot">Rows are enzymes, columns are amine + bile acid type. Hover any cell to see
-  both the measurement and what the model thought. Enzymes are ordered by how many products
-  they make.</p>
+  <p class="foot">Each row is one enzyme, each column one amine &times; bile acid type. Columns
+  run left to right from the most commonly made product to the least &mdash; the same order as
+  the map on <a href="#" data-goto="new">New predictions</a> &mdash; so a broad enzyme fills in
+  from the left. Rows are ordered by how many products the enzyme makes. Hover any cell for the
+  measurement and what the model thought.</p>
   <div class="note" style="margin-top:14px">
     <b>Where these scores come from &mdash; and why they are trustworthy</b>
     <p style="margin:8px 0">No model on this page was ever asked about an enzyme it had
@@ -1390,10 +1403,13 @@ let heatDrawn = false;
 })();
 
 function drawHeat(){
-  const core = $("#mcore").value, shade = $("#mpred").checked;
-  const cols = [];
-  for (const a of amineNames) for (const c of CORES)
-    if ((core==="all"||c===core) && key[enzNames[0]+"|"+a+"|"+c]) cols.push([a,c]);
+  const core = $("#mcore").value, shade = $("#mview").value === "p";
+  // same column order as the New predictions map: commonest product first, so a
+  // broad enzyme fills in from the left and the nesting is visible
+  const order0 = (typeof CGRID !== "undefined" && CGRID.products)
+    ? CGRID.products : amineNames.flatMap(a => CORES.map(c => [a, c]));
+  const cols = order0.filter(([a,c]) =>
+    (core==="all"||c===core) && key[enzNames[0]+"|"+a+"|"+c]);
   const q = ($("#mq").value || "").trim().toLowerCase();
   let order = enzNames.slice().sort((x,y)=>EN[y].n_active-EN[x].n_active);
   if (q) order = order.filter(e => e.toLowerCase().includes(q));
@@ -1424,12 +1440,15 @@ function drawHeat(){
          confident it does not</span>`
     : `<span><i style="background:var(--hit)"></i> product was made</span>
        <span><i style="background:var(--sunk)"></i> was not made</span>`;
-  $("#heat").innerHTML = `<table><thead><tr><th class="rowh">enzyme</th>
-    ${cols.map(([a,c])=>`<th><span class="vlabel">${pretty(a)} · ${c}</span></th>`).join("")}</tr></thead>
-    <tbody>${order.map(e=>`<tr><th class="rowh">${e}</th>${cols.map(c=>cell(e,c)).join("")}</tr>`).join("")}</tbody></table>`;
+  const head = `<tr><th class="rowh"></th>${cols.map(([a,c])=>
+    `<td class="hmlab"><div><span>${pretty(a)} &middot; ${c}</span></div></td>`).join("")}</tr>`;
+  $("#heat").innerHTML = `<table class="cghm"><thead>${head}</thead><tbody>${
+    order.map(e=>`<tr><th class="rowh">${e}<span style="display:block;font-weight:400;
+      font-size:.62rem;color:var(--muted)">${EN[e].n_active} of ${EN[e].n_tested} made</span></th>${
+      cols.map(c=>cell(e,c)).join("")}</tr>`).join("")}</tbody></table>`;
   heatDrawn = true;
 }
-$("#mcore").onchange = drawHeat; $("#mpred").onchange = drawHeat;
+$("#mcore").onchange = drawHeat; $("#mview").onchange = drawHeat;
 
 /* ---------- amine chemistry ---------- */
 
