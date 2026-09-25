@@ -162,6 +162,11 @@ tbody tr:hover{background:var(--soft)}
 .hm td div{width:9px;height:9px}
 .hm th{font-size:.7rem;font-weight:500;color:var(--muted);text-align:right;
   padding-right:6px;white-space:nowrap}
+.hm td.hmlab{vertical-align:bottom;height:122px;padding:0}
+.hm td.hmlab div{width:11px;height:122px;display:flex;align-items:flex-end;justify-content:center}
+.hm td.hmlab span{writing-mode:vertical-rl;transform:rotate(180deg);font-size:8.5px;
+  line-height:11px;color:var(--muted);white-space:nowrap;letter-spacing:.2px}
+.hm tbody td div{width:11px;height:11px}
 
 .sticky .struct{max-width:none}
 .sticky svg{width:100%;height:auto}
@@ -612,14 +617,14 @@ details > *{margin-top:10px}
   <div class="keyfig" id="nKey" style="margin-bottom:18px"></div>
 
   <div class="card">
-    <h3 style="margin-bottom:4px">The map: measured against predicted</h3>
+    <h3 style="margin-bottom:4px">The map &mdash; the 66 signal-peptide proteins</h3>
     <p class="prose foot" style="margin-bottom:4px" id="cgIntro"></p>
     <div class="note" id="cgWarn" style="margin:12px 0"></div>
     <div class="controls">
       <select id="cgView">
-        <option value="m">What the assay measured</option>
-        <option value="f">What the model says &mdash; full sequence</option>
-        <option value="t">What the model says &mdash; signal peptide removed</option>
+        <option value="t">Predicted &mdash; signal peptide removed</option>
+        <option value="f">Predicted &mdash; full sequence, for comparison</option>
+        <option value="m">What the assay actually measured</option>
         <option value="d">Difference: trimmed minus full</option>
       </select>
       <select id="cgSort">
@@ -1432,11 +1437,14 @@ if (typeof CAND !== "undefined" && CAND && CAND.n_proteins) {
     const G = CGRID; if(!G || !G.proteins) return;
     const f3 = v => v==null ? "\u2014" : (+v).toFixed(3);
 
-    $("#cgIntro").innerHTML = `All <b>${G.n_proteins}</b> proteins that carry a signal peptide,
-      against all <b>${G.n_products}</b> amine &times; bile-acid combinations. Products are ordered
-      left to right from the most commonly made to the least, so a broad enzyme fills in from the
-      left. Switch between what the assay recorded and what the model says from each version of
-      the sequence.`;
+    $("#cgIntro").innerHTML = `This map covers <b>only the ${G.n_proteins} proteins that carry a
+      signal peptide</b> &mdash; not the whole 115-enzyme panel, which is on the
+      <a href="#" data-goto="matrix">Full map</a> tab. Each row is one protein, each column one of
+      the <b>${G.n_products}</b> amine &times; bile-acid combinations, ordered left to right from
+      the most commonly made to the least, so a broad enzyme fills in from the left.
+      <br><br>The predictions shown are made from the <b>signal-peptide-removed</b> sequences,
+      which is what this tab is about. The full-sequence view is there to compare against, and the
+      measured view to check both against the assay.`;
 
     $("#cgWarn").innerHTML = `<b>These are mostly not predictions.</b> ${G.trained_on} of the
       ${G.n_proteins} were in the training set of the model scoring them here, so for those the
@@ -1466,7 +1474,10 @@ if (typeof CAND !== "undefined" && CAND && CAND.n_proteins) {
         : sort==="untested" ? (a.tested-b.tested) || b.n_full-a.n_full
         : (b.measured==null?-1:b.measured) - (a.measured==null?-1:a.measured));
 
-      $("#cgHeat").innerHTML = `<table class="hm"><tbody>${rows.map(r=>{
+      const head = `<tr><th></th>${G.products.map((pr,j)=>
+        `<td class="hmlab"><div><span>${pretty(pr[0])} &middot; ${pr[1]}</span></div></td>`
+      ).join("")}</tr>`;
+      $("#cgHeat").innerHTML = `<table class="hm"><thead>${head}</thead><tbody>${rows.map(r=>{
         const c = G.cells[r.acc];
         return `<tr><th title="${r.org||""}${r.phy?" · "+r.phy:""}">
           ${r.tested?"":"\u2726 "}${r.acc}</th>${
