@@ -1,0 +1,185 @@
+{
+ "2,3_diaminopropionic acid": {
+  "classes": {
+   "primary amine": 2
+  },
+  "n_nitrogen": 2,
+  "nucleophilic": 2
+ },
+ "2_aminophenol": {
+  "classes": {
+   "aromatic amine": 1
+  },
+  "n_nitrogen": 1,
+  "nucleophilic": 1
+ },
+ "3_methoxytyramine": {
+  "classes": {
+   "primary amine": 1
+  },
+  "n_nitrogen": 1,
+  "nucleophilic": 1
+ },
+ "alanine": {
+  "classes": {
+   "primary amine": 1
+  },
+  "n_nitrogen": 1,
+  "nucleophilic": 1
+ },
+ "arginine": {
+  "classes": {
+   "guanidine": 1,
+   "primary amine": 1
+  },
+  "n_nitrogen": 4,
+  "nucleophilic": 1
+ },
+ "asparagine": {
+  "classes": {
+   "amide": 1,
+   "primary amine": 1
+  },
+  "n_nitrogen": 2,
+  "nucleophilic": 1
+ },
+ "cadaverine": {
+  "classes": {
+   "primary amine": 2
+  },
+  "n_nitrogen": 2,
+  "nucleophilic": 2
+ },
+ "citrulline": {
+  "classes": {
+   "urea": 1,
+   "primary amine": 1
+  },
+  "n_nitrogen": 3,
+  "nucleophilic": 1
+ },
+ "cystine": {
+  "classes": {
+   "primary amine": 2
+  },
+  "n_nitrogen": 2,
+  "nucleophilic": 2
+ },
+ "dopamine": {
+  "classes": {
+   "primary amine": 1
+  },
+  "n_nitrogen": 1,
+  "nucleophilic": 1
+ },
+ "gaba": {
+  "classes": {
+   "primary amine": 1
+  },
+  "n_nitrogen": 1,
+  "nucleophilic": 1
+ },
+ "glutamine": {
+  "classes": {
+   "amide": 1,
+   "primary amine": 1
+  },
+  "n_nitrogen": 2,
+  "nucleophilic": 1
+ },
+ "glyglycine": {
+  "classes": {
+   "amide": 1,
+   "primary amine": 1
+  },
+  "n_nitrogen": 2,
+  "nucleophilic": 1
+ },
+ "histidine": {
+  "classes": {
+   "imidazole": 2,
+   "primary amine": 1
+  },
+  "n_nitrogen": 3,
+  "nucleophilic": 1
+ },
+ "lysine": {
+  "classes": {
+   "primary amine": 2
+  },
+  "n_nitrogen": 2,
+  "nucleophilic": 2
+ },
+ "methionine": {
+  "classes": {
+   "primary amine": 1
+  },
+  "n_nitrogen": 1,
+  "nucleophilic": 1
+ },
+ "ornithine": {
+  "classes": {
+   "primary amine": 2
+  },
+  "n_nitrogen": 2,
+  "nucleophilic": 2
+ },
+ "phenylalanine": {
+  "classes": {
+   "primary amine": 1
+  },
+  "n_nitrogen": 1,
+  "nucleophilic": 1
+ },
+ "proline": {
+  "classes": {
+   "secondary amine": 1
+  },
+  "n_nitrogen": 1,
+  "nucleophilic": 1
+ },
+ "putrescine": {
+  "classes": {
+   "primary amine": 2
+  },
+  "n_nitrogen": 2,
+  "nucleophilic": 2
+ },
+ "serine": {
+  "classes": {
+   "primary amine": 1
+  },
+  "n_nitrogen": 1,
+  "nucleophilic": 1
+ },
+ "serotonin": {
+  "classes": {
+   "indole NH": 1,
+   "primary amine": 1
+  },
+  "n_nitrogen": 2,
+  "nucleophilic": 1
+ },
+ "threonine": {
+  "classes": {
+   "primary amine": 1
+  },
+  "n_nitrogen": 1,
+  "nucleophilic": 1
+ },
+ "tryptamine": {
+  "classes": {
+   "indole NH": 1,
+   "primary amine": 1
+  },
+  "n_nitrogen": 2,
+  "nucleophilic": 1
+ },
+ "tyramine": {
+  "classes": {
+   "primary amine": 1
+  },
+  "n_nitrogen": 1,
+  "nucleophilic": 1
+ }
+}

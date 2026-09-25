@@ -764,26 +764,13 @@ details > *{margin-top:10px}
     <p class="foot" style="margin-bottom:14px">Across all <span id="nNP"></span> enzymes. The bar
     is how often the amine is predicted; where the same amine was measured in the original
     experiment, the measured rate is marked so you can see whether the model is following the
-    data or departing from it.</p>
+    data or departing from it.
+    <br><br>Under each structure is <b>every kind of nitrogen the molecule carries</b>, not a
+    single label &mdash; arginine has a guanidino group as well as its primary amine, histidine
+    an imidazole ring, citrulline a urea. Which of them the enzyme actually uses is not something
+    this assay can tell you: it records the product mass, which is the same whichever nitrogen
+    formed the bond.</p>
     <div class="gallery" id="nGallery"></div>
-  </div>
-
-  <div class="card" style="margin-top:18px">
-    <h3 style="margin-bottom:4px">What kind of amine gets attached</h3>
-    <p class="prose foot" style="margin-bottom:12px">Grouped by the kind of nitrogen that forms
-    the bond — primary, secondary, tertiary or aromatic. That is one property with one answer
-    per amine, unlike labels such as "amino acid", which overlap (glycine is an amino acid
-    <em>and</em> a primary amine).</p>
-    <div class="scroll" id="nClasses"></div>
-    <p class="prose foot" id="nClassRead" style="margin-top:12px"></p>
-  </div>
-
-  <div class="card" style="margin-top:18px">
-    <h3 style="margin-bottom:4px">How many reactive nitrogens the amine carries</h3>
-    <p class="prose foot" style="margin-bottom:12px">A separate question from which kind. This
-    one does split the panel, and it splits the results with it.</p>
-    <div class="scroll" id="nNitro"></div>
-    <p class="prose foot" id="nNitroRead" style="margin-top:12px"></p>
   </div>
 
   <div class="card" style="margin-top:18px">
@@ -1542,8 +1529,9 @@ if (typeof CAND !== "undefined" && CAND && CAND.n_proteins) {
       </div>
       <span class="sub"><span>predicted <b>${(a.rate*100).toFixed(0)}%</b></span>
         <span>${meas!=null?`measured ${(meas*100).toFixed(0)}%`:"not measured"}</span></span>
-      ${ch?`<span class="sub" style="color:var(--muted)"><span>${ch.formula}</span>
-        <span>${kindOf(ch.cls)}</span></span>`:""}
+      ${ch?`<span class="sub" style="color:var(--muted)"><span>${ch.formula}</span></span>
+        <span class="sub" style="color:var(--muted);display:block;text-align:left;
+          font-size:.7rem;line-height:1.35">${ch.label || kindOf(ch.cls)}</span>`:""}
     </div>`;
   }).join("");
 
@@ -1760,64 +1748,6 @@ if (typeof CAND !== "undefined" && CAND && CAND.n_proteins) {
     <br><br>The model agrees: how much a prediction shifts after trimming has essentially no
     relation to how much was cut (correlation ${SL.spearman_change}). So whatever silenced those
     ${SL.silent.n} enzymes, it is not the length of the piece at the front.`;
-
-  /* amine classes across the whole panel */
-  $("#nClasses").innerHTML = `<table><thead><tr><th>kind of nitrogen</th><th class="r">how many</th>
-    <th class="r">predicted</th><th class="r">measured</th><th style="width:30%"></th>
-    </tr></thead><tbody>${CD.classes.map(c=>`<tr>
-      <td><i style="display:inline-block;width:9px;height:9px;background:var(${
-        CLS_VAR[c.cls]||"--muted"});margin-right:7px"></i><b>${CLS_LABEL[c.cls]||c.cls}</b>
-        <span style="display:block;font-size:.76rem;color:var(--muted);margin-left:16px">${
-          c.amines.map(pretty).join(", ")}</span></td>
-      <td class="r">${c.n_amines}</td>
-      <td class="r">${(c.rate*100).toFixed(0)}%</td>
-      <td class="r">${c.measured_rate==null?"—":(c.measured_rate*100).toFixed(0)+"%"}</td>
-      <td><span class="bar-track" style="width:100%"><span class="bar-mini"
-        style="width:${(c.rate*100).toFixed(0)}%;background:var(${CLS_VAR[c.cls]||"--muted"})"></span></span></td>
-    </tr>`).join("")}</tbody></table>`;
-
-  // the panel is 23 primary amines against one of everything else -- say so rather than
-  // presenting a comparison the data cannot support
-  {
-    const prim = CD.classes.find(c => c.cls === "primary");
-    const rest = CD.classes.filter(c => c.cls !== "primary");
-    $("#nClassRead").innerHTML = `<b>This panel cannot really compare amine types.</b>
-      ${prim ? prim.n_amines : 0} of the ${CD.n_amines} amines are <b>primary amines</b>; the
-      rest are ${rest.map(c => `a single ${CLS_LABEL[c.cls]||c.cls} (${c.amines.map(pretty).join(", ")})`)
-        .join(" and ")}. There is no tertiary amine at all. So the aromatic row sitting at
-      ${rest.find(c=>c.cls==="aromatic") ? (rest.find(c=>c.cls==="aromatic").rate*100).toFixed(0)+"%" : "—"}
-      is one compound, not a class, and should be read as a single observation rather than
-      evidence that aromatic amines react well.`;
-  }
-
-  /* how many reactive nitrogens -- a different axis from which kind */
-  if (CD.nitrogens) {
-    const NLAB = n => n === 0 ? "none that count as nucleophilic"
-      : n === 1 ? "one" : n === 2 ? "two" : n + " or more";
-    $("#nNitro").innerHTML = `<table><thead><tr><th>reactive nitrogens</th>
-      <th class="r">how many amines</th><th class="r">predicted</th><th class="r">measured</th>
-      <th style="width:30%"></th></tr></thead><tbody>${CD.nitrogens.map(c=>`<tr>
-        <td><b>${NLAB(c.n)}</b><span style="display:block;font-size:.76rem;color:var(--muted)">${
-          c.amines.map(pretty).join(", ")}</span></td>
-        <td class="r">${c.n_amines}</td>
-        <td class="r">${(c.rate*100).toFixed(0)}%</td>
-        <td class="r">${c.measured_rate==null?"—":(c.measured_rate*100).toFixed(0)+"%"}</td>
-        <td><span class="bar-track" style="width:100%"><span class="bar-mini"
-          style="width:${(c.rate*100).toFixed(0)}%"></span></span></td></tr>`).join("")}
-      </tbody></table>`;
-  }
-
-  if (CD.nitrogens) {
-    const one = CD.nitrogens.find(c => c.n === 1), two = CD.nitrogens.find(c => c.n === 2);
-    if (one && two) $("#nNitroRead").innerHTML = `<b>Amines with two amine groups react far
-      less.</b> The ${one.n_amines} with a single reactive nitrogen were attached in
-      <b>${(one.measured_rate*100).toFixed(0)}%</b> of their chances; the ${two.n_amines} with
-      two managed <b>${(two.measured_rate*100).toFixed(0)}%</b>. The model has picked this up
-      and, if anything, overstates it — ${(one.rate*100).toFixed(0)}% against
-      ${(two.rate*100).toFixed(0)}%. Lysine, ornithine, cadaverine, putrescine, cystine and
-      2,3-diaminopropionic acid are the six, and they are near the bottom of the reactivity
-      list throughout this study.`;
-  }
 
   /* cores */
   $("#nCores").innerHTML = `<table><thead><tr><th>bile acid type</th>
