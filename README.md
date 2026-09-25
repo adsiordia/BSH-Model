@@ -175,6 +175,46 @@ python build.py               # rebuild index.html from template + JSON
 disk or emailed. Ten tabs cover the assay, the trends, the model, how it was built,
 and the predictions.
 
+## Hosting it
+
+`site/index.html` is one self-contained file — every dataset inlined, no external
+scripts, fonts or network calls of any kind. That makes it trivial to host anywhere
+that serves static files, and it works offline from disk.
+
+### GitHub Pages
+
+A workflow at `.github/workflows/pages.yml` publishes `site/` on every push to `main`
+that touches it. To switch it on once: **Settings -> Pages -> Source: GitHub Actions**.
+The page then lives at `https://<user>.github.io/BSH-Model/`.
+
+Nothing is duplicated into `docs/` — the workflow uploads `site/` directly.
+
+### Hugging Face Spaces
+
+A static Space needs exactly two files: `index.html` and a `README.md` whose YAML
+frontmatter declares `sdk: static`. Both are handled by:
+
+```bash
+hf auth login                                        # once, interactive
+./deploy/sync_huggingface.sh <hf-username>/<space-name>
+```
+
+That creates the Space if needed and uploads the current build. The Space card lives
+in `deploy/huggingface_README.md`; edit it there, not on the Hub, or the next sync
+will overwrite it.
+
+The build is ~4 MB, under the 10 MB threshold where the Hub wants Git LFS, so no LFS
+setup is required. Check `hf auth whoami` before syncing — it publishes under whichever
+account is logged in.
+
+### Anywhere else
+
+```bash
+cd site && ./serve.sh            # local, http://localhost:8811
+```
+
+Or just email `site/index.html` to someone. It opens from disk with no server.
+
 ## Reproducing
 
 ```bash
