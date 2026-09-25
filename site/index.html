@@ -157,16 +157,15 @@ tbody tr:hover{background:var(--soft)}
 .sticky{position:sticky;top:14px}
 .note{border-left:3px solid var(--pred);background:var(--soft);padding:10px 14px;
   border-radius:0 8px 8px 0;font-size:.86rem;line-height:1.5}
-.hm{border-collapse:collapse}
-.hm td{padding:0}
-.hm td div{width:9px;height:9px}
-.hm th{font-size:.7rem;font-weight:500;color:var(--muted);text-align:right;
+.cghm{border-collapse:collapse}
+.cghm td{padding:0}
+.cghm th{font-size:.7rem;font-weight:500;color:var(--muted);text-align:right;
   padding-right:6px;white-space:nowrap}
-.hm td.hmlab{vertical-align:bottom;height:122px;padding:0}
-.hm td.hmlab div{width:11px;height:122px;display:flex;align-items:flex-end;justify-content:center}
-.hm td.hmlab span{writing-mode:vertical-rl;transform:rotate(180deg);font-size:8.5px;
+.cghm td.hmlab{vertical-align:bottom;height:122px;padding:0}
+.cghm td.hmlab div{width:11px;height:122px;display:flex;align-items:flex-end;justify-content:center}
+.cghm td.hmlab span{writing-mode:vertical-rl;transform:rotate(180deg);font-size:8.5px;
   line-height:11px;color:var(--muted);white-space:nowrap;letter-spacing:.2px}
-.hm tbody td div{width:11px;height:11px}
+.cghm tbody td div{width:11px;height:11px}
 .trio3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;align-items:start}
 @media(max-width:820px){.trio3{grid-template-columns:1fr}}
 .corecard{border:1px solid var(--soft);border-radius:10px;padding:12px;background:var(--panel)}
@@ -1662,7 +1661,7 @@ if (typeof CAND !== "undefined" && CAND && CAND.n_proteins) {
       const head = `<tr><th></th>${G.products.map((pr,j)=>
         `<td class="hmlab"><div><span>${pretty(pr[0])} &middot; ${pr[1]}</span></div></td>`
       ).join("")}</tr>`;
-      $("#cgHeat").innerHTML = `<table class="hm"><thead>${head}</thead><tbody>${rows.map(r=>{
+      $("#cgHeat").innerHTML = `<table class="cghm"><thead>${head}</thead><tbody>${rows.map(r=>{
         const c = G.cells[r.acc];
         return `<tr><th title="${r.org||""}${r.phy?" · "+r.phy:""}">
           ${r.tested?"":"\u2726 "}${r.acc}<span style="display:block;font-weight:400;
