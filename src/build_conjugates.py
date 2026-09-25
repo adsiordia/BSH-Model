@@ -149,19 +149,14 @@ def main():
                         n_keto=int(s.n_keto.iloc[0]))
 
     # what each degree class could actually be, in words
-    # Only keep core variants whose positions the assay's own labels ever resolve.
-    # The reference enumeration lists more (e.g. 3a,6a / HDCA), but no measured
-    # product is ever labelled with them, so claiming them on the site overstates
-    # what the data can say.
-    import trimmed as _tr
-    MEASURED_POS = sorted({int(n) for v in _tr.enzymes(_tr.load_long()).Hydroxyl.unique()
-                           for n, _ in re.findall(r"(\d+)([abk]?)", str(v))})
-
+    # Every core variant actually offered in the assay is kept, positions and all.
+    # The substrate mix contained real bile acids (LCA, CDCA, UDCA, HDCA, DCA, CA
+    # and keto forms). What collapses to a hydroxyl COUNT is the product label:
+    # isomers weigh the same, so the measurement cannot separate them, and the
+    # model was reduced to Mono/Di/Tri for that reason.
     positions = {}
     for deg in ("Mono", "Di", "Tri"):
-        opts = [(c, v["name"]) for c, v in cores.items() if v["degree"] == deg
-                and all(int(n) in MEASURED_POS
-                        for n in re.findall(r"(\d+)[abk]?", c))]
+        opts = [(c, v["name"]) for c, v in cores.items() if v["degree"] == deg]
         # "3a,7a,12k" -> hydroxyls at 3 and 7, a ketone at 12. The suffix is the
         # orientation (a/b) for a hydroxyl, or k for a keto group.
         oh, keto = set(), set()
@@ -174,13 +169,10 @@ def main():
             oh=sorted(oh), keto=sorted(keto),
             representative=REPRESENTATIVE[deg],
             representative_name=cores[REPRESENTATIVE[deg]]["name"],
-            measured_positions=MEASURED_POS,
-            note=("The label records how many hydroxyls the core carries, not where "
-                  "they sit. Isomers weigh the same, so the measurement cannot tell "
-                  "them apart. Across the whole assay the only positions its labels "
-                  "ever resolve are "
-                  + ", ".join(str(x) for x in MEASURED_POS[:-1])
-                  + f" and {MEASURED_POS[-1]}."))
+            note=("These are the bile acids actually offered. The product label "
+                  "records only how many hydroxyls the core carries, not where they "
+                  "sit, because isomers weigh the same and the measurement cannot "
+                  "separate them -- which is why the model works in Mono/Di/Tri."))
 
     out, skipped = {}, []
     for _, a in am.iterrows():

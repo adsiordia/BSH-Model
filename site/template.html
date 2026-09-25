@@ -937,15 +937,19 @@ if (typeof TD !== "undefined" && TD && TD.assay) {
 
     /* the three cores */
     const POS = CJ.positions;
-    const mp = (POS.Tri && POS.Tri.measured_positions) || [3,7,12];
     const list = a => a.length>1 ? a.slice(0,-1).join(", ")+" or "+a[a.length-1] : String(a[0]);
-    $("#pnCoreNote").innerHTML = `A bile acid is one steroid scaffold carrying a variable number
-      of hydroxyl groups. <b>Mono, Di and Tri count how many there are &mdash; not where they
-      sit.</b> Isomers of the same count weigh the same, so mass spectrometry cannot tell them
-      apart, and the model was reduced to the hydroxylation <em>number</em> for that reason, even
-      though individual positional products were detected. Across the whole assay the only
-      positions its labels ever resolve are <b>${list(mp)}</b>. Each drawing below is one
-      representative of the class, with the hydroxyls shaded.`;
+    const nBA = ["Mono","Di","Tri"].reduce((n,d)=>n+(POS[d]?POS[d].options.length:0),0);
+    $("#pnCoreNote").innerHTML = `A bile acid is one steroid scaffold carrying hydroxyl groups at
+      different positions. <b>${nBA} distinct bile acids went into the mix</b> &mdash; real
+      molecules with real positions, listed under each class below, and offered to every enzyme
+      as their glycine and taurine conjugates.
+      <br><br>What collapses is the <em>readout</em>, not the experiment. Two bile acids carrying
+      the same number of hydroxyls in different places weigh exactly the same, so mass
+      spectrometry cannot separate them. Some positional products were detected, but the product
+      table records only <b>how many</b> hydroxyls a core carries &mdash; Mono, Di or Tri &mdash;
+      and the model was built on that count for the same reason. Each drawing below is one
+      representative of its class with the hydroxyls shaded; the positions listed are those the
+      bile acids in that class actually carry.`;
 
     $("#pnCores").innerHTML = ["Mono","Di","Tri"].map(deg=>{
       const v = POS[deg]; if(!v) return "";
@@ -959,10 +963,11 @@ if (typeof TD !== "undefined" && TD && TD.assay) {
         ${pr && pr.svg ? `<div class="struct">${pr.svg}</div>` : ""}
         <p class="foot" style="margin-top:6px">
           <b>potential hydroxyl positions:</b> ${list(v.oh)}
-          ${v.keto && v.keto.length ? `<br><b>may carry a ketone instead at:</b> ${list(v.keto)}` : ""}
+          ${v.keto && v.keto.length ? `<br><b>a ketone instead at:</b> ${list(v.keto)}` : ""}
         </p>
-        <p class="foot" style="color:var(--muted);margin-top:6px">consistent with
-          ${v.options.map(o=>o.name).join(" · ")}</p>
+        <p class="foot" style="color:var(--muted);margin-top:6px">
+          <b>${v.options.length}</b> bile acid${v.options.length===1?"":"s"} in the mix with this
+          hydroxyl count, indistinguishable by mass:<br>${v.options.map(o=>o.name).join(" · ")}</p>
       </div>`;
     }).join("");
 
