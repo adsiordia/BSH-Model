@@ -640,7 +640,6 @@ ul.caveats{margin:.4rem 0 0;padding-left:1.1rem} ul.caveats li{margin-bottom:.5r
       <span><span class="sw" style="background:#0f5f6b"></span>contact, own subunit</span>
       <span><span class="sw" style="background:#8a4bbf"></span>contact, neighbouring subunit</span>
       <span><span class="sw" style="background:#c8742a"></span>the conjugate</span>
-      <span class="scooh">labels are the residue and its number; an arrow marks one donated by a neighbouring subunit</span>
       <span class="scooh">drag to rotate &middot; scroll to zoom</span>
     </div>
     <div id="ppTable"></div>
@@ -3209,8 +3208,9 @@ const PPROT = PP.proteins, PPAM = PP.amines;
   const sel=$("#ppSel"), am=$("#ppAmine");
   if(!sel) return;
   PP.order.forEach(p=>{
-    const g=PPROT[p].group;
-    sel.insertAdjacentHTML("beforeend",`<option value="${p}">${p} — ${g} (${PPROT[p].motif})</option>`);
+    const m=PPROT[p].motif;
+    sel.insertAdjacentHTML("beforeend",
+      `<option value="${p}">${p} — loop ${m}${m[1]==="R"?" (Arg centre)":""}</option>`);
   });
   am.insertAdjacentHTML("beforeend",`<option value="">— pick one to view in 3D —</option>`);
   PPAM.forEach(a=>am.insertAdjacentHTML("beforeend",
@@ -3241,10 +3241,21 @@ function drawProtein(){
   const p=$("#ppSel").value, E=PPROT[p];
   const f={part:$("#ppPart").value, itf:$("#ppItf").checked};
   const made=PPAM.filter(a=>E.active[a]).map(a=>S_LABEL[a]||a);
+  const lp=E.loop||{}, ln=[lp[205],lp[206],lp[207]].filter(x=>x!=null);
+  const hasR = E.motif[1]==="R";
   $("#ppHead").innerHTML =
-    `<p><b>${p}</b> — selectivity loop <b>${E.motif}</b> (${E.group}) · `
-    + `${E.seq_len} aa · ${E.construct.replace(/_/g," ")}</p>`
-    + `<p class="foot">Measured in the assay to make ${made.length} of these 13 conjugates`
+    `<p><b>${p}</b> · ${E.seq_len} aa · ${E.construct.replace(/_/g," ")}</p>`
+    + `<p>Loop residues `
+    + (ln.length===3?`<b>${ln[0]}\u2013${ln[2]}</b>`:"")
+    + ` are <b>${E.motif}</b> — `
+    + (hasR ? `an <b>arginine</b> at the centre.` : `<b>no arginine</b> at the centre.`)
+    + `</p>`
+    + `<p class="foot">Those three residues sit on a loop that does not fold back into `
+    + `this monomer's own pocket — it reaches across into a neighbouring subunit's. `
+    + `Because the tetramer is four copies of this same protein, the loop serving `
+    + `<i>this</i> pocket arrives from a neighbour and has exactly this sequence. `
+    + `In the structure below it is drawn in the second colour.</p>`
+    + `<p class="foot">Measured in the assay to make ${made.length} of these ${PPAM.length} conjugates`
     + (made.length?`: ${made.join(", ")}`:"")+`.</p>`;
 
   const rows=ppRows(p,f);
@@ -3320,7 +3331,7 @@ function ppShow3D(p){
         const ca = model.selectedAtoms({chain:c.ch, resi:c.r, atom:"CA"})[0]
                 || model.selectedAtoms({chain:c.ch, resi:c.r})[0];
         if(!ca) continue;
-        pp3dViewer.addLabel(`${c.n}${c.r}${own ? "" : "  \u2190 chain "+c.ch}`,
+        pp3dViewer.addLabel(`${c.n}${c.r}`,
           {position:{x:ca.x, y:ca.y, z:ca.z},
            fontSize:11, fontColor:"white", borderThickness:0,
            backgroundColor: own ? "#0f5f6b" : "#8a4bbf", backgroundOpacity:.85,
