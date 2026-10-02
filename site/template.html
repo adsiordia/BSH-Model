@@ -250,6 +250,34 @@ table.stbl td.n{text-align:right;font-variant-numeric:tabular-nums}
 .dbar{display:block;height:9px;border-radius:2px}
 .dbar.pos{background:var(--accent)} .dbar.neg{background:#b0702a}
 ul.caveats{margin:.4rem 0 0;padding-left:1.1rem} ul.caveats li{margin-bottom:.5rem}
+#alWrap{overflow:auto;max-height:76vh;border:1px solid var(--rule);border-radius:8px}
+table.aln{border-collapse:collapse;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+  font-size:12px;line-height:1.35;width:auto;table-layout:fixed}
+table.aln th.alname{position:sticky;left:0;z-index:3;background:var(--panel);text-align:left;
+  width:118px;min-width:118px;
+  padding:0 10px 0 6px;font-family:inherit;font-size:11px;text-transform:none;letter-spacing:0;
+  white-space:nowrap;font-weight:500;color:var(--body)}
+table.aln thead th{position:sticky;top:0;z-index:2;background:var(--panel);height:52px;
+  width:13px;min-width:13px;
+  vertical-align:bottom;padding:0;font-size:10px;font-weight:400;color:var(--muted);
+  text-transform:none;letter-spacing:0}
+table.aln thead th span{display:inline-block;writing-mode:vertical-rl;transform:rotate(180deg)}
+table.aln thead th.rej{color:#b0702a}
+table.aln td{width:13px;text-align:center;color:var(--muted);padding:0}
+table.aln td.hitm{background:var(--accent-bg);color:var(--accent);font-weight:700}
+table.aln td.hiti{background:#efe2fa;color:#6b3a96;font-weight:700}
+table.aln td.hitc{background:var(--soft);color:var(--body)}
+.sw.alsw{width:auto;min-width:16px;text-align:center;font-family:ui-monospace,monospace;
+  font-size:11px;line-height:14px;font-weight:700}
+.sw.alsw.hitm{background:var(--accent-bg);color:var(--accent)}
+.sw.alsw.hiti{background:#efe2fa;color:#6b3a96}
+.sw.alsw.hitc{background:var(--soft);color:var(--body)}
+:root[data-theme=dark] table.aln td.hiti,
+:root[data-theme=dark] .sw.alsw.hiti{background:#33224a;color:#c9a6ef}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme=light]) table.aln td.hiti,
+  :root:not([data-theme=light]) .sw.alsw.hiti{background:#33224a;color:#c9a6ef}
+}
 </style></head><body>
 
 <header><div class="bar">
@@ -267,6 +295,7 @@ ul.caveats{margin:.4rem 0 0;padding-left:1.1rem} ul.caveats li{margin-bottom:.5r
     <button data-v="new">New predictions</button>
     <button data-v="structure">Structure</button>
     <button data-v="protein">By enzyme</button>
+    <button data-v="align">Alignment</button>
       <button data-v="methods">How it was made</button>
   </nav>
 </div></header>
@@ -653,6 +682,47 @@ ul.caveats{margin:.4rem 0 0;padding-left:1.1rem} ul.caveats li{margin-bottom:.5r
       <span><span class="sw seqsw" style="background:var(--accent-bg);color:var(--accent)">A</span>contacts the conjugate</span>
       <span><span class="sw seqsw" style="background:#f0dcc4;color:#7a4410">A</span>landmark (hover for which)</span>
       <span class="scooh">numbering is this enzyme&rsquo;s own, starting at the catalytic Cys</span>
+    </div>
+  </div>
+</section>
+
+<!-- ALIGNMENT -->
+<section class="view" id="v-align" hidden>
+  <div class="card prose">
+    <h2>All 27 sequences, lined up</h2>
+    <p>Every enzyme on one row, aligned to every other (MAFFT), with the residues that
+    touch the chosen conjugate picked out. Reading down a column shows what the 27 enzymes
+    have at the <i>same</i> structural position &mdash; which is where the trends are.</p>
+    <p class="foot">By default only the 54 alignment columns that ever carry a contact are
+    shown, since the other 339 are blank for every enzyme. Column headings are the matching
+    residue number in C0ERS1; each enzyme&rsquo;s own number appears on hover.</p>
+  </div>
+
+  <div class="card">
+    <div class="srow">
+      <label>Conjugate <select id="alAmine"></select></label>
+      <label>Show
+        <select id="alCols">
+          <option value="hit">columns with a contact (54)</option>
+          <option value="all">the whole alignment (393)</option>
+        </select>
+      </label>
+      <label>Order rows by
+        <select id="alSort">
+          <option value="loop">residue at the contact position</option>
+          <option value="name">name</option>
+        </select>
+      </label>
+      <label class="chk"><input type="checkbox" id="alCore"> also mark bile-acid contacts</label>
+    </div>
+    <p class="foot" id="alNote"></p>
+    <div id="alWrap"><div id="alGrid"></div></div>
+    <div class="slegend">
+      <span><span class="sw alsw hitm">A</span>touches the amine, own subunit</span>
+      <span><span class="sw alsw hiti">A</span>touches the amine of a <b>neighbouring</b> subunit</span>
+      <span><span class="sw alsw hitc">A</span>touches the bile acid</span>
+      <span class="scooh">a residue marked as neighbouring is one this enzyme <i>donates</i> &mdash;
+      its own pocket receives the equivalent residue from the subunit next to it</span>
     </div>
   </div>
 </section>
@@ -1085,7 +1155,8 @@ const TD = /*__THEDATA__*/{};
 const CAND = /*__CANDIDATES__*/{};
 const CONJUGATES = /*__CONJUGATES__*/{};
 const STRUCT = /*__STRUCTURE__*/{};
-const PP = /*__PERPROTEIN__*/{};</script>
+const PP = /*__PERPROTEIN__*/{};
+const AL = /*__ALIGNMENT__*/{};</script>
 <script>
 const $ = s => document.querySelector(s);
 
@@ -1121,6 +1192,7 @@ document.querySelectorAll("nav button").forEach(b => b.onclick = () => {
   if (b.dataset.v === "matrix") drawHeat();
   if (b.dataset.v === "structure") drawStruct();
   if (b.dataset.v === "protein") drawProtein();
+  if (b.dataset.v === "align") drawAlign();
 });
 
 $("#mq").oninput = drawHeat;
@@ -3394,4 +3466,65 @@ function ppShowSeq(p){
          : `<b>${n}</b> highlighted residues contact at least one of the 13 conjugates`)
     + ` (own subunit only — the sequence is a single chain).`;
 }
+
+/* ---------- all sequences aligned, contacts marked ---------- */
+(function alInit(){
+  const a=$("#alAmine"); if(!a) return;
+  AL.amines.forEach(t=>a.insertAdjacentHTML("beforeend",
+    `<option value="${t}">${S_LABEL[t]||t}${AL.cooh[t]?" (COOH)":""}</option>`));
+  ["alAmine","alCols","alSort","alCore"].forEach(id=>{
+    const el=document.getElementById(id); if(el) el.addEventListener("change",drawAlign);
+  });
+})();
+
+function drawAlign(){
+  const t=$("#alAmine").value, showAll=$("#alCols").value==="all",
+        core=$("#alCore").checked, sort=$("#alSort").value;
+  /* which columns to draw */
+  let cols=[];
+  if(showAll){ for(let c=0;c<AL.ncol;c++) cols.push(c); }
+  else {
+    const s=new Set();
+    for(const p of AL.order){ const h=AL.hits[p][t]||{};
+      for(const k of ["om","im"]) Object.keys(h[k]||{}).forEach(c=>s.add(+c));
+      if(core) for(const k of ["oc","ic"]) Object.keys(h[k]||{}).forEach(c=>s.add(+c));
+    }
+    cols=[...s].sort((x,y)=>x-y);
+  }
+  /* row order: by what the enzyme has at the dominant contact position */
+  const LOOP=239;
+  let order=[...AL.order];
+  if(sort==="loop") order.sort((p,q)=>{
+    const a=AL.aln[p][LOOP]||"-", b=AL.aln[q][LOOP]||"-";
+    return (a==="R"?0:1)-(b==="R"?0:1) || a.localeCompare(b) || p.localeCompare(q);
+  });
+
+  $("#alNote").innerHTML = `${AL.order.length} enzymes · ${cols.length} columns · `
+    + `a residue is marked when the contact survives ${AL.solid} of 5 AlphaFold samples. `
+    + `Rows ordered by ${sort==="loop"?"what each enzyme has at the contact position":"name"}.`;
+
+  let h='<table class="aln"><thead><tr><th class="alname"></th>';
+  for(const c of cols){
+    const r=AL.ref[c], warn=AL.verdict[c]==="reject";
+    h+=`<th${warn?' class="rej" title="the structures reject this alignment column"':''}>`
+     + `<span>${r??""}</span></th>`;
+  }
+  h+='</tr></thead><tbody>';
+  for(const p of order){
+    const seq=AL.aln[p], hh=AL.hits[p][t]||{};
+    h+=`<tr><th class="alname" title="loop ${AL.motif[p]}">${p}</th>`;
+    for(const c of cols){
+      const ch=seq[c]||"-";
+      let cls="";
+      if(hh.im && hh.im[c]) cls="hiti";
+      else if(hh.om && hh.om[c]) cls="hitm";
+      else if(core && ((hh.oc&&hh.oc[c])||(hh.ic&&hh.ic[c]))) cls="hitc";
+      const n=AL.ref[c];
+      h+=`<td class="${cls}" title="${p} · column ${c}${n?" (C0ERS1 "+n+")":""} · ${ch}">${ch}</td>`;
+    }
+    h+="</tr>";
+  }
+  $("#alGrid").innerHTML=h+"</tbody></table>";
+}
+
 </script></body></html>
