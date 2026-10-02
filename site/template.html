@@ -197,6 +197,42 @@ tr.clk:hover{background:var(--soft)}
 details{border-top:1px solid var(--soft);padding-top:10px}
 summary{cursor:pointer;color:var(--accent);font-size:.87rem}
 details > *{margin-top:10px}
+/* ---- structure heatmap ---- */
+.srow{display:flex;flex-wrap:wrap;gap:14px;align-items:flex-end;margin-bottom:10px}
+.srow label{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--muted)}
+.srow select{font:inherit;font-size:13px;padding:5px 8px;border:1px solid var(--rule);
+  border-radius:6px;background:var(--panel);color:var(--ink)}
+.srow label.chk{flex-direction:row;align-items:center;gap:6px;padding-bottom:6px}
+#sWrap{overflow:auto;max-height:72vh;border:1px solid var(--rule);border-radius:8px;padding:4px}
+table.sheat{border-collapse:separate;border-spacing:2px;font-size:12px;width:auto;table-layout:fixed}
+table.sheat th{font-weight:500;color:var(--muted);white-space:nowrap;position:sticky;background:var(--panel);z-index:2}
+/* only the first header row is tall -- the COOH row must not inherit the height,
+   or it opens a gap between the labels and the grid */
+table.sheat thead tr:first-child th{top:0;vertical-align:bottom;padding:4px 2px;height:120px}
+table.sheat thead tr:nth-child(2) th{top:120px;height:16px;padding:0 2px;vertical-align:middle}
+table.sheat thead th{font-size:11px;text-transform:none;letter-spacing:0}
+table.sheat thead th span{display:inline-block;writing-mode:vertical-rl;transform:rotate(180deg);
+  max-height:116px}
+table.sheat tbody th{text-transform:none;letter-spacing:0}
+table.sheat th.corner{left:0;z-index:3;width:56px;min-width:56px}
+table.sheat tbody th{left:0;text-align:right;padding:0 8px 0 4px;width:56px;min-width:56px;
+  font-variant-numeric:tabular-nums;color:var(--body)}
+table.sheat td{width:34px;height:26px;border-radius:3px;background:var(--panel);
+  box-shadow:inset 0 0 0 1px var(--rule);cursor:default}
+table.sheat td.f{box-shadow:none}
+table.sheat td.f{outline:2px solid var(--panel);outline-offset:-2px;box-shadow:none}
+table.sheat td:hover{outline:2px solid var(--ink);outline-offset:-1px}
+.scooh{font-size:10px;letter-spacing:.04em;text-transform:uppercase;color:var(--muted)}
+.slegend{display:flex;flex-wrap:wrap;gap:16px;align-items:center;margin-top:12px;font-size:12px;color:var(--muted)}
+.slegend .sw{display:inline-block;width:18px;height:14px;border-radius:3px;vertical-align:-2px;margin-right:4px}
+#sTip{position:fixed;z-index:50;max-width:320px;background:var(--panel);border:1px solid var(--rule);
+  border-radius:8px;padding:10px 12px;font-size:12px;line-height:1.45;color:var(--body);
+  box-shadow:0 6px 24px rgba(0,0,0,.18);pointer-events:none}
+#sTip b{color:var(--ink)}
+#sTip .r{color:var(--muted);font-size:11px}
+table.stbl{border-collapse:collapse;font-size:12px;width:100%}
+table.stbl th,table.stbl td{border-bottom:1px solid var(--rule);padding:4px 8px;text-align:left}
+table.stbl td.n{text-align:right;font-variant-numeric:tabular-nums}
 </style></head><body>
 
 <header><div class="bar">
@@ -212,6 +248,7 @@ details > *{margin-top:10px}
     <button data-v="chem">Amine chemistry</button>
     <button data-v="matrix">Full map</button>
     <button data-v="new">New predictions</button>
+    <button data-v="structure">Structure</button>
       <button data-v="methods">How it was made</button>
   </nav>
 </div></header>
@@ -466,6 +503,65 @@ details > *{margin-top:10px}
 </section>
 
 <!-- PREDICTIONS -->
+
+<!-- STRUCTURE -->
+<section class="view" id="v-structure" hidden>
+  <div class="card prose">
+    <h2>Which residues touch the amine</h2>
+    <p>27 enzymes were folded as tetramers with each of 13 bile&nbsp;acid&ndash;amine
+    conjugates (AlphaFold&nbsp;3, five samples each), and every protein&ndash;ligand contact
+    was measured. Each cell is <b>how many of the five samples showed that contact</b>, averaged
+    over the enzymes &mdash; so 5.0 means always, 0 means never.</p>
+    <p>Residue numbers are on a <b>common scale</b>: every enzyme is aligned to the mature
+    C0ERS1 sequence, because the proteins&rsquo; own numbering differs by tens of residues.
+    Hover any cell for the residue each enzyme actually has there.</p>
+    <p class="foot">Interaction types are geometric assignments from PandaMap (distance,
+    element and residue identity). &pi;-type contacts are excluded: the tool treats any
+    ring carbon as aromatic, and the steroid&rsquo;s four saturated rings generate large
+    numbers of spurious ones.</p>
+  </div>
+
+  <div class="card">
+    <div class="srow">
+      <label>Part of the molecule
+        <select id="sPart">
+          <option value="moiety">the amine</option>
+          <option value="core">the bile acid</option>
+        </select>
+      </label>
+      <label>Contact from
+        <select id="sChain">
+          <option value="all">either subunit</option>
+          <option value="own">the same subunit</option>
+          <option value="interface">a neighbouring subunit</option>
+        </select>
+      </label>
+      <label>Interaction type
+        <select id="sType">
+          <option value="all">all types</option>
+          <option value="hydrogen_bonds">hydrogen bond</option>
+          <option value="ionic">ionic</option>
+          <option value="attractive_charge">attractive charge</option>
+          <option value="hydrophobic">hydrophobic</option>
+          <option value="repulsion">repulsion</option>
+        </select>
+      </label>
+      <label>Enzymes
+        <select id="sGroup">
+          <option value="all">all 27</option>
+          <option value="S-R-X">S-R-X loop (8)</option>
+          <option value="G-X-G">G-X-G loop (10)</option>
+          <option value="Other">other loop (8)</option>
+        </select>
+      </label>
+      <label class="chk"><input type="checkbox" id="sTable"> show as a table</label>
+    </div>
+    <p class="foot" id="sNote"></p>
+    <div id="sWrap"><div id="sHeat"></div></div>
+    <div id="sTableWrap" hidden></div>
+    <div class="slegend" id="sLegend"></div>
+  </div>
+</section>
 
 <!-- METHODS -->
 <section class="view" id="v-methods" hidden>
@@ -893,7 +989,8 @@ const CGRID = /*__CANDGRID__*/{};
 const POOL = /*__POOLING__*/{};
 const TD = /*__THEDATA__*/{};
 const CAND = /*__CANDIDATES__*/{};
-const CONJUGATES = /*__CONJUGATES__*/{};</script>
+const CONJUGATES = /*__CONJUGATES__*/{};
+const STRUCT = /*__STRUCTURE__*/{};</script>
 <script>
 const $ = s => document.querySelector(s);
 
@@ -927,6 +1024,7 @@ document.querySelectorAll("nav button").forEach(b => b.onclick = () => {
   document.querySelectorAll("nav button").forEach(x => x.setAttribute("aria-current", x===b));
   document.querySelectorAll(".view").forEach(v => v.hidden = v.id !== "v"+"-"+b.dataset.v);
   if (b.dataset.v === "matrix") drawHeat();
+  if (b.dataset.v === "structure") drawStruct();
 });
 
 $("#mq").oninput = drawHeat;
@@ -2853,4 +2951,164 @@ if (typeof POOL !== "undefined" && POOL && POOL.results) {
     experiment itself reproduces about 82% of the time. Those are the two things that would
     have to change.`;
 }
+
+/* ---------- structure: residue x amine contact heatmap ---------- */
+/* Sequential one-hue ramp, five discrete steps for a 0-5 sample count.
+   Zero is an empty cell (the surface), so the lightest step only has to clear
+   2:1. Both ramps validated with the dataviz ordinal checks against this
+   page's own surfaces: light 2.18:1, dark 2.30:1, monotone L, single hue. */
+const S_RAMP_LIGHT = ["#7ab9c2","#549daa","#348290","#1b6775","#084d55"];
+const S_RAMP_DARK  = ["#275e69","#32808d","#4098a6","#5ab2bf","#8acfd9"];
+const S_LABEL = {GABA:"GABA", Asn:"asparagine", Gln:"glutamine", Dap:"Dap",
+  Ser:"serine", Thr:"threonine", Met:"methionine", Phe:"phenylalanine",
+  Dopamine:"dopamine", "3MeOTyramine":"3-methoxytyramine", Tyramine:"tyramine",
+  Tryptamine:"tryptamine", "2Aminophenol":"2-aminophenol"};
+const S_TYPENAME = {hydrogen_bonds:"hydrogen bond", ionic:"ionic",
+  attractive_charge:"attractive charge", hydrophobic:"hydrophobic", repulsion:"repulsion"};
+
+const sDarkMode = () => matchMedia("(prefers-color-scheme: dark)").matches
+  || document.documentElement.dataset.theme === "dark";
+const sRamp = () => (document.documentElement.dataset.theme === "light" ? S_RAMP_LIGHT
+  : sDarkMode() ? S_RAMP_DARK : S_RAMP_LIGHT);
+/* 0 -> no fill; >0 -> one of five steps, so a single sample still reads */
+function sColor(v){
+  if (!(v > 0)) return null;
+  const r = sRamp();
+  return r[Math.min(r.length - 1, Math.ceil(v / 5 * r.length) - 1)];
+}
+
+function sFilter(){
+  return {part: $("#sPart").value, chain: $("#sChain").value,
+          type: $("#sType").value, group: $("#sGroup").value};
+}
+/* Values are the number of the five AF3 samples showing that contact, averaged
+   over enzymes -- never a sum. A residue can make several interaction types in
+   one sample, so "all types" counts DISTINCT samples (c.any / c.own / c.itf)
+   rather than adding the per-type numbers, which would exceed 5. */
+function sValue(c, f){
+  if (c.part !== f.part) return 0;
+  if (f.type === "all")
+    return f.chain === "all" ? c.any : (f.chain === "own" ? c.own : c.itf);
+  const k = f.chain === "all"
+    ? (c.types["own|" + f.type] || 0) + (c.types["interface|" + f.type] || 0)
+    : (c.types[f.chain + "|" + f.type] || 0);
+  return Math.min(k, 5);
+}
+
+function sMatrix(){
+  const f = sFilter();
+  const gp = STRUCT.group, inG = p => f.group === "all" || gp[p] === f.group;
+  const nAll = STRUCT.proteins.length, nSel = STRUCT.proteins.filter(inG).length;
+  const scale = f.group === "all" ? 1 : nAll / Math.max(nSel, 1);
+  const M = {};
+  for (const c of STRUCT.cells){
+    const v = sValue(c, f);
+    if (!v) continue;
+    (M[c.pos] = M[c.pos] || {});
+    M[c.pos][c.amine] = (M[c.pos][c.amine] || 0) + v;
+  }
+  /* keep positions that actually vary across amines -- an all-equal row is a
+     constant and adds a stripe with no information */
+  const rows = [];
+  for (const pos of Object.keys(M).map(Number).sort((a,b)=>a-b)){
+    const vals = STRUCT.amines.map(a => M[pos][a] || 0);
+    const mx = Math.max(...vals), mn = Math.min(...vals);
+    if (mx < 0.15) continue;
+    rows.push({pos, vals, spread: mx - mn, max: mx});
+  }
+  rows.sort((a,b) => b.max - a.max || b.spread - a.spread);
+  return {rows, f, nSel, scale};
+}
+
+function drawStruct(){
+  const {rows, f, nSel} = sMatrix();
+  const A = STRUCT.amines, COOH = STRUCT.cooh;
+  $("#sNote").textContent = rows.length
+    ? `${rows.length} residue positions with a contact, ${nSel} enzymes, `
+      + `${A.length} conjugates. Positions are ordered by strongest contact.`
+    : "No contacts match these filters.";
+
+  if ($("#sTable").checked){
+    $("#sWrap").hidden = true; $("#sTableWrap").hidden = false;
+    let h = '<table class="stbl"><thead><tr><th>position</th><th>conjugate</th>'
+          + '<th>carboxylate</th><th class="n">samples (of 5)</th></tr></thead><tbody>';
+    for (const r of rows) A.forEach((a,i)=>{ if (r.vals[i] > 0)
+      h += `<tr><td>${r.pos}</td><td>${S_LABEL[a]||a}</td><td>${COOH[a]?"yes":"no"}</td>`
+         + `<td class="n">${r.vals[i].toFixed(2)}</td></tr>`; });
+    $("#sTableWrap").innerHTML = h + "</tbody></table>";
+  } else {
+    $("#sTableWrap").hidden = true; $("#sWrap").hidden = false;
+    let h = '<table class="sheat"><thead><tr><th class="corner"></th>';
+    for (const a of A) h += `<th><span>${S_LABEL[a]||a}</span></th>`;
+    h += '</tr><tr><th class="corner scooh">COOH</th>';
+    for (const a of A) h += `<th class="scooh">${COOH[a] ? "●" : "·"}</th>`;
+    h += '</tr></thead><tbody>';
+    for (const r of rows){
+      h += `<tr><th>${r.pos}</th>`;
+      r.vals.forEach((v,i)=>{
+        const c = sColor(v);
+        h += `<td${c ? ` class="f" style="background:${c}"` : ""}`
+           + ` data-p="${r.pos}" data-a="${A[i]}" data-v="${v.toFixed(2)}"></td>`;
+      });
+      h += "</tr>";
+    }
+    $("#sHeat").innerHTML = h + "</tbody></table>";
+  }
+
+  const ramp = sRamp();
+  $("#sLegend").innerHTML =
+    '<span><span class="sw" style="background:var(--panel);box-shadow:inset 0 0 0 1px var(--rule)"></span>no contact</span>'
+    + ramp.map((c,i)=>`<span><span class="sw" style="background:${c}"></span>`
+        + `${i===0?"1":""}${i===ramp.length-1?"5 of 5 samples":""}</span>`).join("")
+    + '<span class="scooh">● = the amine carries a carboxylate</span>';
+}
+
+/* hover tooltip: the per-type breakdown and the residue each enzyme has there */
+(function sTooltip(){
+  const tip = document.createElement("div");
+  tip.id = "sTip"; tip.hidden = true; document.body.appendChild(tip);
+  document.addEventListener("mousemove", e => {
+    const td = e.target.closest?.("table.sheat td");
+    if (!td){ tip.hidden = true; return; }
+    const pos = +td.dataset.p, amine = td.dataset.a, v = +td.dataset.v;
+    const f = sFilter();
+    const types = {};
+    for (const c of STRUCT.cells){
+      if (c.pos !== pos || c.amine !== amine || c.part !== f.part) continue;
+      for (const [k,x] of Object.entries(c.types)){
+        const [ch,t] = k.split("|");
+        if (f.chain !== "all" && ch !== f.chain) continue;
+        types[t] = (types[t]||0) + x;
+      }
+    }
+    const res = {};
+    for (const p of STRUCT.proteins){
+      if (f.group !== "all" && STRUCT.group[p] !== f.group) continue;
+      const r = STRUCT.residues[p]?.[pos]; if (r) res[r[0]] = (res[r[0]]||0)+1;
+    }
+    const resStr = Object.entries(res).sort((a,b)=>b[1]-a[1])
+      .map(([aa,n]) => `${aa}×${n}`).join("  ");
+    tip.innerHTML = `<b>position ${pos}</b> &middot; ${S_LABEL[amine]||amine}`
+      + `${STRUCT.cooh[amine] ? " (carboxylate)" : ""}<br>`
+      + `contact in <b>${v.toFixed(2)} of 5</b> samples, mean over enzymes<br>`
+      + (Object.keys(types).length
+          ? Object.entries(types).sort((a,b)=>b[1]-a[1])
+              .map(([t,x]) => `${S_TYPENAME[t]||t}: ${x.toFixed(2)}`).join("<br>") + "<br>"
+          : "")
+      + (resStr ? `<span class="r">residue here: ${resStr}</span>` : "");
+    tip.hidden = false;
+    const r = tip.getBoundingClientRect();
+    tip.style.left = Math.min(e.clientX + 14, innerWidth  - r.width  - 8) + "px";
+    tip.style.top  = Math.min(e.clientY + 14, innerHeight - r.height - 8) + "px";
+  });
+})();
+
+["sPart","sChain","sType","sGroup","sTable"].forEach(id => {
+  const el = document.getElementById(id);
+  if (el) el.addEventListener("change", drawStruct);
+});
+matchMedia("(prefers-color-scheme: dark)").addEventListener?.("change", () => {
+  if (!document.getElementById("v-structure")?.hidden) drawStruct();
+});
+
 </script></body></html>
