@@ -64,8 +64,15 @@ fi
 # create_repo() without a space_sdk, which defaults to Gradio and fails with
 # 402 (Gradio Spaces need PRO). Static Spaces are free; upload_file() does not
 # touch repo creation at all.
-echo "==> uploading index.html and the Space card"
-REPO="$REPO" SITE="$SITE" CARD="$CARD" python - <<'PYEOF'
+# The "By enzyme" tab fetches a pocket structure per run, so site/pockets/ has
+# to travel with the page. Everything else is still inlined in index.html.
+POCKETS="$ROOT/site/pockets"
+if [ -d "$POCKETS" ]; then
+  echo "==> $(ls "$POCKETS"/*.pdb 2>/dev/null | wc -l) pocket structures to upload"
+fi
+
+echo "==> uploading index.html, the Space card and the structures"
+REPO="$REPO" SITE="$SITE" CARD="$CARD" POCKETS="$POCKETS" python - <<'PYEOF'
 import os
 from huggingface_hub import HfApi
 api, repo = HfApi(), os.environ["REPO"]
@@ -75,6 +82,12 @@ for local, remote in ((os.environ["SITE"], "index.html"),
     api.upload_file(path_or_fileobj=local, path_in_repo=remote,
                     repo_id=repo, repo_type="space", commit_message=msg)
     print(f"    uploaded {remote}")
+pk = os.environ.get("POCKETS", "")
+if pk and os.path.isdir(pk):
+    # one commit for the whole folder rather than 351 separate uploads
+    api.upload_folder(folder_path=pk, path_in_repo="pockets", repo_id=repo,
+                      repo_type="space", commit_message="Update pocket structures")
+    print(f"    uploaded pockets/ ({len(os.listdir(pk))} files)")
 PYEOF
 
 echo

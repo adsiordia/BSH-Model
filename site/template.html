@@ -249,6 +249,7 @@ table.stbl td.n{text-align:right;font-variant-numeric:tabular-nums}
     <button data-v="matrix">Full map</button>
     <button data-v="new">New predictions</button>
     <button data-v="structure">Structure</button>
+    <button data-v="protein">By enzyme</button>
       <button data-v="methods">How it was made</button>
   </nav>
 </div></header>
@@ -560,6 +561,54 @@ table.stbl td.n{text-align:right;font-variant-numeric:tabular-nums}
     <div id="sWrap"><div id="sHeat"></div></div>
     <div id="sTableWrap" hidden></div>
     <div class="slegend" id="sLegend"></div>
+  </div>
+</section>
+
+<!-- PER-PROTEIN -->
+<section class="view" id="v-protein" hidden>
+  <div class="card prose">
+    <h2>One enzyme at a time</h2>
+    <p>The same 13 conjugates, for a single enzyme, in <b>its own residue numbering</b> &mdash;
+    nothing is aligned or averaged here, so what you see is what that one structure contains.</p>
+    <p class="foot">Each number is how many of the five AlphaFold&nbsp;3 samples showed that
+    contact. The 3D view holds the ligand and everything within 8&nbsp;&Aring; of it; residues
+    PandaMap found in contact are drawn as sticks and labelled.</p>
+  </div>
+
+  <div class="card">
+    <div class="srow">
+      <label>Enzyme <select id="ppSel"></select></label>
+      <label>Conjugate <select id="ppAmine"></select></label>
+      <label>Part <select id="ppPart">
+        <option value="all">whole conjugate</option>
+        <option value="m">the amine only</option>
+        <option value="c">the bile acid only</option>
+      </select></label>
+      <label class="chk"><input type="checkbox" id="ppItf"> only contacts from the neighbouring subunit</label>
+    </div>
+    <div id="ppHead"></div>
+  </div>
+
+  <div class="card">
+    <h3 style="margin-top:0">Residues contacted, by conjugate</h3>
+    <p class="foot" id="ppNote"></p>
+    <div id="ppWrap"><div id="ppHeat"></div></div>
+    <div class="slegend" id="ppLegend"></div>
+  </div>
+
+  <div class="card">
+    <h3 style="margin-top:0">Structure</h3>
+    <p class="foot" id="ppStructNote"></p>
+    <div id="pp3d" style="position:relative;width:100%;height:460px;border:1px solid var(--rule);
+      border-radius:8px;overflow:hidden"></div>
+    <div class="slegend">
+      <span><span class="sw" style="background:#9aa3ad"></span>pocket backbone</span>
+      <span><span class="sw" style="background:#0f5f6b"></span>contact, own subunit</span>
+      <span><span class="sw" style="background:#8a4bbf"></span>contact, neighbouring subunit</span>
+      <span><span class="sw" style="background:#c8742a"></span>the conjugate</span>
+      <span class="scooh">drag to rotate &middot; scroll to zoom</span>
+    </div>
+    <div id="ppTable"></div>
   </div>
 </section>
 
@@ -990,7 +1039,8 @@ const POOL = /*__POOLING__*/{};
 const TD = /*__THEDATA__*/{};
 const CAND = /*__CANDIDATES__*/{};
 const CONJUGATES = /*__CONJUGATES__*/{};
-const STRUCT = /*__STRUCTURE__*/{};</script>
+const STRUCT = /*__STRUCTURE__*/{};
+const PP = /*__PERPROTEIN__*/{};</script>
 <script>
 const $ = s => document.querySelector(s);
 
@@ -1025,6 +1075,7 @@ document.querySelectorAll("nav button").forEach(b => b.onclick = () => {
   document.querySelectorAll(".view").forEach(v => v.hidden = v.id !== "v"+"-"+b.dataset.v);
   if (b.dataset.v === "matrix") drawHeat();
   if (b.dataset.v === "structure") drawStruct();
+  if (b.dataset.v === "protein") drawProtein();
 });
 
 $("#mq").oninput = drawHeat;
@@ -3110,5 +3161,141 @@ function drawStruct(){
 matchMedia("(prefers-color-scheme: dark)").addEventListener?.("change", () => {
   if (!document.getElementById("v-structure")?.hidden) drawStruct();
 });
+
+
+/* ---------- one enzyme at a time ---------- */
+const PPROT = PP.proteins, PPAM = PP.amines;
+
+(function ppInit(){
+  const sel=$("#ppSel"), am=$("#ppAmine");
+  if(!sel) return;
+  PP.order.forEach(p=>{
+    const g=PPROT[p].group;
+    sel.insertAdjacentHTML("beforeend",`<option value="${p}">${p} — ${g} (${PPROT[p].motif})</option>`);
+  });
+  am.insertAdjacentHTML("beforeend",`<option value="">— pick one to view in 3D —</option>`);
+  PPAM.forEach(a=>am.insertAdjacentHTML("beforeend",
+    `<option value="${a}">${S_LABEL[a]||a}${PP.cooh[a]?" (COOH)":""}</option>`));
+  ["ppSel","ppAmine","ppPart","ppItf"].forEach(id=>{
+    const el=document.getElementById(id); if(el) el.addEventListener("change",drawProtein);
+  });
+})();
+
+function ppRows(p,f){
+  /* residue (own numbering) x conjugate, for one enzyme. No alignment, no averaging. */
+  const E=PPROT[p], M={}, meta={};
+  for(const a of PPAM) for(const c of (E.contacts[a]||[])){
+    if(f.part!=="all" && c.part!==f.part) continue;
+    if(f.itf && c.ch==="A") continue;
+    const key=c.ch+":"+c.r;
+    (M[key]=M[key]||{})[a]=Math.max(M[key][a]||0,c.f);
+    meta[key]={r:c.r,ch:c.ch,n:c.n,col:c.col,v:c.v};
+  }
+  const rows=Object.keys(M).map(k=>({key:k,...meta[k],
+    vals:PPAM.map(a=>M[k][a]||0)}));
+  rows.forEach(r=>{r.max=Math.max(...r.vals); r.sum=r.vals.reduce((x,y)=>x+y,0);});
+  rows.sort((a,b)=>b.sum-a.sum||a.r-b.r);
+  return rows;
+}
+
+function drawProtein(){
+  const p=$("#ppSel").value, E=PPROT[p];
+  const f={part:$("#ppPart").value, itf:$("#ppItf").checked};
+  const made=PPAM.filter(a=>E.active[a]).map(a=>S_LABEL[a]||a);
+  $("#ppHead").innerHTML =
+    `<p><b>${p}</b> — selectivity loop <b>${E.motif}</b> (${E.group}) · `
+    + `${E.seq_len} aa · ${E.construct.replace(/_/g," ")}</p>`
+    + `<p class="foot">Measured in the assay to make ${made.length} of these 13 conjugates`
+    + (made.length?`: ${made.join(", ")}`:"")+`.</p>`;
+
+  const rows=ppRows(p,f);
+  $("#ppNote").textContent = rows.length
+    ? `${rows.length} residues contact at least one conjugate. Rows are this enzyme's own numbering; `
+      + `chain A owns the pocket, other chains are neighbouring subunits.`
+    : "No contacts match these filters.";
+  let h='<table class="sheat"><thead><tr><th class="corner"></th>';
+  for(const a of PPAM) h+=`<th><span>${S_LABEL[a]||a}</span></th>`;
+  h+='</tr><tr><th class="corner scooh">COOH</th>';
+  for(const a of PPAM) h+=`<th class="scooh">${PP.cooh[a]?"●":"·"}</th>`;
+  h+='</tr></thead><tbody>';
+  for(const r of rows){
+    const flag = r.v==="reject" ? ' title="the structures reject this alignment column"' : "";
+    h+=`<tr><th${flag}>${r.ch}:${r.n}${r.r}${r.v==="reject"?" ⚠":""}</th>`;
+    r.vals.forEach((v,i)=>{
+      const c=sColor(v);
+      h+=`<td${c?` class="f" style="background:${c}"`:""} data-p="${r.r}" data-a="${PPAM[i]}"`
+       + ` data-v="${v.toFixed(0)}" title="${r.ch}:${r.n}${r.r} · ${S_LABEL[PPAM[i]]} · ${v} of 5"></td>`;
+    });
+    h+="</tr>";
+  }
+  $("#ppHeat").innerHTML=h+"</tbody></table>";
+  const ramp=sRamp();
+  $("#ppLegend").innerHTML=
+    '<span><span class="sw" style="background:var(--panel);box-shadow:inset 0 0 0 1px var(--rule)"></span>no contact</span>'
+    + ramp.map((c,i)=>`<span><span class="sw" style="background:${c}"></span>`
+        + `${i===0?"1":""}${i===ramp.length-1?"5 of 5 samples":""}</span>`).join("")
+    + '<span class="scooh">⚠ = alignment column the structures reject</span>';
+  ppShow3D(p);
+}
+
+/* ---- 3D: pocket structure with the contacting residues highlighted ---- */
+let pp3dViewer=null, pp3dLoaded="";
+function ppShow3D(p){
+  const a=$("#ppAmine").value, box=$("#pp3d"), note=$("#ppStructNote"), tbl=$("#ppTable");
+  if(!a){ box.innerHTML=""; tbl.innerHTML="";
+    note.textContent="Pick a conjugate above to load its structure."; pp3dLoaded=""; return; }
+  const job=`${p}_tet_${a}`;
+  note.innerHTML=`<b>${job}</b> — the ligand and every residue within 8 &Aring;, `
+    + `taken from the top-ranked AlphaFold 3 model. Colour on the backbone is pLDDT.`;
+  const E=PPROT[p];
+  const con=(E.contacts[a]||[]).filter(c=>c.f>0);
+  tbl.innerHTML='<table class="stbl"><thead><tr><th>residue</th><th>chain</th><th>part touched</th>'
+    +'<th>interaction</th><th class="n">samples</th></tr></thead><tbody>'
+    + con.map(c=>`<tr><td>${c.n}${c.r}</td><td>${c.ch==="A"?"A (own)":c.ch+" (neighbour)"}</td>`
+        +`<td>${c.part==="m"?"amine":"bile acid"}</td>`
+        +`<td>${Object.keys(c.t).map(x=>S_TYPENAME[x]||x).join(", ")}</td>`
+        +`<td class="n">${c.f} of 5</td></tr>`).join("")
+    + "</tbody></table>";
+  if(pp3dLoaded===job) return;
+  pp3dLoaded=job;
+  ppEnsure3Dmol(()=>{
+    fetch(`pockets/${job}.pdb`).then(r=>{
+      if(!r.ok) throw new Error(r.status); return r.text();
+    }).then(txt=>{
+      box.innerHTML="";
+      pp3dViewer=$3Dmol.createViewer(box,{backgroundColor:
+        getComputedStyle(document.body).getPropertyValue("--panel").trim()||"white"});
+      pp3dViewer.addModel(txt,"pdb");
+      pp3dViewer.setStyle({},{cartoon:{color:"#9aa3ad",opacity:.6}});
+      /* contacting residues as sticks: own subunit teal, neighbouring subunit
+         a second hue so the swapped loop is visible at a glance */
+      for(const c of con){
+        pp3dViewer.setStyle({chain:c.ch,resi:c.r},
+          {stick:{color:c.ch==="A"?"#0f5f6b":"#8a4bbf",radius:.17},
+           cartoon:{color:"#9aa3ad",opacity:.6}});
+        pp3dViewer.addLabel(`${c.n}${c.r}`,{fontSize:9,backgroundOpacity:.6,
+          backgroundColor:c.ch==="A"?"#0f5f6b":"#8a4bbf",fontColor:"white",
+          borderThickness:0, inFront:true,
+          position:{chain:c.ch,resi:c.r,atom:"CA"}});
+      }
+      /* the ligand last and thickest, so it is never hidden behind side chains */
+      pp3dViewer.setStyle({hetflag:true},
+        {stick:{colorscheme:"orangeCarbon",radius:.28}});
+      pp3dViewer.zoomTo({hetflag:true}); pp3dViewer.zoom(.6); pp3dViewer.render();
+    }).catch(e=>{
+      box.innerHTML='<p class="foot" style="padding:14px">Structure file not available here '
+        +'(the viewer needs the <code>pockets/</code> folder served alongside this page).</p>';
+    });
+  });
+}
+function ppEnsure3Dmol(cb){
+  if(window.$3Dmol) return cb();
+  const s=document.createElement("script");
+  s.src="https://cdnjs.cloudflare.com/ajax/libs/3Dmol/2.0.4/3Dmol-min.js";
+  s.onload=cb;
+  s.onerror=()=>{ $("#pp3d").innerHTML='<p class="foot" style="padding:14px">'
+    +'3D viewer could not load (needs internet for the 3Dmol library).</p>'; };
+  document.head.appendChild(s);
+}
 
 </script></body></html>
