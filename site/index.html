@@ -640,6 +640,7 @@ ul.caveats{margin:.4rem 0 0;padding-left:1.1rem} ul.caveats li{margin-bottom:.5r
       <span><span class="sw" style="background:#0f5f6b"></span>contact, own subunit</span>
       <span><span class="sw" style="background:#8a4bbf"></span>contact, neighbouring subunit</span>
       <span><span class="sw" style="background:#c8742a"></span>the conjugate</span>
+      <span class="scooh">labels are the residue and its number; an arrow marks one donated by a neighbouring subunit</span>
       <span class="scooh">drag to rotate &middot; scroll to zoom</span>
     </div>
     <div id="ppTable"></div>
@@ -3307,15 +3308,23 @@ function ppShow3D(p){
       pp3dViewer.addModel(txt,"pdb");
       pp3dViewer.setStyle({},{cartoon:{color:"#9aa3ad",opacity:.6}});
       /* contacting residues as sticks: own subunit teal, neighbouring subunit
-         a second hue so the swapped loop is visible at a glance */
+         a second hue, so the swapped selectivity loop reads at a glance */
+      const model = pp3dViewer.getModel();
       for(const c of con){
+        const own = c.ch === "A";
         pp3dViewer.setStyle({chain:c.ch,resi:c.r},
-          {stick:{color:c.ch==="A"?"#0f5f6b":"#8a4bbf",radius:.17},
+          {stick:{color: own ? "#0f5f6b" : "#8a4bbf", radius:.17},
            cartoon:{color:"#9aa3ad",opacity:.6}});
-        pp3dViewer.addLabel(`${c.n}${c.r}`,{fontSize:9,backgroundOpacity:.6,
-          backgroundColor:c.ch==="A"?"#0f5f6b":"#8a4bbf",fontColor:"white",
-          borderThickness:0, inFront:true,
-          position:{chain:c.ch,resi:c.r,atom:"CA"}});
+        /* addLabel's `position` takes literal coordinates -- handing it a
+           selection spec places nothing, silently. Look the CA up first. */
+        const ca = model.selectedAtoms({chain:c.ch, resi:c.r, atom:"CA"})[0]
+                || model.selectedAtoms({chain:c.ch, resi:c.r})[0];
+        if(!ca) continue;
+        pp3dViewer.addLabel(`${c.n}${c.r}${own ? "" : "  \u2190 chain "+c.ch}`,
+          {position:{x:ca.x, y:ca.y, z:ca.z},
+           fontSize:11, fontColor:"white", borderThickness:0,
+           backgroundColor: own ? "#0f5f6b" : "#8a4bbf", backgroundOpacity:.85,
+           inFront:true, alignment:"center"});
       }
       /* the ligand last and thickest, so it is never hidden behind side chains */
       pp3dViewer.setStyle({hetflag:true},
