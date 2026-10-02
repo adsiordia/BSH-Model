@@ -233,6 +233,15 @@ table.sheat td:hover{outline:2px solid var(--ink);outline-offset:-1px}
 table.stbl{border-collapse:collapse;font-size:12px;width:100%}
 table.stbl th,table.stbl td{border-bottom:1px solid var(--rule);padding:4px 8px;text-align:left}
 table.stbl td.n{text-align:right;font-variant-numeric:tabular-nums}
+.seqbox{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:13px;line-height:2;
+  overflow-x:auto;padding:4px 2px}
+.seqbox .ln{color:var(--muted);user-select:none;padding-right:10px;font-size:11px}
+.seqbox b{font-weight:500;padding:1px 0;border-radius:2px}
+.seqbox b.hit{background:var(--accent-bg);color:var(--accent);font-weight:700}
+.seqbox b.mark{box-shadow:inset 0 -2px 0 #c8742a}
+.seqbox .blk{margin-right:9px}
+.sw.seqsw{width:auto;min-width:16px;text-align:center;font-family:ui-monospace,monospace;
+  font-size:11px;line-height:14px;font-weight:700}
 </style></head><body>
 
 <header><div class="bar">
@@ -609,6 +618,17 @@ table.stbl td.n{text-align:right;font-variant-numeric:tabular-nums}
       <span class="scooh">drag to rotate &middot; scroll to zoom</span>
     </div>
     <div id="ppTable"></div>
+  </div>
+
+  <div class="card">
+    <h3 style="margin-top:0">Sequence</h3>
+    <p class="foot" id="ppSeqNote"></p>
+    <div id="ppSeq" class="seqbox"></div>
+    <div class="slegend">
+      <span><span class="sw seqsw" style="background:var(--accent-bg);color:var(--accent)">A</span>contacts the conjugate</span>
+      <span><span class="sw seqsw" style="background:#f0dcc4;color:#7a4410">A</span>landmark (hover for which)</span>
+      <span class="scooh">numbering is this enzyme&rsquo;s own, starting at the catalytic Cys</span>
+    </div>
   </div>
 </section>
 
@@ -3236,6 +3256,7 @@ function drawProtein(){
         + `${i===0?"1":""}${i===ramp.length-1?"5 of 5 samples":""}</span>`).join("")
     + '<span class="scooh">⚠ = alignment column the structures reject</span>';
   ppShow3D(p);
+  ppShowSeq(p);
 }
 
 /* ---- 3D: pocket structure with the contacting residues highlighted ---- */
@@ -3298,4 +3319,41 @@ function ppEnsure3Dmol(cb){
   document.head.appendChild(s);
 }
 
+
+/* ---- sequence of the selected enzyme, contacts highlighted ---- */
+function ppShowSeq(p){
+  const E=PPROT[p], a=$("#ppAmine").value, box=$("#ppSeq");
+  if(!box) return;
+  const f={part:$("#ppPart").value, itf:$("#ppItf").checked};
+  /* highlight the residues that touch the chosen conjugate; with none chosen,
+     anything that touches any of the 13 */
+  const hit={};
+  const srcs = a ? [a] : PPAM;
+  for(const t of srcs) for(const c of (E.contacts[t]||[])){
+    if(c.ch!=="A") continue;                 // the sequence is one chain
+    if(f.part!=="all" && c.part!==f.part) continue;
+    hit[c.r]=Math.max(hit[c.r]||0, c.f);
+  }
+  const marks=E.marks||{}, s=E.seq;
+  let html="", W=60;
+  for(let i=0;i<s.length;i+=W){
+    html+=`<div><span class="ln">${String(i+1).padStart(4)}</span>`;
+    for(let j=i;j<Math.min(i+W,s.length);j++){
+      const n=j+1, cls=[];
+      if(hit[n]) cls.push("hit");
+      if(marks[n]) cls.push("mark");
+      const title=[marks[n]?marks[n]:null, hit[n]?`contacts in ${hit[n]} of 5 samples`:null]
+        .filter(Boolean).join(" — ");
+      html+=`<b class="${cls.join(" ")}"${title?` title="${s[j]}${n}: ${title}"`:` title="${s[j]}${n}"`}>${s[j]}</b>`;
+      if((j+1)%10===0) html+='<span class="blk"></span>';
+    }
+    html+="</div>";
+  }
+  box.innerHTML=html;
+  const n=Object.keys(hit).length;
+  $("#ppSeqNote").innerHTML = `${E.seq.length} residues. `
+    + (a ? `<b>${n}</b> highlighted residues contact the ${S_LABEL[a]||a} conjugate`
+         : `<b>${n}</b> highlighted residues contact at least one of the 13 conjugates`)
+    + ` (own subunit only — the sequence is a single chain).`;
+}
 </script></body></html>
