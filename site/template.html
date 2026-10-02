@@ -3069,12 +3069,22 @@ const sDark = () => document.documentElement.dataset.theme === "dark"
   || (document.documentElement.dataset.theme !== "light"
       && matchMedia("(prefers-color-scheme: dark)").matches);
 const sRamp = () => sDark() ? S_RAMP_DARK : S_RAMP_LIGHT;
-/* 0 -> empty cell (the surface); otherwise five steps across 0-100% of enzymes */
-function sColor(pct){
+/* Two quantities are plotted on this page and they are NOT the same scale:
+     sColorPct  -- Structure tab: share of the 27 enzymes, 0-100%
+     sColorSamp -- By-enzyme tab: AlphaFold samples for ONE enzyme, 0-5
+   Both use the same validated ramp; passing one to the other silently paints
+   every cell the palest step. 0 is an empty cell in both. */
+function sColorPct(pct){
   if (!(pct > 0)) return null;
   const r = sRamp();
   return r[Math.min(r.length - 1, Math.floor(pct / 100 * r.length))];
 }
+function sColorSamp(n){
+  if (!(n > 0)) return null;
+  const r = sRamp();
+  return r[Math.min(r.length - 1, Math.round(n) - 1)];
+}
+const sColor = sColorPct;   /* the Structure tab's default */
 
 const sF = () => ({part:$("#sPart").value, chain:$("#sChain").value,
                    type:$("#sType").value, sort:$("#sSort").value});
@@ -3250,7 +3260,7 @@ function drawProtein(){
     const flag = r.v==="reject" ? ' title="the structures reject this alignment column"' : "";
     h+=`<tr><th${flag}>${r.ch}:${r.n}${r.r}${r.v==="reject"?" ⚠":""}</th>`;
     r.vals.forEach((v,i)=>{
-      const c=sColor(v);
+      const c=sColorSamp(v);
       h+=`<td${c?` class="f" style="background:${c}"`:""} data-p="${r.r}" data-a="${PPAM[i]}"`
        + ` data-v="${v.toFixed(0)}" title="${r.ch}:${r.n}${r.r} · ${S_LABEL[PPAM[i]]} · ${v} of 5"></td>`;
     });
@@ -3259,10 +3269,10 @@ function drawProtein(){
   $("#ppHeat").innerHTML=h+"</tbody></table>";
   const ramp=sRamp();
   $("#ppLegend").innerHTML=
-    '<span><span class="sw" style="background:var(--panel);box-shadow:inset 0 0 0 1px var(--rule)"></span>no contact</span>'
-    + ramp.map((c,i)=>`<span><span class="sw" style="background:${c}"></span>`
-        + `${i===0?"1":""}${i===ramp.length-1?"5 of 5 samples":""}</span>`).join("")
-    + '<span class="scooh">⚠ = alignment column the structures reject</span>';
+    '<span><span class="sw" style="background:var(--panel);box-shadow:inset 0 0 0 1px var(--rule)"></span>0</span>'
+    + ramp.map((c,i)=>`<span><span class="sw" style="background:${c}"></span>${i+1}</span>`).join("")
+    + '<span class="scooh">AlphaFold samples (of 5) for THIS enzyme &mdash; predictions of one structure, not experimental repeats</span>'
+    + '<span class="scooh">⚠ alignment column the structures reject</span>';
   ppShow3D(p);
   ppShowSeq(p);
 }
