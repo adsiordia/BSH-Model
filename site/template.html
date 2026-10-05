@@ -727,9 +727,13 @@ table.sa td.split,table.sa th.split{border-left:2px solid var(--muted)}
 <section class="view" id="v-align" hidden>
   <div class="card prose">
     <h2>All 27 sequences, lined up</h2>
-    <p>Every enzyme on one row, aligned to every other (MAFFT), with the residues that
-    touch the chosen conjugate picked out. Reading down a column shows what the 27 enzymes
+    <p>Every enzyme on one row, aligned to every other (MAFFT L-INS-i), with the residues
+    that touch the chosen conjugate picked out. Reading down a column shows what the enzymes
     have at the <i>same</i> structural position &mdash; which is where the trends are.</p>
+    <p>Switch to <b>all 127</b> to see every sequence in the dataset, not only the 27 that
+    were folded. Contacts can only be marked for those 27, so the rest show their residues
+    with no highlighting; each row carries its identity to the nearest folded enzyme, which
+    is what licenses reading a structural position off its sequence at all.</p>
     <p class="foot">By default only the 54 alignment columns that ever carry a contact are
     shown, since the other 339 are blank for every enzyme. Column headings are the matching
     residue number in C0ERS1; each enzyme&rsquo;s own number appears on hover.</p>
@@ -738,10 +742,16 @@ table.sa td.split,table.sa th.split{border-left:2px solid var(--muted)}
   <div class="card">
     <div class="srow">
       <label>Conjugate <select id="alAmine"></select></label>
+      <label>Sequences
+        <select id="alSet">
+          <option value="27">the 27 with structures</option>
+          <option value="127">all 127 in the dataset</option>
+        </select>
+      </label>
       <label>Show
         <select id="alCols">
-          <option value="hit">columns with a contact (54)</option>
-          <option value="all">the whole alignment (393)</option>
+          <option value="hit">columns that carry a contact</option>
+          <option value="all">the whole alignment</option>
         </select>
       </label>
       <label>Order rows by
@@ -3572,58 +3582,76 @@ function ppShowSeq(p){
   const a=$("#alAmine"); if(!a) return;
   AL.amines.forEach(t=>a.insertAdjacentHTML("beforeend",
     `<option value="${t}">${S_LABEL[t]||t}${AL.charge[t]!=="neutral"?" ("+AL.charge[t]+")":""}</option>`));
-  ["alAmine","alCols","alSort","alCore"].forEach(id=>{
+  ["alAmine","alCols","alSort","alCore","alSet"].forEach(id=>{
     const el=document.getElementById(id); if(el) el.addEventListener("change",drawAlign);
   });
 })();
 
 function drawAlign(){
   const t=$("#alAmine").value, showAll=$("#alCols").value==="all",
-        core=$("#alCore").checked, sort=$("#alSort").value;
-  /* which columns to draw */
+        core=$("#alCore").checked, sort=$("#alSort").value,
+        full=($("#alSet")||{}).value==="127";
+  /* Two alignments: 27 folded enzymes (where contacts were measured) and all 127
+     sequences. Columns are bridged through C0ERS1 residue numbers, verified to
+     agree at every pocket position. Contacts exist only for the 27. */
+  const A    = full ? AL.aln127   : AL.aln;
+  const ORD  = full ? AL.order127 : AL.order;
+  const NCOL = full ? AL.ncol127  : AL.ncol;
+  const REF  = full ? AL.ref127   : AL.ref;
+  const to127 = c => AL.map27to127[String(c)];
+  const LOOP = full ? to127(239) : 239;
+  const hasStruct = new Set(AL.modelled || AL.order);
+
   let cols=[];
-  if(showAll){ for(let c=0;c<AL.ncol;c++) cols.push(c); }
+  if(showAll){ for(let c=0;c<NCOL;c++) cols.push(c); }
   else {
     const s=new Set();
-    for(const p of AL.order){ const h=AL.hits[p][t]||{};
-      for(const k of ["om","im"]) Object.keys(h[k]||{}).forEach(c=>s.add(+c));
-      if(core) for(const k of ["oc","ic"]) Object.keys(h[k]||{}).forEach(c=>s.add(+c));
+    for(const p of AL.order){ const hh=AL.hits[p][t]||{};
+      for(const k of ["om","im"]) Object.keys(hh[k]||{}).forEach(c=>{
+        const cc = full ? to127(+c) : +c; if(cc!=null) s.add(cc); });
+      if(core) for(const k of ["oc","ic"]) Object.keys(hh[k]||{}).forEach(c=>{
+        const cc = full ? to127(+c) : +c; if(cc!=null) s.add(cc); });
     }
     cols=[...s].sort((x,y)=>x-y);
   }
-  /* row order: by what the enzyme has at the dominant contact position */
-  const LOOP=239;
-  let order=[...AL.order];
+  let order=[...ORD];
   if(sort==="loop") order.sort((p,q)=>{
-    const a=AL.aln[p][LOOP]||"-", b=AL.aln[q][LOOP]||"-";
+    const a=(A[p]||"")[LOOP]||"-", b=(A[q]||"")[LOOP]||"-";
     return (a==="R"?0:1)-(b==="R"?0:1) || a.localeCompare(b) || p.localeCompare(q);
   });
 
-  $("#alNote").innerHTML = `${AL.order.length} enzymes · ${cols.length} columns · `
-    + `a residue is marked when the contact survives ${AL.solid} of 5 AlphaFold samples. `
-    + `Rows ordered by ${sort==="loop"?"what each enzyme has at the contact position":"name"}.`;
+  $("#alNote").innerHTML = `${order.length} sequences \u00b7 ${cols.length} columns \u00b7 `
+    + (full
+        ? `contacts are marked only for the ${AL.order.length} with structures (\u25c6); `
+          + `the others show residues only.`
+        : `a residue is marked when the contact survives ${AL.solid} of 5 AlphaFold samples.`)
+    + ` Rows ordered by ${sort==="loop"?"what each has at the contact position":"name"}.`;
 
   let h='<table class="aln"><thead><tr><th class="alname"></th>';
   for(const c of cols){
-    const r=AL.ref[c], warn=AL.verdict[c]==="reject";
-    h+=`<th${warn?' class="rej" title="the structures reject this alignment column"':''}>`
+    const r=REF[String(c)];
+    const v = full ? null : AL.verdict[String(c)];
+    h+=`<th${v==="reject"?' class="rej" title="the structures reject this alignment column"':''}>`
      + `<span>${r??""}</span></th>`;
   }
   h+='</tr></thead><tbody>';
   for(const p of order){
-    const seq=AL.aln[p], hh=AL.hits[p][t]||{};
-    /* tooltip: what this enzyme has at the dominant inter-subunit column,
-       read from the alignment itself -- no motif field is carried any more */
-    const atLoop=(AL.aln[p]||"")[LOOP]||"-";
-    h+=`<tr><th class="alname" title="${p} — ${atLoop} at the inter-subunit contact column">${p}</th>`;
+    const seq=A[p]||"", hh=(AL.hits[p]||{})[t]||{}, known=hasStruct.has(p);
+    const near = full && !known && AL.near ? ` \u00b7 ${Math.round(AL.near[p]*100)}% to nearest folded` : "";
+    h+=`<tr><th class="alname" title="${p}${near}">${p}`
+      +`${known?' <span class="samod">\u25c6</span>':''}</th>`;
     for(const c of cols){
       const ch=seq[c]||"-";
       let cls="";
-      if(hh.im && hh.im[c]) cls="hiti";
-      else if(hh.om && hh.om[c]) cls="hitm";
-      else if(core && ((hh.oc&&hh.oc[c])||(hh.ic&&hh.ic[c]))) cls="hitc";
-      const n=AL.ref[c];
-      h+=`<td class="${cls}" title="${p} · column ${c}${n?" (C0ERS1 "+n+")":""} · ${ch}">${ch}</td>`;
+      if(known){
+        const c27 = full ? Object.keys(AL.map27to127).find(k=>AL.map27to127[k]===c) : c;
+        if(c27!=null){
+          if(hh.im && hh.im[c27]) cls="hiti";
+          else if(hh.om && hh.om[c27]) cls="hitm";
+          else if(core && ((hh.oc&&hh.oc[c27])||(hh.ic&&hh.ic[c27]))) cls="hitc";
+        }
+      }
+      h+=`<td class="${cls}" title="${p} \u00b7 ${REF[String(c)]?("C0ERS1 "+REF[String(c)]):("column "+c)} \u00b7 ${ch}">${ch}</td>`;
     }
     h+="</tr>";
   }
