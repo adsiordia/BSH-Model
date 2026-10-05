@@ -669,6 +669,15 @@ table.aln td.hitc{background:var(--soft);color:var(--body)}
 
   <div class="card">
     <h3 style="margin-top:0">Structure</h3>
+    <div class="srow">
+      <label>Show
+        <select id="ppMode">
+          <option value="one">this enzyme with the chosen conjugate</option>
+          <option value="allconj">this enzyme, all conjugates overlaid</option>
+          <option value="allenz">the chosen conjugate, all enzymes overlaid</option>
+        </select>
+      </label>
+    </div>
     <p class="foot" id="ppStructNote"></p>
     <div id="pp3d" style="position:relative;width:100%;height:460px;border:1px solid var(--rule);
       border-radius:8px;overflow:hidden"></div>
@@ -1164,7 +1173,8 @@ const CAND = /*__CANDIDATES__*/{};
 const CONJUGATES = /*__CONJUGATES__*/{};
 const STRUCT = /*__STRUCTURE__*/{};
 const PP = /*__PERPROTEIN__*/{};
-const AL = /*__ALIGNMENT__*/{};</script>
+const AL = /*__ALIGNMENT__*/{};
+const SUP = /*__SUPERPOSE__*/{};</script>
 <script>
 const $ = s => document.querySelector(s);
 
@@ -3297,7 +3307,7 @@ const PPROT = PP.proteins, PPAM = PP.amines;
   am.insertAdjacentHTML("beforeend",`<option value="">— pick one to view in 3D —</option>`);
   PPAM.forEach(a=>am.insertAdjacentHTML("beforeend",
     `<option value="${a}">${S_LABEL[a]||a}${PP.charge[a]!=="neutral"?" ("+PP.charge[a]+")":""}</option>`));
-  ["ppSel","ppAmine","ppPart","ppItf"].forEach(id=>{
+  ["ppSel","ppAmine","ppPart","ppItf","ppMode"].forEach(id=>{
     const el=document.getElementById(id); if(el) el.addEventListener("change",drawProtein);
   });
 })();
@@ -3375,6 +3385,8 @@ function drawProtein(){
 /* ---- 3D: pocket structure with the contacting residues highlighted ---- */
 let pp3dViewer=null, pp3dLoaded="";
 function ppShow3D(p){
+  const mode=($("#ppMode")||{}).value||"one";
+  if(mode!=="one"){ pp3dLoaded=""; return ppOverlay(mode); }
   const a=$("#ppAmine").value, box=$("#pp3d"), note=$("#ppStructNote"), tbl=$("#ppTable");
   if(!a){ box.innerHTML=""; tbl.innerHTML="";
     note.textContent="Pick a conjugate above to load its structure."; pp3dLoaded=""; return; }
@@ -3541,4 +3553,67 @@ function drawAlign(){
   $("#alGrid").innerHTML=h+"</tbody></table>";
 }
 
+
+/* ---- overlays: several pockets superposed into one frame ---- */
+/* The AF3 outputs do NOT share a coordinate frame -- as written they sit 45-55 A
+   apart. SUP holds a rotation+translation per job, fitted on CA atoms matched
+   through the MSA onto C0ERS1_tet_Asn, so different enzymes can be compared and
+   not just different conjugates of one enzyme. */
+function ppApply(txt, job){
+  const T = SUP[job];
+  if (!T) return txt;                       // no transform: leave it where it is
+  const R=T.R, t=T.t, out=[];
+  for (const line of txt.split("\n")){
+    if (!line.startsWith("ATOM") && !line.startsWith("HETATM")){ out.push(line); continue; }
+    const x=+line.slice(30,38), y=+line.slice(38,46), z=+line.slice(46,54);
+    const X=R[0]*x+R[1]*y+R[2]*z+t[0],
+          Y=R[3]*x+R[4]*y+R[5]*z+t[1],
+          Z=R[6]*x+R[7]*y+R[8]*z+t[2];
+    out.push(line.slice(0,30)
+      + X.toFixed(3).padStart(8) + Y.toFixed(3).padStart(8) + Z.toFixed(3).padStart(8)
+      + line.slice(54));
+  }
+  return out.join("\n");
+}
+const OV_HUES=["#0f5f6b","#c8742a","#6b3a96","#1a6b52","#a8324a","#2a5fa8","#8a6b12","#117d7d",
+               "#b0486b","#4a7a1f","#7a4bbf","#a85b12","#2e7d6b","#9b2d5e","#3f6fb5","#6d8f1a"];
+function ppOverlay(mode){
+  const p=$("#ppSel").value, a=$("#ppAmine").value, box=$("#pp3d"), note=$("#ppStructNote");
+  const items = mode==="allconj"
+    ? PPAM.map(t=>({job:`${p}_tet_${t}`, label:S_LABEL[t]||t, charged:PP.charge[t]!=="neutral"}))
+    : PP.order.map(q=>({job:`${q}_tet_${a}`, label:q, charged:true}));
+  if (mode==="allenz" && !a){ box.innerHTML=""; $("#ppTable").innerHTML="";
+    note.textContent="Pick a conjugate to overlay it across the enzymes."; return; }
+  const have = items.filter(i=>SUP[i.job]);
+  note.innerHTML = mode==="allconj"
+    ? `<b>${p}</b> — ${have.length} conjugates superposed on one pocket. The protein is drawn `
+      + `once; each conjugate is a separate colour. Charged amines are solid, neutral ones faint.`
+    : `<b>${S_LABEL[a]||a}</b> — the same conjugate in ${have.length} enzymes, superposed. `
+      + `Each enzyme's pocket backbone and its ligand share a colour.`;
+  $("#ppTable").innerHTML = '<div class="slegend">' + have.map((i,k)=>
+      `<span><span class="sw" style="background:${OV_HUES[k%OV_HUES.length]}"></span>${i.label}</span>`
+    ).join("") + '</div>';
+  ppEnsure3Dmol(async ()=>{
+    box.innerHTML="";
+    const v=$3Dmol.createViewer(box,{backgroundColor:
+      getComputedStyle(document.body).getPropertyValue("--panel").trim()||"white"});
+    for (let k=0;k<have.length;k++){
+      const it=have[k], col=OV_HUES[k%OV_HUES.length];
+      let txt; try{ const r=await fetch(`pockets/${it.job}.pdb`); if(!r.ok) continue;
+        txt=ppApply(await r.text(), it.job); }catch(e){ continue; }
+      const m=v.addModel(txt,"pdb");
+      if (mode==="allconj"){
+        /* one shared protein: draw the backbone only for the first model */
+        v.setStyle({model:m,hetflag:false},
+          k===0?{cartoon:{color:"#9aa3ad",opacity:.45}}:{});
+        v.setStyle({model:m,hetflag:true},
+          {stick:{color:col,radius:it.charged?.20:.13,opacity:it.charged?1:.55}});
+      } else {
+        v.setStyle({model:m,hetflag:false},{cartoon:{color:col,opacity:.22}});
+        v.setStyle({model:m,hetflag:true},{stick:{color:col,radius:.18}});
+      }
+    }
+    v.zoomTo({hetflag:true}); v.zoom(.7); v.render();
+  });
+}
 </script></body></html>
