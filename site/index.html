@@ -737,6 +737,40 @@ table.sa td.split,table.sa th.split{border-left:2px solid var(--muted)}
     <p class="foot">By default only the 54 alignment columns that ever carry a contact are
     shown, since the other 339 are blank for every enzyme. Column headings are the matching
     residue number in C0ERS1; each enzyme&rsquo;s own number appears on hover.</p>
+
+    <details style="margin-top:12px">
+      <summary>Which sequence is each row, exactly?</summary>
+      <div class="prose">
+        <p>Every sequence here is the one that was supplied, with a single edit allowed:
+        if the entry has a <b>signal peptide</b>, the collaborator&rsquo;s trimmed sequence is
+        used; if it does not, the <b>raw sequence is used verbatim</b>, initiator methionine
+        included. Nothing else was normalised.</p>
+        <p>That splits the dataset <b>65 trimmed / 62 raw</b>, and it means 65 rows do not
+        begin at the catalytic cysteine &mdash; the first residue is <code>C</code> for 62
+        sequences, <code>M</code> for 62, and <code>G</code>, <code>I</code> or
+        <code>T</code> for one each. These are the files as received, so they were kept that
+        way rather than corrected.</p>
+        <p>The ragged starts do not disturb the alignment. MAFFT parks each spare methionine
+        in a leader region ahead of the conserved block, and the catalytic cysteine still
+        lands on the <b>same column for 126 of the 127</b> sequences. Because every position
+        quoted on this page is an alignment column rendered in the C0ERS1 frame, the extra
+        residue never enters the numbering.</p>
+        <p class="foot"><b>Two caveats worth carrying.</b>
+        <br>&mdash; <b>A0A414Q275 has no cysteine at all.</b> Its UniProt entry reads
+        <code>MKKILKLTLSLFLILSSLALA&middot;C&middot;TGITIKT&hellip;</code>: a 21-residue signal
+        peptide with the catalytic cysteine at position 22. The supplied file begins one
+        residue later, at 23, so the nucleophile is absent and the 344-residue sequence
+        contains no cysteine anywhere. It is the only sequence in the dataset like that, and
+        the only one the alignment cannot place on the catalytic column. It was still folded
+        against all thirteen conjugates, so its contacts appear throughout this site &mdash;
+        but they describe an enzyme modelled without its catalytic residue, and should not be
+        read as evidence about catalysis.
+        <br>&mdash; <b>Sequence numbering runs one ahead of the structures for 12 enzymes.</b>
+        The folded constructs had the initiator methionine stripped, so their catalytic
+        cysteine is residue 1 in the structure while the sequence above numbers it 2. Alignment
+        columns are unaffected; raw residue numbers taken straight from the FASTA are not.</p>
+      </div>
+    </details>
   </div>
 
   <div class="card">
