@@ -555,14 +555,17 @@ table.aln td.hitc{background:var(--soft);color:var(--body)}
 <section class="view" id="v-structure" hidden>
   <div class="card prose">
     <h2>Which residues tell the amines apart</h2>
-    <p>27 enzymes were folded with each conjugate and every protein&ndash;ligand contact
+    <p>27 enzymes were folded with each of 25 conjugates and every protein&ndash;ligand contact
     measured. The question this answers is <b>not</b> &ldquo;which residues touch the
     ligand&rdquo; &mdash; most of them touch all of it. It is <b>which residues behave
     differently depending on the amine</b>.</p>
     <p>So each cell is <b>the share of the 27 enzymes</b> in which that residue contacts
     that conjugate, counting a contact only when it appears in at least 3 of the 5
     AlphaFold&nbsp;3 samples. Rows are ordered by how strongly they separate amines that
-    carry a free carboxylate from those that do not.</p>
+    carry a <b>negative charge</b> from amines that carry none.</p>
+    <p>That split is charge, not chemistry: 17 of the 25 amines carry a carboxylate, one
+    (taurine) carries a sulfonate, and seven carry no ionisable group at all. The
+    carboxylate and the sulfonate behave the same way here &mdash; see the caveats below.</p>
     <p class="foot">Every conjugate here uses the same bile acid &mdash; cholic acid
     (3&alpha;,7&alpha;,12&alpha;-trihydroxy), identical in all of them. The conjugates differ
     only in the amine. Forming the bond consumes the bile acid&rsquo;s own carboxyl, so any
@@ -594,7 +597,7 @@ table.aln td.hitc{background:var(--soft);color:var(--body)}
       </label>
       <label>Sort rows by
         <select id="sSort">
-          <option value="disc">carboxylate discrimination</option>
+          <option value="disc">charged vs neutral separation</option>
           <option value="strength">overall contact strength</option>
           <option value="pos">residue position</option>
         </select>
@@ -613,7 +616,12 @@ table.aln td.hitc{background:var(--soft);color:var(--body)}
       <li><b>A pose is not binding.</b> AlphaFold 3 places every ligand it is given.
       Threonine and tyramine are here as controls precisely because no enzyme in this set
       makes them, and they still get confident poses. Read the contact <i>pattern</i>,
-      not presence or absence of a pose.</li>
+      not the presence of a pose.</li>
+      <li><b>The split is charge, not carboxylate.</b> Taurine carries a sulfonate rather
+      than a carboxylate, and the residue that separates the classes treats the two
+      identically (4.64 vs 4.75 of 5 samples, p&nbsp;=&nbsp;0.55). Every other charged
+      amine here happens to carry a carboxylate, so without taurine the two explanations
+      could not be told apart.</li>
       <li><b>The conjugate is the finished product</b>, not the reaction. Selectivity is
       decided before the bond forms; this assumes the product&rsquo;s amine sits where the
       incoming amine must.</li>
@@ -621,7 +629,7 @@ table.aln td.hitc{background:var(--soft);color:var(--body)}
       MAFFT and numbered on the mature C0ERS1 sequence. Superposing the 27 structures
       confirms 273 of 321 columns to within 3&nbsp;&Aring;; the 19 it rejects are flagged
       &#9888; and sit in the C-terminal tail and two loops.</li>
-      <li><b>Ligand confidence is moderate</b> &mdash; pLDDT around 56 in these tetramers,
+      <li><b>Ligand confidence is moderate</b> &mdash; pLDDT around 55 in these tetramers,
       which is why a contact counts only when it survives 3 of 5 samples.</li>
     </ul>
   </div>
@@ -631,7 +639,7 @@ table.aln td.hitc{background:var(--soft);color:var(--body)}
 <section class="view" id="v-protein" hidden>
   <div class="card prose">
     <h2>One enzyme at a time</h2>
-    <p>The same 13 conjugates, for a single enzyme, in <b>its own residue numbering</b> &mdash;
+    <p>All 25 conjugates, for a single enzyme, in <b>its own residue numbering</b> &mdash;
     nothing is aligned or averaged here, so what you see is what that one structure contains.</p>
     <p class="foot">Each number is how many of the five AlphaFold&nbsp;3 samples showed that
     contact. The 3D view holds the ligand and everything within 8&nbsp;&Aring; of it; residues
@@ -3170,8 +3178,8 @@ function sRows(){
       return f.type === "all" ? e.pct : (e.types[f.type] || 0);
     });
     if (Math.max(...vals) < 4) continue;          // < ~1 enzyme of 27
-    const C = A.filter(t => STRUCT.cooh[t]).map((t,i)=>vals[A.indexOf(t)]);
-    const N = A.filter(t => !STRUCT.cooh[t]).map(t=>vals[A.indexOf(t)]);
+    const C = A.filter(t => STRUCT.charge[t] !== "neutral").map(t=>vals[A.indexOf(t)]);
+    const N = A.filter(t => STRUCT.charge[t] === "neutral").map(t=>vals[A.indexOf(t)]);
     const mean = a => a.length ? a.reduce((x,y)=>x+y,0)/a.length : 0;
     out.push({col:c.col, ref:c.ref, v:c.v, vals,
               disc: mean(C) - mean(N), max: Math.max(...vals)});
@@ -3184,7 +3192,7 @@ function sRows(){
 
 function drawStruct(){
   const f = sF(), A = STRUCT.amines, rows = sRows();
-  const nC = A.filter(t=>STRUCT.cooh[t]).length;
+  const nC = A.filter(t=>STRUCT.charge[t]!=="neutral").length;
   $("#sNote").innerHTML = rows.length
     ? `${rows.length} residue positions · ${STRUCT.nprot} enzymes · ${A.length} conjugates. `
       + `A cell is the share of enzymes where that residue contacts that conjugate in at `
@@ -3194,10 +3202,10 @@ function drawStruct(){
   if ($("#sTable").checked){
     $("#sWrap").hidden = true; $("#sTableWrap").hidden = false;
     let h='<table class="stbl"><thead><tr><th>position</th><th>conjugate</th>'
-        + '<th>carboxylate</th><th class="n">% of enzymes</th></tr></thead><tbody>';
+        + '<th>charge</th><th class="n">% of enzymes</th></tr></thead><tbody>';
     for (const r of rows) A.forEach((t,i)=>{ if (r.vals[i] > 0)
       h += `<tr><td>${r.ref ?? "col "+r.col}</td><td>${S_LABEL[t]||t}</td>`
-         + `<td>${STRUCT.cooh[t]?"yes":"no"}</td><td class="n">${r.vals[i].toFixed(0)}%</td></tr>`;});
+         + `<td>${STRUCT.charge[t]}</td><td class="n">${r.vals[i].toFixed(0)}%</td></tr>`;});
     $("#sTableWrap").innerHTML = h + "</tbody></table>";
   } else {
     $("#sTableWrap").hidden = true; $("#sWrap").hidden = false;
@@ -3205,10 +3213,10 @@ function drawStruct(){
     A.forEach((t,i)=>{
       h += `<th class="${i===nC?'split':''}"><span>${S_LABEL[t]||t}</span></th>`;
     });
-    h += '<th class="discq">COOH&minus;non</th></tr>'
+    h += '<th class="discq">charged&minus;neutral</th></tr>'
        + '<tr><th class="corner scooh"></th>';
     A.forEach((t,i)=>{ h += `<th class="scooh ${i===nC?'split':''}">`
-      + `${STRUCT.cooh[t] ? "COOH" : "—"}</th>`; });
+      + `${STRUCT.charge[t]==="carboxylate"?"COO⁻":STRUCT.charge[t]==="sulfonate"?"SO₃⁻":"—"}</th>`; });
     h += '<th class="discq"></th></tr></thead><tbody>';
     for (const r of rows){
       const warn = r.v === "reject";
@@ -3219,11 +3227,11 @@ function drawStruct(){
         h += `<td class="${c?'f ':''}${i===nC?'split':''}"${c?` style="background:${c}"`:""}`
            + ` data-c="${r.col}" data-t="${A[i]}" data-v="${v.toFixed(0)}"></td>`;
       });
-      /* a small diverging bar: how much this row prefers carboxylate amines */
+      /* a small diverging bar: how much this row prefers charged amines */
       const d = r.disc, w = Math.min(Math.abs(d), 100) / 2;
       h += `<td class="discq"><span class="dbar ${d>=0?'pos':'neg'}" `
          + `style="width:${w}%;margin-left:${d>=0?50:50-w}%" `
-         + `title="${d>=0?'+':''}${d.toFixed(0)} points toward ${d>=0?'carboxylate':'non-carboxylate'}"></span></td>`;
+         + `title="${d>=0?'+':''}${d.toFixed(0)} points toward ${d>=0?'charged':'neutral'} amines"></span></td>`;
       h += "</tr>";
     }
     $("#sHeat").innerHTML = h + "</tbody></table>";
@@ -3234,9 +3242,9 @@ function drawStruct(){
     + ramp.map((c,i)=>`<span><span class="sw" style="background:${c}"></span>`
         + `${i===0?"1–20%":""}${i===ramp.length-1?"81–100% of enzymes":""}</span>`).join("")
     + '<span><span class="dbar pos" style="width:14px;display:inline-block;height:8px"></span>'
-    + ' prefers carboxylate</span>'
+    + ' prefers a charged amine</span>'
     + '<span><span class="dbar neg" style="width:14px;display:inline-block;height:8px"></span>'
-    + ' prefers non-carboxylate</span>'
+    + ' prefers a neutral amine</span>'
     + '<span class="scooh">⚠ alignment column the structures reject</span>';
 }
 
@@ -3252,7 +3260,7 @@ function drawStruct(){
     const res={};
     for(const p of STRUCT.proteins){ const r=STRUCT.residues[p]?.[col]; if(r) res[r[0]]=(res[r[0]]||0)+1; }
     tip.innerHTML=`<b>position ${cell?.ref ?? "column "+col}</b> &middot; ${S_LABEL[t]||t}`
-      + `${STRUCT.cooh[t]?" (carboxylate)":""}<br>`
+      + `${STRUCT.charge[t]!=="neutral"?" ("+STRUCT.charge[t]+")":""}<br>`
       + (e2 ? `<b>${e2.n} of ${STRUCT.nprot} enzymes</b> (${e2.pct}%), mean ${e2.mean} of 5 samples<br>`
             + Object.entries(e2.types).sort((a,b)=>b[1]-a[1])
                 .map(([k,v])=>`${S_TYPENAME[k]||k}: ${v}%`).join("<br>")
@@ -3279,14 +3287,16 @@ const PPROT = PP.proteins, PPAM = PP.amines;
 (function ppInit(){
   const sel=$("#ppSel"), am=$("#ppAmine");
   if(!sel) return;
-  PP.order.forEach(p=>{
-    const m=PPROT[p].motif;
-    sel.insertAdjacentHTML("beforeend",
-      `<option value="${p}">${p} — loop ${m}${m[1]==="R"?" (Arg centre)":""}</option>`);
+  PP.order.slice().sort((a,b)=>PPROT[b].n_itf_conj-PPROT[a].n_itf_conj||a.localeCompare(b))
+   .forEach(p=>{
+    const e=PPROT[p], t=(e.interface||[])[0];
+    sel.insertAdjacentHTML("beforeend", `<option value="${p}">${p} — `
+      + (e.n_itf_conj ? `${t.n}${t.r} from a neighbour, ${e.n_itf_conj}/${PP.amines.length}`
+                      : "no neighbouring contact") + `</option>`);
   });
   am.insertAdjacentHTML("beforeend",`<option value="">— pick one to view in 3D —</option>`);
   PPAM.forEach(a=>am.insertAdjacentHTML("beforeend",
-    `<option value="${a}">${S_LABEL[a]||a}${PP.cooh[a]?" (COOH)":""}</option>`));
+    `<option value="${a}">${S_LABEL[a]||a}${PP.charge[a]!=="neutral"?" ("+PP.charge[a]+")":""}</option>`));
   ["ppSel","ppAmine","ppPart","ppItf"].forEach(id=>{
     const el=document.getElementById(id); if(el) el.addEventListener("change",drawProtein);
   });
@@ -3313,23 +3323,23 @@ function drawProtein(){
   const p=$("#ppSel").value, E=PPROT[p];
   const f={part:$("#ppPart").value, itf:$("#ppItf").checked};
   const made=PPAM.filter(a=>E.active[a]).map(a=>S_LABEL[a]||a);
-  const lp=E.loop||{}, ln=[lp[205],lp[206],lp[207]].filter(x=>x!=null);
-  const hasR = E.motif[1]==="R";
+  const itf=E.interface||[], top=itf[0];
   $("#ppHead").innerHTML =
     `<p><b>${p}</b> · ${E.seq_len} aa · ${E.construct.replace(/_/g," ")}</p>`
-    + `<p>Loop residues `
-    + (ln.length===3?`<b>${ln[0]}\u2013${ln[2]}</b>`:"")
-    + ` are <b>${E.motif}</b> — `
-    + (hasR ? `an <b>arginine</b> at the centre.` : `<b>no arginine</b> at the centre.`)
+    + `<p>Its pocket uses <b>${E.n_own_res}</b> residues from its own subunit. `
+    + (E.n_itf_conj
+        ? `A residue from a <b>neighbouring</b> subunit also reaches in, for `
+          + `<b>${E.n_itf_conj} of ${PPAM.length}</b> conjugates`
+          + (top ? ` &mdash; ${top.n}${top.r}${itf.length>1?" (and "+(itf.length-1)+" other"+(itf.length>2?"s":"")+")":""}` : "")
+          + `.</p>`
+        : `<b>No residue from a neighbouring subunit</b> reaches its pocket in any of the `
+          + `${PPAM.length} conjugates &mdash; this pocket is built entirely from its own chain.</p>`)
+    + `<p class="foot">Both numbers are counted from the structures: a residue is included `
+    + `when it contacts the conjugate in at least ${PP.solid} of 5 AlphaFold samples. `
+    + (E.n_itf_conj ? `Residues donated by a neighbour are drawn in the second colour below.` : "")
     + `</p>`
-    + `<p class="foot">Those three residues sit on a loop that does not fold back into `
-    + `this monomer's own pocket — it reaches across into a neighbouring subunit's. `
-    + `Because the tetramer is four copies of this same protein, the loop serving `
-    + `<i>this</i> pocket arrives from a neighbour and has exactly this sequence. `
-    + `In the structure below it is drawn in the second colour.</p>`
     + `<p class="foot">Measured in the assay to make ${made.length} of these ${PPAM.length} conjugates`
     + (made.length?`: ${made.join(", ")}`:"")+`.</p>`;
-
   const rows=ppRows(p,f);
   $("#ppNote").textContent = rows.length
     ? `${rows.length} residues contact at least one conjugate. Rows are this enzyme's own numbering; `
@@ -3338,7 +3348,8 @@ function drawProtein(){
   let h='<table class="sheat"><thead><tr><th class="corner"></th>';
   for(const a of PPAM) h+=`<th><span>${S_LABEL[a]||a}</span></th>`;
   h+='</tr><tr><th class="corner scooh">COOH</th>';
-  for(const a of PPAM) h+=`<th class="scooh">${PP.cooh[a]?"●":"·"}</th>`;
+  for(const a of PPAM){const c=PP.charge[a];
+    h+=`<th class="scooh" title="${c}">${c==="carboxylate"?"COO⁻":c==="sulfonate"?"SO₃⁻":"·"}</th>`;}
   h+='</tr></thead><tbody>';
   for(const r of rows){
     const flag = r.v==="reject" ? ' title="the structures reject this alignment column"' : "";
@@ -3463,7 +3474,7 @@ function ppShowSeq(p){
   const n=Object.keys(hit).length;
   $("#ppSeqNote").innerHTML = `${E.seq.length} residues. `
     + (a ? `<b>${n}</b> highlighted residues contact the ${S_LABEL[a]||a} conjugate`
-         : `<b>${n}</b> highlighted residues contact at least one of the 13 conjugates`)
+         : `<b>${n}</b> highlighted residues contact at least one of the ${PPAM.length} conjugates`)
     + ` (own subunit only — the sequence is a single chain).`;
 }
 
@@ -3471,7 +3482,7 @@ function ppShowSeq(p){
 (function alInit(){
   const a=$("#alAmine"); if(!a) return;
   AL.amines.forEach(t=>a.insertAdjacentHTML("beforeend",
-    `<option value="${t}">${S_LABEL[t]||t}${AL.cooh[t]?" (COOH)":""}</option>`));
+    `<option value="${t}">${S_LABEL[t]||t}${AL.charge[t]!=="neutral"?" ("+AL.charge[t]+")":""}</option>`));
   ["alAmine","alCols","alSort","alCore"].forEach(id=>{
     const el=document.getElementById(id); if(el) el.addEventListener("change",drawAlign);
   });
