@@ -293,10 +293,21 @@ table.sa th.saam{width:13px;min-width:13px}
 table.sa td.sares{width:17px;text-align:center;background:var(--accent-bg);color:var(--accent);
   font-family:ui-monospace,monospace;font-weight:700}
 table.sa td.sacl,table.sa th.sacl{width:22px;min-width:22px;text-align:center;color:var(--muted);font-size:10px}
-table.sa td.sagap,table.sa th.sagap{width:14px;min-width:14px;background:transparent}
+table.sa td.sagap,table.sa th.sagap{width:16px;min-width:16px;background:transparent;border:0}
 table.sa td{height:14px;border:1px solid var(--rule);padding:0}
 table.sa td.saon{background:var(--hit-bg)}
-table.sa td.split,table.sa th.split{border-left:2px solid var(--muted)}
+/* the boundary between the two halves of the table -- the one that matters.
+   It used to be bare whitespace while the charged/neutral rule inside the right
+   half was the only visible line, which read as if IT were the divide. */
+table.sa td.samain,table.sa th.samain{border-left:3px solid var(--body)}
+/* charged vs neutral: inside the right half, so deliberately subordinate */
+table.sa td.split,table.sa th.split{border-left:1px dashed var(--muted)}
+/* the row naming the two halves */
+table.sa thead tr.sagrp th{height:auto;padding:0 0 4px;top:0;font-size:10.5px;
+  font-weight:600;color:var(--body);text-align:center;letter-spacing:.02em;
+  white-space:nowrap;overflow:visible}
+table.sa thead tr.sagrp th span{writing-mode:horizontal-tb;transform:none;max-height:none}
+table.sa thead tr.sacols th{top:17px}
 </style></head><body>
 
 <header><div class="bar">
@@ -861,10 +872,16 @@ table.sa td.split,table.sa th.split{border-left:2px solid var(--muted)}
 <section class="view" id="v-sites" hidden>
   <div class="card prose">
     <h2>Pocket residues beside what each enzyme actually makes</h2>
-    <p>Every enzyme with both a sequence and assay data, on one row. On the left, the residue
-    it has at each position the structures showed touching the <b>amine</b>. On the right,
-    which conjugates it was <b>measured</b> to make. The question is whether the left half
-    predicts the right half.</p>
+    <p>Every enzyme with both a sequence and assay data, on one row, split into two halves by
+    the <b>thick vertical rule</b>. Left of it is what the enzyme <b>has</b>: the amino acid it
+    carries at each position the structures showed touching the <b>amine</b>, one letter per
+    cell. Right of it is what the enzyme <b>makes</b>: one cell per conjugate, filled if the
+    assay measured it being made. The question is whether the left half predicts the right.</p>
+    <p><b>The right half is yes or no, not a shade.</b> A filled cell means made, an empty cell
+    means not made &mdash; there is no intensity to read, and a darker-looking block is just
+    more neighbouring cells filled in. The thin dashed rule inside the right half is not the
+    divide between the halves; it only separates the charged conjugates from the neutral
+    ones.</p>
     <p class="foot">The positions came from 27 folded structures but are read off the
     alignment, so all 115 enzymes can be shown. Four of the eleven are effectively invariant
     (the catalytic Cys, and positions 15, 169, 222) and are greyed: important, but they
@@ -887,10 +904,12 @@ table.sa td.split,table.sa th.split{border-left:2px solid var(--muted)}
     <p class="foot" id="saNote"></p>
     <div id="saWrap"><div id="saGrid"></div></div>
     <div class="slegend">
-      <span><span class="sw" style="background:var(--accent-bg);color:var(--accent);font-weight:700;width:auto;min-width:16px;text-align:center">R</span>residue at a pocket position</span>
-      <span><span class="sw" style="background:var(--hit-bg)"></span>conjugate measured as made</span>
+      <span><span class="sw" style="background:var(--accent-bg);color:var(--accent);font-weight:700;width:auto;min-width:16px;text-align:center">R</span><b>left half</b> &mdash; the residue it has there</span>
+      <span><span class="sw" style="background:var(--hit-bg)"></span><b>right half</b> &mdash; conjugate measured as made</span>
       <span><span class="sw" style="background:var(--panel);box-shadow:inset 0 0 0 1px var(--rule)"></span>not made</span>
-      <span class="scooh">charged conjugates are listed first, then neutral</span>
+      <span><span class="sw" style="background:transparent;border-left:3px solid var(--body);width:3px;min-width:3px"></span>divides the two halves</span>
+      <span><span class="sw" style="background:transparent;border-left:1px dashed var(--muted);width:3px;min-width:3px"></span>charged conjugates | neutral</span>
+      <span class="scooh">hover any cell for the enzyme, the position or the conjugate, and what it says</span>
     </div>
   </div>
 
@@ -3943,10 +3962,22 @@ function drawSites(){
   $("#saNote").innerHTML=`${rows.length} enzymes · ${sites.length} pocket positions · `
     + `${amines.length} conjugates measured. ${nArg} carry an arginine at 206, `
     + `spread over ${new Set(rows.filter(r=>r.res["206"]==="R").map(r=>r.cluster)).size} sequence cluster(s).`;
-  let h='<table class="sa"><thead><tr><th class="saname">enzyme</th><th class="sacl">cl</th>';
+  /* two header rows: one naming the halves, one naming the columns. Without the
+     first, the only visible rule was the charged/neutral one inside the right
+     half, which readers took for the boundary between the halves. */
+  const nNeu = amines.length - nCh;
+  let h='<table class="sa"><thead>'
+    + '<tr class="sagrp"><th colspan="2"></th>'
+    + `<th colspan="${sites.length}"><span>what it HAS &mdash; residue at each pocket position</span></th>`
+    + '<th class="sagap"></th>'
+    + (nCh ? `<th class="samain" colspan="${nCh}"><span>what it MAKES &mdash; charged conjugates</span></th>` : '')
+    + (nNeu ? `<th class="${nCh?'split':'samain'}" colspan="${nNeu}"><span>neutral</span></th>` : '')
+    + '</tr>'
+    + '<tr class="sacols"><th class="saname">enzyme</th><th class="sacl">cl</th>';
   for(const s of sites) h+=`<th class="sapos" title="${s.note||""}"><span>${s.pos}</span></th>`;
   h+='<th class="sagap"></th>';
-  amines.forEach((a,i)=>{ h+=`<th class="saam ${i===nCh?'split':''}"><span>${a.replace(/_/g," ")}</span></th>`; });
+  amines.forEach((a,i)=>{ h+=`<th class="saam ${i===0?'samain':''} ${i===nCh?'split':''}">`
+    +`<span>${a.replace(/_/g," ")}</span></th>`; });
   h+='</tr></thead><tbody>';
   for(const r of rows){
     h+=`<tr><th class="saname">${r.id}${r.modelled?' <span class="samod" title="has a folded structure">◆</span>':''}</th>`
@@ -3957,7 +3988,8 @@ function drawSites(){
     }
     h+='<td class="sagap"></td>';
     amines.forEach((a,i)=>{
-      h+=`<td class="${r.act[a]?'saon':''} ${i===nCh?'split':''}" title="${r.id} · ${a.replace(/_/g," ")} · ${r.act[a]?"made":"not made"}"></td>`;
+      h+=`<td class="${r.act[a]?'saon':''} ${i===0?'samain':''} ${i===nCh?'split':''}"`
+       +` title="${r.id} · ${a.replace(/_/g," ")} · ${r.act[a]?"MADE":"not made"}"></td>`;
     });
     h+="</tr>";
   }
