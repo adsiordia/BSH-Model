@@ -722,6 +722,14 @@ table.sa td.split,table.sa th.split{border-left:2px solid var(--muted)}
 
   <div class="card">
     <h3 style="margin-top:0">Structure</h3>
+    <!-- the conjugate, part and interface controls are repeated here, bound to the
+         ones at the top of the tab, so the structure can be changed without
+         scrolling back up. Either copy drives both. -->
+    <div class="srow">
+      <label>Conjugate <select id="ppAmine2"></select></label>
+      <label>Part <select id="ppPart2"></select></label>
+      <label class="chk"><input type="checkbox" id="ppItf2"> only contacts from the neighbouring subunit</label>
+    </div>
     <div class="srow">
       <label>Show
         <select id="ppMode">
@@ -3469,6 +3477,22 @@ const PPROT = PP.proteins, PPAM = PP.amines;
   am.insertAdjacentHTML("beforeend",`<option value="">— pick one to view in 3D —</option>`);
   PPAM.forEach(a=>am.insertAdjacentHTML("beforeend",
     `<option value="${a}">${S_LABEL[a]||a}${PP.charge[a]!=="neutral"?" ("+PP.charge[a]+")":""}</option>`));
+  /* the Structure card repeats Conjugate / Part / interface so they are to hand
+     where the viewer is. Clone the options, then bind each pair both ways: the
+     copy writes to the original and the original writes back, and only the
+     original is ever read. */
+  [["ppAmine","ppAmine2"],["ppPart","ppPart2"]].forEach(([a,b])=>{
+    const src=document.getElementById(a), dst=document.getElementById(b);
+    if(!src||!dst) return;
+    dst.innerHTML=src.innerHTML; dst.value=src.value;
+    dst.addEventListener("change",()=>{ src.value=dst.value; drawProtein(); });
+  });
+  (function(){
+    const src=document.getElementById("ppItf"), dst=document.getElementById("ppItf2");
+    if(!src||!dst) return;
+    dst.checked=src.checked;
+    dst.addEventListener("change",()=>{ src.checked=dst.checked; drawProtein(); });
+  })();
   ["ppSel","ppAmine","ppPart","ppItf","ppMode","ppDetail","ppRes","ppLab"].forEach(id=>{
     const el=document.getElementById(id); if(el) el.addEventListener("change",drawProtein);
   });
@@ -3494,6 +3518,11 @@ function ppRows(p,f){
 function drawProtein(){
   const p=$("#ppSel").value, E=PPROT[p];
   const f={part:$("#ppPart").value, itf:$("#ppItf").checked};
+  /* push the authoritative values back into the repeated controls */
+  const a2=$("#ppAmine2"), p2=$("#ppPart2"), i2=$("#ppItf2");
+  if(a2) a2.value=$("#ppAmine").value;
+  if(p2) p2.value=f.part;
+  if(i2) i2.checked=f.itf;
   const made=PPAM.filter(a=>E.active[a]).map(a=>S_LABEL[a]||a);
   const itf=E.interface||[], top=itf[0];
   $("#ppHead").innerHTML =
@@ -3558,7 +3587,11 @@ function ppShow3D(p){
   const job=`${p}_tet_${a}`;
   const detail=($("#ppDetail")||{}).value||"pocket";
   const E=PPROT[p];
-  const con=(E.contacts[a]||[]).filter(c=>c.f>0);
+  /* Part and "only the neighbouring subunit" now narrow the structure as well as
+     the heatmap, so the repeated controls beside the viewer do what they say. */
+  const f={part:$("#ppPart").value, itf:$("#ppItf").checked};
+  const all=(E.contacts[a]||[]).filter(c=>c.f>0);
+  const con=all.filter(c=>(f.part==="all"||c.part===f.part) && (!f.itf||c.ch!=="A"));
   tbl.innerHTML='<table class="stbl"><thead><tr><th>residue</th><th>chain</th><th>part touched</th>'
     +'<th>interaction</th><th class="n">samples</th></tr></thead><tbody>'
     + con.map(c=>`<tr><td>${c.n}${c.r}</td><td>${c.ch==="A"?"A (own)":c.ch+" (neighbour)"}</td>`
@@ -3566,7 +3599,8 @@ function ppShow3D(p){
         +`<td>${Object.keys(c.t).map(x=>S_TYPENAME[x]||x).join(", ")}</td>`
         +`<td class="n">${c.f} of 5</td></tr>`).join("")
     + "</tbody></table>";
-  const tag=job+":"+detail+":"+($("#ppRes").checked?1:0)+($("#ppLab").checked?1:0);
+  const tag=[job,detail,$("#ppRes").checked?1:0,$("#ppLab").checked?1:0,
+             f.part,f.itf?1:0].join(":");
   if(pp3dLoaded===tag) return;
   pp3dLoaded=tag;
   ppEnsure3Dmol(()=>{
@@ -3581,6 +3615,15 @@ function ppShow3D(p){
         : `<b>${job}</b> — the ligand and every residue within 8 &Aring;, cropped from the `
           + `top-ranked AlphaFold 3 model. Backbone colour is pLDDT.`
           + (fell ? ' <b>The raw file could not be loaded, so this is the cropped pocket.</b>' : '');
+      if (con.length < all.length)
+        note.innerHTML += ` Drawing <b>${con.length} of ${all.length}</b> contacting residues &mdash; `
+          + (f.itf ? "only those a neighbouring subunit donates" : "")
+          + (f.itf && f.part!=="all" ? ", and " : "")
+          + (f.part==="m" ? "only those touching the amine"
+             : f.part==="c" ? "only those touching the bile acid" : "")
+          + `. Clear the filters above the viewer to see all ${all.length}.`;
+      if (!con.length && all.length)
+        note.innerHTML += ` <b>No residue matches the current filter</b>, so none are drawn.`;
       box.innerHTML="";
       pp3dViewer=$3Dmol.createViewer(box,{backgroundColor:
         getComputedStyle(document.body).getPropertyValue("--panel").trim()||"white"});
@@ -3838,6 +3881,9 @@ function ppOverlay(mode){
     const v=$3Dmol.createViewer(box,{backgroundColor:
       getComputedStyle(document.body).getPropertyValue("--panel").trim()||"white"});
     const E=PPROT[p];
+    /* the same Part / neighbouring-subunit filter the single view uses */
+    const fl={part:$("#ppPart").value, itf:$("#ppItf").checked};
+    const keep=c=>(fl.part==="all"||c.part===fl.part) && (!fl.itf||c.ch!=="A");
     for (let k=0;k<have.length;k++){
       const it=have[k], col=OV_HUES[k%OV_HUES.length];
       let txt; try{ txt=ppApply(await ppFetch(it.job,"pocket"), it.job); }catch(e){ continue; }
@@ -3853,7 +3899,8 @@ function ppOverlay(mode){
         v.setStyle({model:m,hetflag:true},{stick:{color:col,radius:.18}});
         /* each enzyme's own contacts, thin and in its colour; no labels, they
            would collide once more than a couple of enzymes are stacked */
-        const con=((PPROT[it.prot]||{contacts:{}}).contacts[a]||[]).filter(c=>c.f>=3);
+        const con=((PPROT[it.prot]||{contacts:{}}).contacts[a]||[])
+                    .filter(c=>c.f>=3&&keep(c));
         ppMarkRes(v, m, con, {color:col, radius:.12, noLabel:true});
       }
     }
@@ -3863,7 +3910,7 @@ function ppOverlay(mode){
       const best=new Map();
       for (const it of have)
         for (const c of ((E||{contacts:{}}).contacts[it.amine]||[]))
-          if (c.f>=3){
+          if (c.f>=3 && keep(c)){
             const key=c.ch+":"+c.r;
             if (!best.has(key) || best.get(key).f<c.f) best.set(key,c);
           }
