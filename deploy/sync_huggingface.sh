@@ -64,15 +64,24 @@ fi
 # create_repo() without a space_sdk, which defaults to Gradio and fails with
 # 402 (Gradio Spaces need PRO). Static Spaces are free; upload_file() does not
 # touch repo creation at all.
-# The "By enzyme" tab fetches a pocket structure per run, so site/pockets/ has
-# to travel with the page. Everything else is still inlined in index.html.
+# The "By enzyme" tab fetches a structure per run, so both folders have to
+# travel with the page. Everything else is still inlined in index.html.
+#   site/pockets/  8 A around the ligand, plain PDB, ~46 KB each   (~10 MB)
+#   site/raw/      the whole tetramer, gzipped PDB, ~205 KB each  (~130 MB)
+# raw/ is fetched only when the viewer is switched to it, and inflated in the
+# browser: a static Space serves .gz as bytes with no Content-Encoding.
 POCKETS="$ROOT/site/pockets"
+RAW="$ROOT/site/raw"
 if [ -d "$POCKETS" ]; then
   echo "==> $(ls "$POCKETS"/*.pdb 2>/dev/null | wc -l) pocket structures to upload"
 fi
+if [ -d "$RAW" ]; then
+  echo "==> $(ls "$RAW"/*.pdb.gz 2>/dev/null | wc -l) raw tetramers to upload" \
+       "($(du -sh --apparent-size "$RAW" | cut -f1)) — this is the slow part"
+fi
 
 echo "==> uploading index.html, the Space card and the structures"
-REPO="$REPO" SITE="$SITE" CARD="$CARD" POCKETS="$POCKETS" python - <<'PYEOF'
+REPO="$REPO" SITE="$SITE" CARD="$CARD" POCKETS="$POCKETS" RAW="$RAW" python - <<'PYEOF'
 import os
 from huggingface_hub import HfApi
 api, repo = HfApi(), os.environ["REPO"]
@@ -88,6 +97,20 @@ if pk and os.path.isdir(pk):
     api.upload_folder(folder_path=pk, path_in_repo="pockets", repo_id=repo,
                       repo_type="space", commit_message="Update pocket structures")
     print(f"    uploaded pockets/ ({len(os.listdir(pk))} files)")
+rw = os.environ.get("RAW", "")
+if rw and os.path.isdir(rw):
+    # 130 MB in 675 files. upload_large_folder() would chunk and resume, but it
+    # has no path_in_repo and would scatter the files across the Space root,
+    # breaking the raw/<job>.pdb.gz the page fetches. So: upload_folder() in
+    # batches, which keeps the prefix and still avoids one 130 MB commit.
+    names = sorted(f for f in os.listdir(rw) if f.endswith(".pdb.gz"))
+    B = 120
+    for i in range(0, len(names), B):
+        chunk = names[i:i + B]
+        api.upload_folder(folder_path=rw, path_in_repo="raw", repo_id=repo,
+                          repo_type="space", allow_patterns=chunk,
+                          commit_message=f"Raw tetramers {i + 1}-{i + len(chunk)}")
+        print(f"    uploaded raw/ {i + 1}-{i + len(chunk)} of {len(names)}", flush=True)
 PYEOF
 
 echo

@@ -662,8 +662,41 @@ table.sa td.split,table.sa th.split{border-left:2px solid var(--muted)}
     <p>All 25 conjugates, for a single enzyme, in <b>its own residue numbering</b> &mdash;
     nothing is aligned or averaged here, so what you see is what that one structure contains.</p>
     <p class="foot">Each number is how many of the five AlphaFold&nbsp;3 samples showed that
-    contact. The 3D view holds the ligand and everything within 8&nbsp;&Aring; of it; residues
-    PandaMap found in contact are drawn as sticks and labelled.</p>
+    contact. The 3D view can show either the <b>active site</b> &mdash; the ligand and
+    everything within 8&nbsp;&Aring; of it &mdash; or the <b>whole raw tetramer</b> as
+    AlphaFold wrote it, with nothing cropped. Residues PandaMap found in contact are drawn as
+    sticks and labelled: teal when they belong to the subunit that owns the ligand, purple
+    when a neighbouring subunit donates them.</p>
+
+    <details style="margin-top:10px">
+      <summary>Why a residue in the table is sometimes missing from the picture</summary>
+      <div class="prose">
+        <p>The table is the <b>union over five AlphaFold samples</b>; the structure on screen is
+        a <b>single model</b>, the top-ranked one. Those are not the same thing, so a contact
+        that only appeared in one sample may simply not be a contact in the model you are
+        looking at &mdash; the residue can sit 8 or 9&nbsp;&Aring; away there.</p>
+        <p>How often that happens depends entirely on how reproducible the contact was:</p>
+        <table class="stbl"><thead><tr><th>samples showing the contact</th>
+          <th class="n">present in the model shown</th><th class="n">absent</th></tr></thead>
+          <tbody>
+          <tr><td>5 of 5</td><td class="n">4145</td><td class="n">0 &nbsp;(0.0%)</td></tr>
+          <tr><td>4 of 5</td><td class="n">2385</td><td class="n">9 &nbsp;(0.4%)</td></tr>
+          <tr><td>3 of 5</td><td class="n">2051</td><td class="n">13 &nbsp;(0.6%)</td></tr>
+          <tr><td>2 of 5</td><td class="n">2185</td><td class="n">37 &nbsp;(1.7%)</td></tr>
+          <tr><td>1 of 5</td><td class="n">3124</td><td class="n">563 (15.3%)</td></tr>
+          </tbody></table>
+        <p class="foot">A contact reproduced in all five samples is <b>never</b> missing from the
+        model shown. A one-off is missing about one time in seven. This is the clearest reason
+        to read the sample count as a confidence measure rather than a detail &mdash; and the
+        reason the overlays only draw residues seen in at least three of five.</p>
+        <p class="foot">Switching to the whole tetramer also matters here. The cropped pocket
+        keeps only what is within 8&nbsp;&Aring;, so a residue that drifted just outside in this
+        particular model is not in the file at all and cannot be drawn: of the 14,512 recorded
+        contacts, <b>95.7% can be drawn on the cropped pocket and 100% on the raw tetramer</b>,
+        so the raw view recovers 622 of them. Those 622 are overwhelmingly the one-off contacts
+        &mdash; which is the same fact from the other side.</p>
+      </div>
+    </details>
   </div>
 
   <div class="card">
@@ -697,12 +730,20 @@ table.sa td.split,table.sa th.split{border-left:2px solid var(--muted)}
           <option value="allenz">the chosen conjugate, all enzymes overlaid</option>
         </select>
       </label>
+      <label>Detail
+        <select id="ppDetail">
+          <option value="pocket">active site &mdash; 8 &Aring; around the ligand</option>
+          <option value="raw">the whole raw tetramer, uncropped</option>
+        </select>
+      </label>
+      <label class="chk"><input type="checkbox" id="ppRes" checked> draw the contacting residues</label>
+      <label class="chk"><input type="checkbox" id="ppLab" checked> label them</label>
     </div>
     <p class="foot" id="ppStructNote"></p>
     <div id="pp3d" style="position:relative;width:100%;height:460px;border:1px solid var(--rule);
       border-radius:8px;overflow:hidden"></div>
-    <div class="slegend">
-      <span><span class="sw" style="background:#9aa3ad"></span>pocket backbone</span>
+    <div class="slegend" id="pp3dLegend">
+      <span><span class="sw" style="background:#9aa3ad"></span>backbone</span>
       <span><span class="sw" style="background:#0f5f6b"></span>contact, own subunit</span>
       <span><span class="sw" style="background:#8a4bbf"></span>contact, neighbouring subunit</span>
       <span><span class="sw" style="background:#c8742a"></span>the conjugate</span>
@@ -3428,7 +3469,7 @@ const PPROT = PP.proteins, PPAM = PP.amines;
   am.insertAdjacentHTML("beforeend",`<option value="">— pick one to view in 3D —</option>`);
   PPAM.forEach(a=>am.insertAdjacentHTML("beforeend",
     `<option value="${a}">${S_LABEL[a]||a}${PP.charge[a]!=="neutral"?" ("+PP.charge[a]+")":""}</option>`));
-  ["ppSel","ppAmine","ppPart","ppItf","ppMode"].forEach(id=>{
+  ["ppSel","ppAmine","ppPart","ppItf","ppMode","ppDetail","ppRes","ppLab"].forEach(id=>{
     const el=document.getElementById(id); if(el) el.addEventListener("change",drawProtein);
   });
 })();
@@ -3507,13 +3548,15 @@ function drawProtein(){
 let pp3dViewer=null, pp3dLoaded="";
 function ppShow3D(p){
   const mode=($("#ppMode")||{}).value||"one";
+  const dsel=$("#ppDetail");
+  if(dsel){ dsel.disabled = mode!=="one";
+            dsel.closest("label").style.opacity = mode==="one" ? "" : ".45"; }
   if(mode!=="one"){ pp3dLoaded=""; return ppOverlay(mode); }
   const a=$("#ppAmine").value, box=$("#pp3d"), note=$("#ppStructNote"), tbl=$("#ppTable");
   if(!a){ box.innerHTML=""; tbl.innerHTML="";
     note.textContent="Pick a conjugate above to load its structure."; pp3dLoaded=""; return; }
   const job=`${p}_tet_${a}`;
-  note.innerHTML=`<b>${job}</b> — the ligand and every residue within 8 &Aring;, `
-    + `taken from the top-ranked AlphaFold 3 model. Colour on the backbone is pLDDT.`;
+  const detail=($("#ppDetail")||{}).value||"pocket";
   const E=PPROT[p];
   const con=(E.contacts[a]||[]).filter(c=>c.f>0);
   tbl.innerHTML='<table class="stbl"><thead><tr><th>residue</th><th>chain</th><th>part touched</th>'
@@ -3523,45 +3566,97 @@ function ppShow3D(p){
         +`<td>${Object.keys(c.t).map(x=>S_TYPENAME[x]||x).join(", ")}</td>`
         +`<td class="n">${c.f} of 5</td></tr>`).join("")
     + "</tbody></table>";
-  if(pp3dLoaded===job) return;
-  pp3dLoaded=job;
+  const tag=job+":"+detail+":"+($("#ppRes").checked?1:0)+($("#ppLab").checked?1:0);
+  if(pp3dLoaded===tag) return;
+  pp3dLoaded=tag;
   ppEnsure3Dmol(()=>{
-    fetch(`pockets/${job}.pdb`).then(r=>{
-      if(!r.ok) throw new Error(r.status); return r.text();
-    }).then(txt=>{
+    ppFetch(job, detail).then(txt=>{
+      let fell=false;
+      if(txt.startsWith("__FELLBACK__")){ fell=true; txt=txt.slice(12); }
+      const raw = detail==="raw" && !fell;
+      note.innerHTML = raw
+        ? `<b>${job}</b> — the <b>whole top-ranked AlphaFold 3 model</b>, uncropped: all four `
+          + `chains and the ligand, exactly as AlphaFold wrote them. Only one of the four sites `
+          + `is occupied, which is why the ligand sits off to one side. Backbone colour is pLDDT.`
+        : `<b>${job}</b> — the ligand and every residue within 8 &Aring;, cropped from the `
+          + `top-ranked AlphaFold 3 model. Backbone colour is pLDDT.`
+          + (fell ? ' <b>The raw file could not be loaded, so this is the cropped pocket.</b>' : '');
       box.innerHTML="";
       pp3dViewer=$3Dmol.createViewer(box,{backgroundColor:
         getComputedStyle(document.body).getPropertyValue("--panel").trim()||"white"});
       pp3dViewer.addModel(txt,"pdb");
-      pp3dViewer.setStyle({},{cartoon:{color:"#9aa3ad",opacity:.6}});
-      /* contacting residues as sticks: own subunit teal, neighbouring subunit
-         a second hue, so the swapped selectivity loop reads at a glance */
-      const model = pp3dViewer.getModel();
-      for(const c of con){
-        const own = c.ch === "A";
-        pp3dViewer.setStyle({chain:c.ch,resi:c.r},
-          {stick:{color: own ? "#0f5f6b" : "#8a4bbf", radius:.17},
-           cartoon:{color:"#9aa3ad",opacity:.6}});
-        /* addLabel's `position` takes literal coordinates -- handing it a
-           selection spec places nothing, silently. Look the CA up first. */
-        const ca = model.selectedAtoms({chain:c.ch, resi:c.r, atom:"CA"})[0]
-                || model.selectedAtoms({chain:c.ch, resi:c.r})[0];
-        if(!ca) continue;
-        pp3dViewer.addLabel(`${c.n}${c.r}`,
-          {position:{x:ca.x, y:ca.y, z:ca.z},
-           fontSize:11, fontColor:"white", borderThickness:0,
-           backgroundColor: own ? "#0f5f6b" : "#8a4bbf", backgroundOpacity:.85,
-           inFront:true, alignment:"center"});
+      if(raw){
+        /* four chains: the one holding the ligand and its partner carry the
+           pocket, so they stay legible while C and D recede into context. */
+        pp3dViewer.setStyle({},{cartoon:{color:"#c6ccd3",opacity:.30}});
+        pp3dViewer.setStyle({chain:"A"},{cartoon:{color:"#9aa3ad",opacity:.70}});
+        pp3dViewer.setStyle({chain:"B"},{cartoon:{color:"#b9a6cf",opacity:.55}});
+      } else {
+        pp3dViewer.setStyle({},{cartoon:{color:"#9aa3ad",opacity:.6}});
       }
+      ppMarkRes(pp3dViewer, null, con, {});
       /* the ligand last and thickest, so it is never hidden behind side chains */
-      pp3dViewer.setStyle({hetflag:true},
+      pp3dViewer.addStyle({hetflag:true},
         {stick:{colorscheme:"orangeCarbon",radius:.28}});
-      pp3dViewer.zoomTo({hetflag:true}); pp3dViewer.zoom(.6); pp3dViewer.render();
+      pp3dViewer.zoomTo({hetflag:true});
+      pp3dViewer.zoom(raw?.33:.6);
+      pp3dViewer.render();
     }).catch(e=>{
       box.innerHTML='<p class="foot" style="padding:14px">Structure file not available here '
-        +'(the viewer needs the <code>pockets/</code> folder served alongside this page).</p>';
+        +'(the viewer needs the <code>pockets/</code> and <code>raw/</code> folders served '
+        +'alongside this page).</p>';
     });
   });
+}
+/* ---- fetching a structure: the 8 A pocket is plain text, the raw tetramer is
+   gzipped (822 KB -> ~200 KB) and inflated here rather than on the server, since
+   a static host sends .gz as bytes with no Content-Encoding to do it for us.
+   Falls back to the pocket if the browser has no DecompressionStream. ---- */
+const PP_CACHE = new Map();
+async function ppFetch(job, detail){
+  const key = detail + ":" + job;
+  if (PP_CACHE.has(key)) return PP_CACHE.get(key);
+  let txt = null;
+  if (detail === "raw" && typeof DecompressionStream === "function"){
+    try{
+      const r = await fetch(`raw/${job}.pdb.gz`);
+      if (r.ok) txt = await new Response(
+        r.body.pipeThrough(new DecompressionStream("gzip"))).text();
+    }catch(e){ txt = null; }
+  }
+  if (txt === null){
+    const r = await fetch(`pockets/${job}.pdb`);
+    if (!r.ok) throw new Error(r.status);
+    txt = await r.text();
+    if (detail === "raw") txt = "__FELLBACK__" + txt;
+  }
+  PP_CACHE.set(key, txt);
+  return txt;
+}
+/* sticks + a label on every contacting residue, in whichever model holds the
+   protein. Own subunit teal, a neighbouring subunit purple, so a donated
+   residue reads at a glance. */
+function ppMarkRes(v, model, con, opts){
+  const o = opts || {};
+  if (!$("#ppRes").checked) return;
+  const label = $("#ppLab").checked && !o.noLabel;
+  for (const c of con){
+    const own = c.ch === "A";
+    const col = o.color || (own ? "#0f5f6b" : "#8a4bbf");
+    const sel = {chain:c.ch, resi:c.r};
+    if (model !== null && model !== undefined) sel.model = model;
+    v.addStyle(sel, {stick:{color:col, radius:o.radius || .17}});
+    if (!label) continue;
+    const m = (model===null||model===undefined) ? v.getModel() : v.getModel(model);
+    if (!m) continue;
+    const ca = m.selectedAtoms({chain:c.ch, resi:c.r, atom:"CA"})[0]
+            || m.selectedAtoms({chain:c.ch, resi:c.r})[0];
+    if (!ca) continue;
+    v.addLabel(`${c.n}${c.r}`,
+      {position:{x:ca.x, y:ca.y, z:ca.z}, fontSize:11, fontColor:"white",
+       borderThickness:0, backgroundColor:col, backgroundOpacity:.85,
+       inFront:true, alignment:"center"});
+  }
 }
 function ppEnsure3Dmol(cb){
   if(window.$3Dmol) return cb();
@@ -3719,16 +3814,22 @@ const OV_HUES=["#0f5f6b","#c8742a","#6b3a96","#1a6b52","#a8324a","#2a5fa8","#8a6
 function ppOverlay(mode){
   const p=$("#ppSel").value, a=$("#ppAmine").value, box=$("#pp3d"), note=$("#ppStructNote");
   const items = mode==="allconj"
-    ? PPAM.map(t=>({job:`${p}_tet_${t}`, label:S_LABEL[t]||t, charged:PP.charge[t]!=="neutral"}))
-    : PP.order.map(q=>({job:`${q}_tet_${a}`, label:q, charged:true}));
+    ? PPAM.map(t=>({job:`${p}_tet_${t}`, label:S_LABEL[t]||t, amine:t,
+                    charged:PP.charge[t]!=="neutral"}))
+    : PP.order.map(q=>({job:`${q}_tet_${a}`, label:q, prot:q, charged:true}));
   if (mode==="allenz" && !a){ box.innerHTML=""; $("#ppTable").innerHTML="";
     note.textContent="Pick a conjugate to overlay it across the enzymes."; return; }
   const have = items.filter(i=>SUP[i.job]);
   note.innerHTML = mode==="allconj"
     ? `<b>${p}</b> — ${have.length} conjugates superposed on one pocket. The protein is drawn `
-      + `once; each conjugate is a separate colour. Charged amines are solid, neutral ones faint.`
+      + `once, from the first conjugate; each ligand is a separate colour, charged amines solid `
+      + `and neutral ones faint. Sticks are the residues this enzyme contacts in <b>any</b> of `
+      + `the conjugates, in at least three of five samples.`
     : `<b>${S_LABEL[a]||a}</b> — the same conjugate in ${have.length} enzymes, superposed. `
-      + `Each enzyme's pocket backbone and its ligand share a colour.`;
+      + `Each enzyme's pocket backbone and its ligand share a colour, and its own contacting `
+      + `residues are drawn in that colour too.`;
+  note.innerHTML += ` Overlays always use the cropped 8&nbsp;&Aring; pockets — stacking `
+    + `${have.length} whole tetramers would be unreadable as well as slow.`;
   $("#ppTable").innerHTML = '<div class="slegend">' + have.map((i,k)=>
       `<span><span class="sw" style="background:${OV_HUES[k%OV_HUES.length]}"></span>${i.label}</span>`
     ).join("") + '</div>';
@@ -3736,10 +3837,10 @@ function ppOverlay(mode){
     box.innerHTML="";
     const v=$3Dmol.createViewer(box,{backgroundColor:
       getComputedStyle(document.body).getPropertyValue("--panel").trim()||"white"});
+    const E=PPROT[p];
     for (let k=0;k<have.length;k++){
       const it=have[k], col=OV_HUES[k%OV_HUES.length];
-      let txt; try{ const r=await fetch(`pockets/${it.job}.pdb`); if(!r.ok) continue;
-        txt=ppApply(await r.text(), it.job); }catch(e){ continue; }
+      let txt; try{ txt=ppApply(await ppFetch(it.job,"pocket"), it.job); }catch(e){ continue; }
       const m=v.addModel(txt,"pdb");
       if (mode==="allconj"){
         /* one shared protein: draw the backbone only for the first model */
@@ -3750,7 +3851,23 @@ function ppOverlay(mode){
       } else {
         v.setStyle({model:m,hetflag:false},{cartoon:{color:col,opacity:.22}});
         v.setStyle({model:m,hetflag:true},{stick:{color:col,radius:.18}});
+        /* each enzyme's own contacts, thin and in its colour; no labels, they
+           would collide once more than a couple of enzymes are stacked */
+        const con=((PPROT[it.prot]||{contacts:{}}).contacts[a]||[]).filter(c=>c.f>=3);
+        ppMarkRes(v, m, con, {color:col, radius:.12, noLabel:true});
       }
+    }
+    if (mode==="allconj"){
+      /* the union over conjugates, so a residue that only ever touches one of
+         them is still visible; own/neighbour colouring is kept */
+      const best=new Map();
+      for (const it of have)
+        for (const c of ((E||{contacts:{}}).contacts[it.amine]||[]))
+          if (c.f>=3){
+            const key=c.ch+":"+c.r;
+            if (!best.has(key) || best.get(key).f<c.f) best.set(key,c);
+          }
+      ppMarkRes(v, 0, [...best.values()], {});
     }
     v.zoomTo({hetflag:true}); v.zoom(.7); v.render();
   });

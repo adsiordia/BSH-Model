@@ -9,3 +9,5 @@ slurm-*.out
 site/.serve.pid
 site/.serve.log
 .DS_Store
+# 130 MB of raw tetramers, regenerable with analysis/make_raw.py in AF3/BSH_AF3
+site/raw/
