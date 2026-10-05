@@ -306,6 +306,16 @@ table.sa td.saon{background:var(--hit-bg)}
 table.sa td.samain,table.sa th.samain{border-left:3px solid var(--body)}
 /* charged vs neutral: inside the right half, so deliberately subordinate */
 table.sa td.split,table.sa th.split{border-left:1px dashed var(--muted)}
+/* the focus position, outlined down the whole column */
+table.sa td.rafoc,table.sa th.rafoc{box-shadow:inset 1px 0 0 var(--accent),inset -1px 0 0 var(--accent)}
+table.sa td.rafoc{background:var(--accent-bg);font-weight:800}
+/* the split-by-residue table: wider name column, a count column */
+table.sa.rasp th.saname,table.sa.rasp td.saname{width:84px;min-width:84px;font-size:11px}
+table.sa.rasp td.racl,table.sa.rasp th.racl{width:46px;min-width:46px;text-align:center;
+  color:var(--muted);font-size:10px}
+table.sa.rasp td{height:17px}
+table.sa.rasp tr.rathin th.saname{color:var(--muted)}
+#raWrap,#raSplitWrap{overflow:auto;max-width:100%}
 /* the row naming the two halves */
 table.sa thead tr.sagrp th{height:auto;padding:0 0 4px;top:0;font-size:10.5px;
   font-weight:600;color:var(--body);text-align:center;letter-spacing:.02em;
@@ -330,6 +340,7 @@ table.sa thead tr.sacols th{top:17px}
     <button data-v="structure">Structure</button>
     <button data-v="protein">By enzyme</button>
     <button data-v="align">Alignment</button>
+    <button data-v="ra">Residues &amp; activity</button>
     <button data-v="sites">Pocket &amp; activity</button>
       <button data-v="methods">How it was made</button>
   </nav>
@@ -872,6 +883,74 @@ table.sa thead tr.sacols th{top:17px}
   </div>
 </section>
 
+<!-- RESIDUES & ACTIVITY : the alignment and the assay on one index -->
+<section class="view" id="v-ra" hidden>
+  <div class="card prose">
+    <h2>Residues and activity together</h2>
+    <p>The <b>Alignment</b> tab and <b>Pocket&nbsp;&amp;&nbsp;activity</b> tab were answering two
+    halves of one question from opposite ends. Alignment shows, for a chosen conjugate, which
+    aligned columns the structures found in contact &mdash; but only for the 27 folded enzymes,
+    and with no assay data. Pocket&nbsp;&amp;&nbsp;activity shows residue letters beside the
+    assay for all 115 measured enzymes &mdash; but at 11 fixed positions, with no way to look at
+    any other column. This tab puts both on one index: <b>pick the positions, see what every
+    measured enzyme carries there, and see what it makes.</b></p>
+    <p>Pick a <b>focus position</b> and the panel underneath splits the enzymes by the residue
+    they carry there and shows how often each group makes each conjugate. That is the quickest
+    way to notice a residue trend &mdash; and, right beside it, to see whether the trend is
+    really a <b>lineage</b> trend, which in this dataset it usually is.</p>
+    <p class="foot">35 columns carry a contact in at least one of the 27 folded structures:
+    11 touch the amine, 28 touch the bile acid core, four touch both. Positions are named by
+    their residue number in C0ERS1. The other two tabs are still there for detail &mdash;
+    Alignment for the full sequence context and per-conjugate contacts, Pocket&nbsp;&amp;&nbsp;activity
+    for the plain 11-position table.</p>
+  </div>
+
+  <div class="card">
+    <div class="srow">
+      <label>Positions
+        <select id="raCols">
+          <option value="amine">the 11 that touch the amine</option>
+          <option value="core">the 28 that touch the bile acid</option>
+          <option value="all">all 35 contact positions</option>
+        </select>
+      </label>
+      <label>Focus position <select id="raFocus"></select></label>
+      <label>Order rows by
+        <select id="raSort">
+          <option value="focus">residue at the focus position</option>
+          <option value="cluster">sequence cluster</option>
+          <option value="n">how many conjugates it makes</option>
+          <option value="name">name</option>
+        </select>
+      </label>
+      <label class="chk"><input type="checkbox" id="raVar" checked> hide invariant positions</label>
+      <label class="chk"><input type="checkbox" id="raMod"> only the 27 with structures</label>
+    </div>
+    <p class="foot" id="raNote"></p>
+    <div id="raWrap"><div id="raGrid"></div></div>
+    <div class="slegend">
+      <span><span class="sw" style="background:var(--accent-bg);color:var(--accent);font-weight:700;width:auto;min-width:16px;text-align:center">R</span><b>left</b> &mdash; residue it carries</span>
+      <span><span class="sw" style="background:var(--hit-bg)"></span><b>right</b> &mdash; conjugate measured as made</span>
+      <span><span class="sw" style="background:var(--panel);box-shadow:inset 0 0 0 1px var(--rule)"></span>not made</span>
+      <span><span class="sw" style="background:transparent;border-left:3px solid var(--body);width:3px;min-width:3px"></span>divides the halves</span>
+      <span class="scooh">the right half is yes/no, not a shade &mdash; the focus column is outlined</span>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3 style="margin-top:0">Split by the focus position</h3>
+    <p class="foot" id="raSplitNote"></p>
+    <div id="raSplitWrap"><div id="raSplit"></div></div>
+    <div class="slegend">
+      <span class="scooh">Here the shading <b>is</b> a scale: the fraction of enzymes in that
+      residue group measured to make that conjugate, from 0 to 1. Groups of fewer than four
+      enzymes are shown but greyed, since a fraction over two or three enzymes means little.</span>
+    </div>
+  </div>
+
+  <div class="card prose" id="raVerdict"></div>
+</section>
+
 <!-- SITES vs ACTIVITY -->
 <section class="view" id="v-sites" hidden>
   <div class="card prose">
@@ -1404,6 +1483,7 @@ document.querySelectorAll("nav button").forEach(b => b.onclick = () => {
   if (b.dataset.v === "protein") drawProtein();
   if (b.dataset.v === "align") drawAlign();
   if (b.dataset.v === "sites") drawSites();
+  if (b.dataset.v === "ra") drawRA();
 });
 
 $("#mq").oninput = drawHeat;
@@ -3952,6 +4032,236 @@ function ppOverlay(mode){
     }
     v.zoomTo({hetflag:true}); v.zoom(.7); v.render();
   });
+}
+
+/* ---------- residues and activity on one index ---------- */
+const RA = /*__RESACT__*/{};
+const RA_AM = RA.amines.slice().sort((x,y)=>
+    (RA.charge[x]==="neutral") - (RA.charge[y]==="neutral")
+    || saLab(x).localeCompare(saLab(y)));
+const RA_NCH = RA_AM.filter(a=>RA.charge[a]!=="neutral").length;
+
+function raPositions(){
+  const which=$("#raCols").value, hideInv=$("#raVar").checked;
+  return RA.positions.filter(p=>
+      (which==="all" || (which==="amine" ? p.amine : p.core))
+      && !(hideInv && p.invariant));
+}
+function raRows(){
+  const rows = RA.rows.filter(r=>!$("#raMod").checked || r.modelled);
+  const sort=$("#raSort").value, fc=$("#raFocus").value;
+  const byName=(a,b)=>a.id.localeCompare(b.id);
+  if(sort==="focus") return rows.slice().sort((a,b)=>
+      (a.res[fc]||"-").localeCompare(b.res[fc]||"-") || b.n-a.n || byName(a,b));
+  if(sort==="cluster") return rows.slice().sort((a,b)=>a.cluster-b.cluster||b.n-a.n||byName(a,b));
+  if(sort==="n") return rows.slice().sort((a,b)=>b.n-a.n||byName(a,b));
+  return rows.slice().sort(byName);
+}
+(function raInit(){
+  if(!document.getElementById("raGrid")) return;
+  const refill=()=>{
+    const sel=$("#raFocus"), keep=sel.value;
+    sel.innerHTML = raPositions().map(p=>
+      `<option value="${p.col}">${p.ref==null?"col "+p.col:p.ref}`
+      + ` — ${p.amine?(p.core?"amine + core":"amine"):"bile acid"}`
+      + `, ${p.nres} residue${p.nres===1?"":"s"}</option>`).join("");
+    if([...sel.options].some(o=>o.value===keep)) sel.value=keep;
+    else if(sel.options.length){                    /* prefer 206 when present */
+      const pref=[...sel.options].find(o=>o.textContent.startsWith("206"));
+      sel.value=(pref||sel.options[0]).value;
+    }
+  };
+  refill();
+  ["raCols","raVar"].forEach(id=>$("#"+id).addEventListener("change",()=>{refill();drawRA();}));
+  ["raFocus","raSort","raMod"].forEach(id=>$("#"+id).addEventListener("change",drawRA));
+})();
+
+function drawRA(){
+  const pos=raPositions(), rows=raRows(), fc=$("#raFocus").value;
+  const focus=RA.positions.find(p=>String(p.col)===String(fc));
+  const lab=p=>p.ref==null?("c"+p.col):String(p.ref);
+  $("#raNote").innerHTML = `${rows.length} enzymes with assay data · ${pos.length} positions shown `
+    + `· ${RA_AM.length} conjugates measured. Focus position <b>${focus?lab(focus):"—"}</b>.`;
+
+  /* ---- the grid: residues | activity, same shape as the Pocket tab ---- */
+  let h='<table class="sa"><thead>'
+    + '<tr class="sagrp"><th colspan="2"></th>'
+    + `<th colspan="${pos.length}"><span>what it HAS — residue at each position</span></th>`
+    + '<th class="sagap"></th>'
+    + `<th class="samain" colspan="${RA_NCH}"><span>what it MAKES — charged conjugates</span></th>`
+    + `<th class="split" colspan="${RA_AM.length-RA_NCH}"><span>neutral</span></th>`
+    + '</tr><tr class="sacols"><th class="saname">enzyme</th><th class="sacl">cl</th>';
+  for(const p of pos) h+=`<th class="sapos ${String(p.col)===String(fc)?'rafoc':''}"`
+    + ` title="${lab(p)} · touches ${p.amine?(p.core?"the amine and the core":"the amine"):"the bile acid"}`
+    + ` · in ${Math.max(p.n_amine,p.n_core)} of 27 structures · alignment ${p.verdict}">`
+    + `<span>${lab(p)}</span></th>`;
+  h+='<th class="sagap"></th>';
+  RA_AM.forEach((a,i)=>{ h+=`<th class="saam ${i===0?'samain':''} ${i===RA_NCH?'split':''}"`
+    +` title="${saTitle(a)} · ${RA.charge[a]}"><span>${saLab(a)}</span></th>`; });
+  h+='</tr></thead><tbody>';
+  for(const r of rows){
+    h+=`<tr><th class="saname">${r.id}${r.modelled?' <span class="samod" title="has a folded structure">◆</span>':''}</th>`
+     + `<td class="sacl" title="50% identity cluster">${r.cluster}</td>`;
+    for(const p of pos){
+      const aa=r.res[String(p.col)]||"-";
+      h+=`<td class="sares ${String(p.col)===String(fc)?'rafoc':''}"`
+       + ` title="${r.id} · position ${lab(p)} · ${aa}">${aa}</td>`;
+    }
+    h+='<td class="sagap"></td>';
+    RA_AM.forEach((a,i)=>{
+      h+=`<td class="${r.act[a]?'saon':''} ${i===0?'samain':''} ${i===RA_NCH?'split':''}"`
+       +` title="${r.id} · ${saTitle(a)} · ${r.act[a]?"MADE":"not made"}"></td>`;
+    });
+    h+='</tr>';
+  }
+  $("#raGrid").innerHTML=h+'</tbody></table>';
+  raSplit(focus, rows);
+}
+
+function raSplit(focus, rows){
+  if(!focus){ $("#raSplit").innerHTML=""; $("#raVerdict").innerHTML=""; return; }
+  const fc=String(focus.col);
+  const groups=new Map();
+  for(const r of rows){
+    const aa=r.res[fc]||"-";
+    if(!groups.has(aa)) groups.set(aa,[]);
+    groups.get(aa).push(r);
+  }
+  const g=[...groups.entries()].sort((a,b)=>b[1].length-a[1].length);
+  const lab=focus.ref==null?("col "+focus.col):String(focus.ref);
+  $("#raSplitNote").innerHTML = `Position <b>${lab}</b> splits these ${rows.length} enzymes into `
+    + `<b>${g.length}</b> group${g.length===1?"":"s"} by the residue they carry. Each cell is the `
+    + `fraction of that group measured to make that conjugate.`;
+
+  let h='<table class="sa rasp"><thead><tr class="sacols">'
+    + '<th class="saname">residue</th><th class="sacl">n</th><th class="racl">clusters</th>'
+    + '<th class="sagap"></th>';
+  RA_AM.forEach((a,i)=>{ h+=`<th class="saam ${i===0?'samain':''} ${i===RA_NCH?'split':''}"`
+    +` title="${saTitle(a)}"><span>${saLab(a)}</span></th>`; });
+  h+='</tr></thead><tbody>';
+  for(const [aa,rs] of g){
+    const cl=[...new Set(rs.map(r=>r.cluster))].sort((x,y)=>x-y);
+    const thin=rs.length<4;
+    h+=`<tr${thin?' class="rathin"':''}><th class="saname">`
+     + `<b style="font-family:ui-monospace,monospace">${aa}</b>`
+     + `${thin?' <span class="scooh">(too few)</span>':''}</th>`
+     + `<td class="sacl">${rs.length}</td>`
+     + `<td class="racl" title="50% identity clusters represented: ${cl.join(", ")}">${cl.length}</td>`
+     + '<td class="sagap"></td>';
+    RA_AM.forEach((a,i)=>{
+      const f=rs.filter(r=>r.act[a]).length/rs.length;
+      h+=`<td class="${i===0?'samain':''} ${i===RA_NCH?'split':''}"`
+       +` style="background:${raRamp(f,thin)}"`
+       +` title="${aa} at ${lab} · ${saTitle(a)} · ${rs.filter(r=>r.act[a]).length} of ${rs.length}`
+       +` = ${(100*f).toFixed(0)}%"></td>`;
+    });
+    h+='</tr>';
+  }
+  $("#raSplit").innerHTML=h+'</tbody></table>';
+  raJudge(focus, g, rows);
+}
+/* a single-hue sequential ramp, pale -> deep; greyed for groups too small to read */
+function raRamp(f, thin){
+  if(f<=0) return "var(--panel)";
+  const steps=sDark()?["#13343a","#17484f","#1b5f68","#1f7883","#24929f"]
+                     :["#dbeef0","#b4dde1","#86c7ce","#4fa8b3","#0f5f6b"];
+  const grey =sDark()?["#262a2e","#2e343a","#363e45","#3f4951","#485561"]
+                     :["#e8eaec","#d4d8db","#bcc2c7","#a1a9b0","#868f98"];
+  const k=Math.min(4, Math.floor(f*5 - 1e-9));
+  return (thin?grey:steps)[Math.max(0,k)];
+}
+
+/* The honest part: a residue trend, or a lineage trend?
+
+   Two weaker tests were tried first and both misled. "Do any two residue groups
+   share a sequence cluster" says yes at position 206, because A/S/Q/N overlap
+   each other -- while arginine, the group with the effect, sits alone in cluster
+   5. Even per-group isolation passes position 80, where V and P nominally share
+   clusters 5 and 6 but V is 45 of cluster 5 and P is 4, so the contrast is still
+   between lineages. The only test that holds ancestry fixed is stratified: a
+   cluster carrying at least three enzymes of each residue, compared inside it. */
+const RA_MIN_STRAT = 3;
+function raStrat(col){
+  const fc=String(col), g=new Map();
+  for(const r of RA.rows){
+    const aa=r.res[fc]; if(!aa||aa==="-") continue;
+    if(!g.has(aa)) g.set(aa,[]); g.get(aa).push(r);
+  }
+  const big=[...g.entries()].sort((x,y)=>y[1].length-x[1].length).slice(0,2);
+  if(big.length<2 || big[1][1].length<4) return null;
+  const aa=big[0][0], A=big[0][1], bb=big[1][0], B=big[1][1];
+  const mean=rs=>rs.reduce((s,r)=>s+r.n,0)/rs.length;
+  const clB=new Set(B.map(r=>r.cluster));
+  const strata=[];
+  for(const cl of new Set(A.map(r=>r.cluster))) if(clB.has(cl)){
+    const x=A.filter(r=>r.cluster===cl), y=B.filter(r=>r.cluster===cl);
+    if(x.length>=RA_MIN_STRAT && y.length>=RA_MIN_STRAT)
+      strata.push({cl, d:mean(x)-mean(y), nA:x.length, nB:y.length});
+  }
+  return {aa, bb, nA:A.length, nB:B.length, raw:mean(A)-mean(B), strata,
+          ctrl: strata.length ? strata.reduce((s,t)=>s+t.d,0)/strata.length : null};
+}
+
+function raJudge(focus, g, rows){
+  const lab=p=>p.ref==null?("col "+p.col):String(p.ref);
+  const sign=x=>(x>=0?"+":"")+x.toFixed(1);
+  const st=raStrat(focus.col);
+  let h = `<h3>Read this before drawing a conclusion</h3>`;
+  if(!st){
+    h += `<p>At position <b>${lab(focus)}</b> there is no second residue carried by four or more `
+      + `enzymes, so there is no comparison to make.</p>`;
+  } else {
+    h += `<p>At <b>${lab(focus)}</b> the two commonest residues are <b>${st.aa}</b> `
+      + `(${st.nA} enzymes) and <b>${st.bb}</b> (${st.nB}). Across all enzymes ${st.aa} makes `
+      + `<b>${sign(st.raw)}</b> more of the ${RA_AM.length} conjugates than ${st.bb}.</p>`;
+    if(!st.strata.length){
+      h += `<p><b>That difference cannot be separated from ancestry.</b> No sequence cluster `
+        + `holds at least ${RA_MIN_STRAT} enzymes of each residue, so this dataset contains no `
+        + `pair of close relatives that differ here. Carrying ${st.aa} and belonging to a `
+        + `particular clade are the same variable at this position, and the ${sign(st.raw)} is `
+        + `equally an argument about lineage.</p>`;
+    } else {
+      h += `<p>Holding ancestry fixed changes it. In the `
+        + `${st.strata.length===1?"one cluster that carries":st.strata.length+" clusters that carry"} `
+        + `enough of both &mdash; `
+        + st.strata.map(t=>`cluster ${t.cl} (${t.nA} vs ${t.nB}): <b>${sign(t.d)}</b>`).join(", ")
+        + ` &mdash; the difference is <b>${sign(st.ctrl)}</b> rather than ${sign(st.raw)}`
+        + (Math.sign(st.ctrl)!==Math.sign(st.raw) ? `, and it changes direction` : ``)
+        + `. The comparison is thin, but it is the only one here that is not a lineage `
+        + `comparison.</p>`;
+    }
+  }
+
+  /* the same test for every position shown, so the answer is one table */
+  const pos=raPositions().map(p=>({p, st:raStrat(p.col)})).filter(x=>x.st);
+  pos.sort((x,y)=>(y.st.strata.length?1:0)-(x.st.strata.length?1:0)
+                  || Math.abs(y.st.raw)-Math.abs(x.st.raw));
+  const nTest=pos.filter(x=>x.st.strata.length).length;
+  h += `<h3 style="margin-top:18px">Every position shown, tested the same way</h3>`
+    + `<p>Of the ${pos.length} positions with two residues to compare, <b>${nTest}</b> admit even `
+    + `one lineage-controlled comparison. For the rest the residue and the clade are the same `
+    + `variable, and no amount of re-sorting this table will separate them.</p>`
+    + `<table class="stbl"><thead><tr><th>position</th><th>touches</th><th>commonest two</th>`
+    + `<th class="n">raw difference</th><th class="n">clusters with both</th>`
+    + `<th class="n">holding lineage fixed</th></tr></thead><tbody>`;
+  for(const it of pos){
+    h += `<tr><td><b>${lab(it.p)}</b></td>`
+      + `<td>${it.p.amine?(it.p.core?"amine + core":"the amine"):"the bile acid"}</td>`
+      + `<td style="font-family:ui-monospace,monospace">${it.st.aa} ${it.st.nA} / ${it.st.bb} ${it.st.nB}</td>`
+      + `<td class="n">${sign(it.st.raw)}</td>`
+      + `<td class="n">${it.st.strata.length||"&mdash;"}</td>`
+      + `<td class="n">${it.st.strata.length
+          ? `<b>${sign(it.st.ctrl)}</b>`
+          : `<span class="scooh">not separable</span>`}</td></tr>`;
+  }
+  h += `</tbody></table>`
+    + `<p class="foot">Differences are in conjugates made, out of ${RA_AM.length}. A stratum needs `
+    + `${RA_MIN_STRAT} enzymes of each residue. Activity was measured on pooled bile-acid cores, so `
+    + `these counts are what an enzyme made at all, not what it made on the cholic core the `
+    + `structures use. The comparison that sidesteps lineage completely is on the `
+    + `<b>Structure</b> and <b>By enzyme</b> tabs: one enzyme, 25 conjugates, ancestry fixed by `
+    + `construction.</p>`;
+  $("#raVerdict").innerHTML = h;
 }
 
 /* ---------- pocket residues beside measured activity ---------- */
