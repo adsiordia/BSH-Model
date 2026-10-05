@@ -284,10 +284,14 @@ table.sa th.saname{position:sticky;left:0;z-index:3;background:var(--panel);text
   width:150px;min-width:150px;padding:0 8px 0 6px;font-family:ui-monospace,monospace;
   font-size:10px;text-transform:none;letter-spacing:0;font-weight:500;color:var(--body);white-space:nowrap}
 table.sa .samod{color:var(--accent)}
-table.sa thead th{position:sticky;top:0;z-index:2;background:var(--panel);height:74px;
+table.sa thead th{position:sticky;top:0;z-index:2;background:var(--panel);height:96px;
   vertical-align:bottom;padding:0 0 3px;font-size:10px;font-weight:400;color:var(--muted);
   text-transform:none;letter-spacing:0}
-table.sa thead th span{display:inline-block;writing-mode:vertical-rl;transform:rotate(180deg);max-height:70px}
+/* tall enough for the longest label upright in one line -- at 70px the longer
+   conjugate names wrapped to a second vertical line and overlapped the next
+   column's label */
+table.sa thead th span{display:inline-block;writing-mode:vertical-rl;transform:rotate(180deg);
+  max-height:92px;white-space:nowrap;overflow:hidden}
 table.sa th.sapos{width:17px;min-width:17px}
 table.sa th.saam{width:13px;min-width:13px}
 table.sa td.sares{width:17px;text-align:center;background:var(--accent-bg);color:var(--accent);
@@ -3344,6 +3348,17 @@ const S_LABEL = {GABA:"GABA", Asn:"asparagine", Gln:"glutamine", Dap:"Dap",
   His:"histidine", Orn:"ornithine", Pro:"proline", Cadaverine:"cadaverine",
   Putrescine:"putrescine", Gly:"glycine", Tau:"taurine"};
 
+/* sitesactivity.json carries longer conjugate names than S_LABEL does, and two
+   of them overflow a 13 px rotated header and collide with their neighbours.
+   Short form for the header, full name in the tooltip. "cystine" in the assay
+   table is the free thiol, i.e. cysteine, so it is shown under that name. */
+const SA_SHORT = {"2,3_diaminopropionic acid":"Dap", "3_methoxytyramine":"3-MeO-tyramine",
+  "2_aminophenol":"2-aminophenol", "glyglycine":"glycylglycine", "cystine":"cysteine"};
+const SA_FULL = {"2,3_diaminopropionic acid":"2,3-diaminopropionic acid (Dap)",
+  "cystine":"cysteine — the free thiol, listed as \u201ccystine\u201d in the assay table"};
+const saLab  = a => SA_SHORT[a] || a.replace(/_/g," ");
+const saTitle = a => SA_FULL[a] || a.replace(/_/g," ");
+
 const sDark = () => document.documentElement.dataset.theme === "dark"
   || (document.documentElement.dataset.theme !== "light"
       && matchMedia("(prefers-color-scheme: dark)").matches);
@@ -3951,7 +3966,12 @@ function drawSites(){
         onlyMod=$("#saModelled").checked;
   let rows=SA.rows.filter(r=>!onlyMod||r.modelled);
   const sites=SA.sites.filter(s=>!onlyVar||!SA_INVARIANT.has(String(s.pos)));
-  const amines=SA.amines;
+  /* The dashed rule and the "neutral" group heading both assume the charged
+     conjugates come first. They were not sorted, so the rule fell on histidine
+     (a carboxylate) and the heading mislabelled three columns. Sort here. */
+  const amines=SA.amines.slice().sort((x,y)=>
+      (SA.charge[x]==="neutral") - (SA.charge[y]==="neutral")
+      || saLab(x).localeCompare(saLab(y)));
   const nCh=amines.filter(a=>SA.charge[a]!=="neutral").length;
   if(sort==="cluster") rows=rows.slice().sort((a,b)=>a.cluster-b.cluster||b.n-a.n||a.id.localeCompare(b.id));
   else if(sort==="n")  rows=rows.slice().sort((a,b)=>b.n-a.n||a.id.localeCompare(b.id));
@@ -3976,8 +3996,8 @@ function drawSites(){
     + '<tr class="sacols"><th class="saname">enzyme</th><th class="sacl">cl</th>';
   for(const s of sites) h+=`<th class="sapos" title="${s.note||""}"><span>${s.pos}</span></th>`;
   h+='<th class="sagap"></th>';
-  amines.forEach((a,i)=>{ h+=`<th class="saam ${i===0?'samain':''} ${i===nCh?'split':''}">`
-    +`<span>${a.replace(/_/g," ")}</span></th>`; });
+  amines.forEach((a,i)=>{ h+=`<th class="saam ${i===0?'samain':''} ${i===nCh?'split':''}"`
+    +` title="${saTitle(a)} · ${SA.charge[a]}"><span>${saLab(a)}</span></th>`; });
   h+='</tr></thead><tbody>';
   for(const r of rows){
     h+=`<tr><th class="saname">${r.id}${r.modelled?' <span class="samod" title="has a folded structure">◆</span>':''}</th>`
@@ -3989,7 +4009,7 @@ function drawSites(){
     h+='<td class="sagap"></td>';
     amines.forEach((a,i)=>{
       h+=`<td class="${r.act[a]?'saon':''} ${i===0?'samain':''} ${i===nCh?'split':''}"`
-       +` title="${r.id} · ${a.replace(/_/g," ")} · ${r.act[a]?"MADE":"not made"}"></td>`;
+       +` title="${r.id} · ${saTitle(a)} · ${r.act[a]?"MADE":"not made"}"></td>`;
     });
     h+="</tr>";
   }
