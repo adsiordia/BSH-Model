@@ -278,6 +278,25 @@ table.aln td.hitc{background:var(--soft);color:var(--body)}
   :root:not([data-theme=light]) table.aln td.hiti,
   :root:not([data-theme=light]) .sw.alsw.hiti{background:#33224a;color:#c9a6ef}
 }
+#saWrap{overflow:auto;max-height:76vh;border:1px solid var(--rule);border-radius:8px}
+table.sa{border-collapse:collapse;font-size:11px;width:auto;table-layout:fixed}
+table.sa th.saname{position:sticky;left:0;z-index:3;background:var(--panel);text-align:left;
+  width:150px;min-width:150px;padding:0 8px 0 6px;font-family:ui-monospace,monospace;
+  font-size:10px;text-transform:none;letter-spacing:0;font-weight:500;color:var(--body);white-space:nowrap}
+table.sa .samod{color:var(--accent)}
+table.sa thead th{position:sticky;top:0;z-index:2;background:var(--panel);height:74px;
+  vertical-align:bottom;padding:0 0 3px;font-size:10px;font-weight:400;color:var(--muted);
+  text-transform:none;letter-spacing:0}
+table.sa thead th span{display:inline-block;writing-mode:vertical-rl;transform:rotate(180deg);max-height:70px}
+table.sa th.sapos{width:17px;min-width:17px}
+table.sa th.saam{width:13px;min-width:13px}
+table.sa td.sares{width:17px;text-align:center;background:var(--accent-bg);color:var(--accent);
+  font-family:ui-monospace,monospace;font-weight:700}
+table.sa td.sacl,table.sa th.sacl{width:22px;min-width:22px;text-align:center;color:var(--muted);font-size:10px}
+table.sa td.sagap,table.sa th.sagap{width:14px;min-width:14px;background:transparent}
+table.sa td{height:14px;border:1px solid var(--rule);padding:0}
+table.sa td.saon{background:var(--hit-bg)}
+table.sa td.split,table.sa th.split{border-left:2px solid var(--muted)}
 </style></head><body>
 
 <header><div class="bar">
@@ -296,6 +315,7 @@ table.aln td.hitc{background:var(--soft);color:var(--body)}
     <button data-v="structure">Structure</button>
     <button data-v="protein">By enzyme</button>
     <button data-v="align">Alignment</button>
+    <button data-v="sites">Pocket &amp; activity</button>
       <button data-v="methods">How it was made</button>
   </nav>
 </div></header>
@@ -744,6 +764,61 @@ table.aln td.hitc{background:var(--soft);color:var(--body)}
   </div>
 </section>
 
+<!-- SITES vs ACTIVITY -->
+<section class="view" id="v-sites" hidden>
+  <div class="card prose">
+    <h2>Pocket residues beside what each enzyme actually makes</h2>
+    <p>Every enzyme with both a sequence and assay data, on one row. On the left, the residue
+    it has at each position the structures showed touching the <b>amine</b>. On the right,
+    which conjugates it was <b>measured</b> to make. The question is whether the left half
+    predicts the right half.</p>
+    <p class="foot">The positions came from 27 folded structures but are read off the
+    alignment, so all 115 enzymes can be shown. Four of the eleven are effectively invariant
+    (the catalytic Cys, and positions 15, 169, 222) and are greyed: important, but they
+    cannot explain a difference between enzymes.</p>
+  </div>
+
+  <div class="card">
+    <div class="srow">
+      <label>Order rows by
+        <select id="saSort">
+          <option value="cluster">sequence cluster</option>
+          <option value="n">how many conjugates it makes</option>
+          <option value="206">residue at position 206</option>
+          <option value="name">name</option>
+        </select>
+      </label>
+      <label class="chk"><input type="checkbox" id="saOnlyVar" checked> hide the invariant positions</label>
+      <label class="chk"><input type="checkbox" id="saModelled"> only the 27 with structures</label>
+    </div>
+    <p class="foot" id="saNote"></p>
+    <div id="saWrap"><div id="saGrid"></div></div>
+    <div class="slegend">
+      <span><span class="sw" style="background:var(--accent-bg);color:var(--accent);font-weight:700;width:auto;min-width:16px;text-align:center">R</span>residue at a pocket position</span>
+      <span><span class="sw" style="background:var(--hit-bg)"></span>conjugate measured as made</span>
+      <span><span class="sw" style="background:var(--panel);box-shadow:inset 0 0 0 1px var(--rule)"></span>not made</span>
+      <span class="scooh">charged conjugates are listed first, then neutral</span>
+    </div>
+  </div>
+
+  <div class="card prose">
+    <h3>Read this before drawing a conclusion</h3>
+    <p><b>Arginine at 206 and membership of the largest sequence cluster are the same
+    variable.</b> Of 115 enzymes, 51 carry an arginine there &mdash; and all 51 sit in one
+    50%-identity cluster, with none outside it. So an enzyme having that arginine and an
+    enzyme belonging to that lineage cannot be told apart in this dataset.</p>
+    <p>Order the rows by sequence cluster and the point is visible: the block of
+    arginine-bearing enzymes is also a block of close relatives, and they share far more
+    than one residue. Any apparent association between the residue and activity is equally
+    an association between the <i>lineage</i> and activity.</p>
+    <p class="foot">What the structures add is a comparison this table cannot make: within a
+    single enzyme, across 25 conjugates, that residue contacts charged amines and not
+    neutral ones. Ancestry is identical on both sides of that comparison, so it cannot be
+    the explanation there. Separating the two in the activity data would need either an
+    arginine-bearing enzyme from a different lineage, or a point mutant.</p>
+  </div>
+</section>
+
 <!-- METHODS -->
 <section class="view" id="v-methods" hidden>
   <div class="card prose">
@@ -1174,7 +1249,8 @@ const CONJUGATES = /*__CONJUGATES__*/{};
 const STRUCT = /*__STRUCTURE__*/{};
 const PP = /*__PERPROTEIN__*/{};
 const AL = /*__ALIGNMENT__*/{};
-const SUP = /*__SUPERPOSE__*/{};</script>
+const SUP = /*__SUPERPOSE__*/{};
+const SA = /*__SITESACT__*/{};</script>
 <script>
 const $ = s => document.querySelector(s);
 
@@ -1211,6 +1287,7 @@ document.querySelectorAll("nav button").forEach(b => b.onclick = () => {
   if (b.dataset.v === "structure") drawStruct();
   if (b.dataset.v === "protein") drawProtein();
   if (b.dataset.v === "align") drawAlign();
+  if (b.dataset.v === "sites") drawSites();
 });
 
 $("#mq").oninput = drawHeat;
@@ -3616,4 +3693,49 @@ function ppOverlay(mode){
     v.zoomTo({hetflag:true}); v.zoom(.7); v.render();
   });
 }
+
+/* ---------- pocket residues beside measured activity ---------- */
+const SA_INVARIANT=new Set(["1","15","169","222"]);
+(function saInit(){
+  ["saSort","saOnlyVar","saModelled"].forEach(id=>{
+    const el=document.getElementById(id); if(el) el.addEventListener("change",drawSites);
+  });
+})();
+function drawSites(){
+  const sort=$("#saSort").value, onlyVar=$("#saOnlyVar").checked,
+        onlyMod=$("#saModelled").checked;
+  let rows=SA.rows.filter(r=>!onlyMod||r.modelled);
+  const sites=SA.sites.filter(s=>!onlyVar||!SA_INVARIANT.has(String(s.pos)));
+  const amines=SA.amines;
+  const nCh=amines.filter(a=>SA.charge[a]!=="neutral").length;
+  if(sort==="cluster") rows=rows.slice().sort((a,b)=>a.cluster-b.cluster||b.n-a.n||a.id.localeCompare(b.id));
+  else if(sort==="n")  rows=rows.slice().sort((a,b)=>b.n-a.n||a.id.localeCompare(b.id));
+  else if(sort==="206")rows=rows.slice().sort((a,b)=>
+      (a.res["206"]==="R"?0:1)-(b.res["206"]==="R"?0:1)||a.res["206"].localeCompare(b.res["206"])||b.n-a.n);
+  else rows=rows.slice().sort((a,b)=>a.id.localeCompare(b.id));
+  const nArg=rows.filter(r=>r.res["206"]==="R").length;
+  $("#saNote").innerHTML=`${rows.length} enzymes · ${sites.length} pocket positions · `
+    + `${amines.length} conjugates measured. ${nArg} carry an arginine at 206, `
+    + `spread over ${new Set(rows.filter(r=>r.res["206"]==="R").map(r=>r.cluster)).size} sequence cluster(s).`;
+  let h='<table class="sa"><thead><tr><th class="saname">enzyme</th><th class="sacl">cl</th>';
+  for(const s of sites) h+=`<th class="sapos" title="${s.note||""}"><span>${s.pos}</span></th>`;
+  h+='<th class="sagap"></th>';
+  amines.forEach((a,i)=>{ h+=`<th class="saam ${i===nCh?'split':''}"><span>${a.replace(/_/g," ")}</span></th>`; });
+  h+='</tr></thead><tbody>';
+  for(const r of rows){
+    h+=`<tr><th class="saname">${r.id}${r.modelled?' <span class="samod" title="has a folded structure">◆</span>':''}</th>`
+     + `<td class="sacl" title="50% identity cluster">${r.cluster}</td>`;
+    for(const s of sites){
+      const aa=r.res[String(s.pos)]||"-";
+      h+=`<td class="sares" title="${r.id} position ${s.pos}: ${aa}">${aa}</td>`;
+    }
+    h+='<td class="sagap"></td>';
+    amines.forEach((a,i)=>{
+      h+=`<td class="${r.act[a]?'saon':''} ${i===nCh?'split':''}" title="${r.id} · ${a.replace(/_/g," ")} · ${r.act[a]?"made":"not made"}"></td>`;
+    });
+    h+="</tr>";
+  }
+  $("#saGrid").innerHTML=h+"</tbody></table>";
+}
+
 </script></body></html>
