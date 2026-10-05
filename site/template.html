@@ -3523,7 +3523,10 @@ function drawAlign(){
   h+='</tr></thead><tbody>';
   for(const p of order){
     const seq=AL.aln[p], hh=AL.hits[p][t]||{};
-    h+=`<tr><th class="alname" title="loop ${AL.motif[p]}">${p}</th>`;
+    /* tooltip: what this enzyme has at the dominant inter-subunit column,
+       read from the alignment itself -- no motif field is carried any more */
+    const atLoop=(AL.aln[p]||"")[LOOP]||"-";
+    h+=`<tr><th class="alname" title="${p} — ${atLoop} at the inter-subunit contact column">${p}</th>`;
     for(const c of cols){
       const ch=seq[c]||"-";
       let cls="";
