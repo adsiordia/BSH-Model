@@ -86,6 +86,14 @@ for col in PC["moiety"]:
                         asel=round(mean(ar) - mean(na), 3)))
 
 out.sort(key=lambda r: -max(abs(r["sel"]), abs(r["asel"])))
+# the equivalent residue in the two published structures, so a position quoted
+# in the C0ERS1 frame can be looked up in the PDB by someone outside the project
+XF = json.load(open(f"{AF3}/refstruct/xtal_frames.json"))
+for r in out:
+    b = XF["2BJF"].get(str(r["pos"])); l = XF["8BLT"].get(str(r["pos"]))
+    r["x2BJF"] = f"{b[1]}{b[0]}" if b else None
+    r["x8BLT"] = f"{l[1]}{l[0]}" if l else None
+
 out.sort(key=lambda r: -r["pol"])
 json.dump(dict(rows=out, amines=AM, charge=charge, classes=CLS,
                aromatic=sorted(AROM & set(AM)), n_enzymes=len(PR)),

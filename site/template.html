@@ -3834,12 +3834,23 @@ function ppShow3D(p){
   const f={part:$("#ppPart").value, itf:$("#ppItf").checked};
   const all=(E.contacts[a]||[]).filter(c=>c.f>0);
   const con=all.filter(c=>(f.part==="all"||c.part===f.part) && (!f.itf||c.ch!=="A"));
-  tbl.innerHTML='<table class="stbl"><thead><tr><th>residue</th><th>chain</th><th>part touched</th>'
-    +'<th>interaction</th><th class="n">samples</th></tr></thead><tbody>'
-    + con.map(c=>`<tr><td>${c.n}${c.r}</td><td>${c.ch==="A"?"A (own)":c.ch+" (neighbour)"}</td>`
+  /* the residue column gives this enzyme's OWN number, which is what you would
+     look up in its sequence or its structure; the position column translates it
+     into the C0ERS1 frame the rest of the site names positions by. */
+  tbl.innerHTML='<table class="stbl"><thead><tr><th>residue</th><th>position</th><th>chain</th>'
+    +'<th>part touched</th><th>interaction</th><th class="n">samples</th></tr></thead><tbody>'
+    + con.map(c=>{
+        const ref=alRefOfStruct(p,c.r);
+        const nm=alResNum(p, (alNumbering(p,"127")||{idx2col:[]}).idx2col[
+                   ((AL.source||{})[p]==="raw, untouched"?c.r+1:c.r)] , "127");
+        return `<tr><td title="${c.n}${c.r} in ${p}'s own numbering`
+        + (nm&&nm.stripped?` — residue ${nm.seq} in its sequence, the structure drops the initiator methionine`:``)
+        + `">${c.n}${c.r}</td>`
+        +`<td>${ref==null?'<span class="scooh">&mdash;</span>':ref}</td>`
+        +`<td>${c.ch==="A"?"A (own)":c.ch+" (neighbour)"}</td>`
         +`<td>${c.part==="m"?"amine":"bile acid"}</td>`
         +`<td>${Object.keys(c.t).map(x=>S_TYPENAME[x]||x).join(", ")}</td>`
-        +`<td class="n">${c.f} of 5</td></tr>`).join("")
+        +`<td class="n">${c.f} of 5</td></tr>`;}).join("")
     + "</tbody></table>";
   const tag=[job,detail,$("#ppRes").checked?1:0,$("#ppLab").checked?1:0,
              $("#ppDist").checked?1:0,f.part,f.itf?1:0].join(":");
@@ -4080,7 +4091,7 @@ function drawAlign(){
           else if(core && ((hh.oc&&hh.oc[c27])||(hh.ic&&hh.ic[c27]))) cls="hitc";
         }
       }
-      h+=`<td class="${cls}" title="${p} \u00b7 ${REF[String(c)]?("C0ERS1 "+REF[String(c)]):("column "+c)} \u00b7 ${ch}">${ch}</td>`;
+      h+=`<td class="${cls}" title="${p} \u00b7 ${ch} \u00b7 ${alNumText(p, c, full?"127":"27")} \u00b7 ${REF[String(c)]?("position "+REF[String(c)]+" in the C0ERS1 frame"):("alignment column "+c)}">${ch}</td>`;
     }
     h+="</tr>";
   }
@@ -4309,6 +4320,63 @@ function ppShowAssay(prot, token){
     + `<p class="foot" style="margin:6px 0 0">Every structure on this page uses the `
       + `<b>Tri</b> (cholic) core, so only that row is the one the contacts can speak to. `
       + `Across the dataset the core changes the answer in 24% of pairs.</p></div>`;
+}
+
+/* ---- residue numbering, both directions ----------------------------------
+   Positions on this site are named by their residue number in C0ERS1, which is
+   an internal label: in any other enzyme the same structural position carries a
+   different number. These convert, so a tooltip can always give the number that
+   exists in the sequence being looked at.
+
+   Two numbers exist per residue and they differ for 62 of the 127 sequences:
+   the index in the mature sequence (what data/alignment/ holds) and the residue
+   number in the folded AF3 structure, which is one lower wherever the construct
+   had its initiator methionine stripped. Verified exact against the CA records
+   of the shipped structures, 893/893. */
+const NUMCACHE = new Map();
+/* `which` picks the alignment: "127" is the 731-column one over all sequences,
+   "27" the 393-column one over the folded set. They are different coordinate
+   spaces and their reference maps (ref127 vs ref) are not interchangeable. */
+function alNumbering(enz, which){
+  const key = which + ":" + enz;
+  if(NUMCACHE.has(key)) return NUMCACHE.get(key);
+  const A = which === "27" ? (AL.aln||{}) : (AL.aln127||{});
+  const s = A[enz];
+  if(!s){ NUMCACHE.set(key,null); return null; }
+  const stripped = (AL.source||{})[enz] === "raw, untouched";
+  const col2idx = new Int32Array(s.length).fill(-1);
+  const idx2col = [0];
+  let n = 0;
+  for(let c=0;c<s.length;c++) if(s[c] !== "-"){ n++; col2idx[c]=n; idx2col[n]=c; }
+  const o = {col2idx, idx2col, stripped, len:n};
+  NUMCACHE.set(key,o); return o;
+}
+/* column -> the number that exists in this enzyme */
+function alResNum(enz, col, which){
+  const o = alNumbering(enz, which||"127");
+  if(!o || col>=o.col2idx.length) return null;
+  const i = o.col2idx[col];
+  if(i < 0) return null;                       // a gap: no residue here
+  return {seq:i, struct: o.stripped ? i-1 : i, stripped:o.stripped};
+}
+/* the other way: a residue number in a folded structure -> the C0ERS1 frame.
+   Always goes through the 127-sequence alignment and ref127. */
+function alRefOfStruct(enz, structNum){
+  const o = alNumbering(enz, "127");
+  if(!o) return null;
+  const i = o.stripped ? structNum+1 : structNum;
+  const col = o.idx2col[i];
+  if(col === undefined) return null;
+  const r = (AL.ref127||{})[String(col)];
+  return r === undefined ? null : r;
+}
+/* the phrase used in tooltips, naming both numbers only when they differ */
+function alNumText(enz, col, which){
+  const r = alResNum(enz, col, which);
+  if(!r) return "no residue here (gap)";
+  return r.stripped
+    ? `residue ${r.seq} in its sequence, ${r.struct} in the folded structure`
+    : `residue ${r.seq}`;
 }
 
 /* ---------- which amines each residue identity actually touches ----------
