@@ -19,7 +19,8 @@ for ph, f in [("/*__DATA__*/{}", "data.json"), ("/*__CHEM__*/{}", "chem.json"),
               ("/*__SITESACT__*/{}", "sitesactivity.json"),
               ("/*__RESACT__*/{}", "resact.json"),
               ("/*__VALID__*/{}", "validation.json"),
-              ("/*__RESAMINE__*/{}", "resamine.json")]:
+              ("/*__RESAMINE__*/{}", "resamine.json"),
+              ("/*__TOKMAP__*/{}", "tokmap.json")]:
     html = html.replace(ph, (HERE/f).read_text())
 out = HERE/"index.html"; out.write_text(html)
 print(f"wrote {out}  ({out.stat().st_size/1e6:.2f} MB)")

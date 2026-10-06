@@ -28,6 +28,15 @@ cluster = {r["id"]: r["cluster"] for r in RA["rows"]}
 
 AROM = {"Phe", "Tyramine", "Dopamine", "3MeOTyramine", "Tryptamine",
         "2Aminophenol", "His"}
+# chemical classes of the amine, which is the altitude the claims can support:
+# 25 individual conjugates give per-cell counts too small to read a trend off.
+CLS = {"aromatic":  ["Phe", "Tyramine", "Dopamine", "3MeOTyramine",
+                     "Tryptamine", "2Aminophenol", "His"],
+       "basic":     ["Arg", "Orn", "Dap"],
+       "polar":     ["Asn", "Gln", "Cit", "Ser", "Thr", "Cys"],
+       "small":     ["Ala", "GlyGly", "Pro", "Met", "GABA", "Gly"],
+       "polyamine": ["Cadaverine", "Putrescine"],
+       "sulfonate": ["Tau"]}
 AA3 = {"ALA": "A", "ARG": "R", "ASN": "N", "ASP": "D", "CYS": "C", "GLN": "Q",
        "GLU": "E", "GLY": "G", "HIS": "H", "ILE": "I", "LEU": "L", "LYS": "K",
        "MET": "M", "PHE": "F", "PRO": "P", "SER": "S", "THR": "T", "TRP": "W",
@@ -62,7 +71,13 @@ for col in PC["moiety"]:
         nu = [a for a in AM if charge.get(a, "neutral") == "neutral"]
         ar = [a for a in AM if a in AROM]
         na = [a for a in AM if a not in AROM]
-        out.append(dict(pos=pos, col=col, aa=aa, n=len(ps),
+        cls = {k: round(sum(rates[a] for a in v if a in rates)
+                        / max(1, len([a for a in v if a in rates])), 3)
+               for k, v in CLS.items()}
+        # polarity: aromatic preference minus the mean of the carboxylate classes
+        pol = round(cls["aromatic"]
+                    - sum(cls[k] for k in ("basic", "polar", "small")) / 3, 3)
+        out.append(dict(cls=cls, pol=pol, pos=pos, col=col, aa=aa, n=len(ps),
                         clusters=len({cluster.get(p) for p in ps if p in cluster}),
                         enzymes=sorted(ps), rates=rates,
                         chg=round(mean(ch), 3), neu=round(mean(nu), 3),
@@ -71,7 +86,8 @@ for col in PC["moiety"]:
                         asel=round(mean(ar) - mean(na), 3)))
 
 out.sort(key=lambda r: -max(abs(r["sel"]), abs(r["asel"])))
-json.dump(dict(rows=out, amines=AM, charge=charge,
+out.sort(key=lambda r: -r["pol"])
+json.dump(dict(rows=out, amines=AM, charge=charge, classes=CLS,
                aromatic=sorted(AROM & set(AM)), n_enzymes=len(PR)),
           open(f"{SITE}/resamine.json", "w"), separators=(",", ":"))
 print(f"wrote site/resamine.json: {len(out)} (position, residue) groups, "
