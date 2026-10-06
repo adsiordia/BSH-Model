@@ -918,6 +918,36 @@ table.sa thead tr.sacols th{top:17px}
     </div>
   </div>
 
+  <div class="card">
+    <h3 style="margin-top:0">The crystal structure in 3D</h3>
+    <div class="srow">
+      <label>Structure <select id="xSel">
+        <option value="2BJF">2BJF — C. perfringens, taurine + deoxycholate</option>
+        <option value="8BLT">8BLT — L. salivarius, taurocholate</option>
+      </select></label>
+      <label>Copy <select id="xCopy"></select></label>
+      <label>Show <select id="xPart">
+        <option value="all">everything contacted</option>
+        <option value="moiety">only the amine contacts</option>
+        <option value="core">only the bile-acid contacts</option>
+      </select></label>
+      <label class="chk"><input type="checkbox" id="xLab" checked> label the residues</label>
+    </div>
+    <p class="foot" id="x3dNote"></p>
+    <div id="x3d" style="position:relative;width:100%;height:470px;border:1px solid var(--rule);
+      border-radius:8px;overflow:hidden"></div>
+    <div class="slegend">
+      <span><span class="sw" style="background:#9aa3ad"></span>the subunit holding the ligand</span>
+      <span><span class="sw" style="background:#b9a6cf"></span>the subunit that donates into it</span>
+      <span><span class="sw" style="background:#c6ccd3"></span>the rest of the assembly</span>
+      <span><span class="sw" style="background:#0f5f6b"></span>contact, own subunit</span>
+      <span><span class="sw" style="background:#8a4bbf"></span>contact, neighbouring subunit</span>
+      <span><span class="sw" style="background:#c8742a"></span>the bile salt</span>
+      <span class="scooh">drag to rotate &middot; scroll to zoom &middot; the whole deposited assembly is drawn, uncropped</span>
+    </div>
+    <div id="xTable"></div>
+  </div>
+
   <div class="card prose" id="xVerdict"></div>
 </section>
 
@@ -1522,7 +1552,7 @@ document.querySelectorAll("nav button").forEach(b => b.onclick = () => {
   if (b.dataset.v === "align") drawAlign();
   if (b.dataset.v === "sites") drawSites();
   if (b.dataset.v === "ra") drawRA();
-  if (b.dataset.v === "xtal") drawXtal();
+  if (b.dataset.v === "xtal") { drawXtal(); drawXtal3D(); }
 });
 
 $("#mq").oninput = drawHeat;
@@ -4145,6 +4175,88 @@ function drawXtal(){
       + `(${ex["8BLT"].join(", ")}); it is present in our data, contacted by all 26 enzymes in `
       + `some sample but reproducible in only 8, so it fell below the threshold that defined the `
       + `11 &mdash; which suggests that threshold is slightly too strict rather than wrong.</p>`;
+}
+
+/* ---- the crystal structures in 3D, same conventions as the By-enzyme tab ---- */
+let x3dViewer=null, x3dTag="";
+(function xInit(){
+  const sel=document.getElementById("xSel"); if(!sel) return;
+  const refill=()=>{
+    const p=sel.value, cp=$("#xCopy");
+    cp.innerHTML=Object.keys(XV.copies[p]).sort()
+      .map(c=>`<option value="${c}">chain ${c}</option>`).join("");
+  };
+  refill();
+  sel.addEventListener("change",()=>{refill(); drawXtal3D();});
+  ["xCopy","xPart","xLab"].forEach(id=>
+    document.getElementById(id).addEventListener("change",drawXtal3D));
+})();
+
+function drawXtal3D(){
+  const p=$("#xSel").value, ch=$("#xCopy").value, part=$("#xPart").value;
+  const box=$("#x3d"), M=XV.structures[p].meta;
+  const all=XV.copies[p][ch]||[];
+  const con=all.filter(c=>part==="all"||c.part===part);
+  const nbr=[...new Set(all.filter(c=>c.itf).map(c=>c.ch))];
+  $("#x3dNote").innerHTML =
+      `<b>${p}</b>, chain ${ch} &mdash; ${M.enzyme}, ${M.res}&nbsp;&Aring;. The whole deposited `
+    + `assembly is drawn, nothing cropped. <b>${con.length}</b> residue`
+    + `${con.length===1?"":"s"} contact this copy of the ligand`
+    + (part==="all"?"":`, filtered to the ${part==="moiety"?"amine":"bile-acid"} side`)
+    + (nbr.length?`; chain ${nbr.join(" and ")} reaches in from the neighbouring subunit.`:`.`);
+
+  $("#xTable").innerHTML = con.length
+    ? '<table class="stbl"><thead><tr><th>residue</th><th>chain</th><th>touches</th>'
+      + '<th>C0ERS1</th><th>interaction</th><th class="n">closest</th></tr></thead><tbody>'
+      + con.map(c=>`<tr><td>${c.nm}${c.rn}</td>`
+          + `<td>${c.itf?`${c.ch} <b>(neighbour)</b>`:`${c.ch} (own)`}</td>`
+          + `<td>${c.part==="moiety"?"the amine":"the bile acid"}</td>`
+          + `<td>${c.ref==null?"&mdash;":c.ref}</td>`
+          + `<td>${c.it.map(x=>S_TYPENAME[x]||x.replace(/_/g," ")).join(", ")}</td>`
+          + `<td class="n">${c.d} &Aring;</td></tr>`).join("")
+      + '</tbody></table>'
+    : '<p class="foot">No residue matches that filter for this copy.</p>';
+
+  const tag=[p,ch,part,$("#xLab").checked?1:0].join(":");
+  if(x3dTag===tag) return;
+  x3dTag=tag;
+  ppEnsure3Dmol(async ()=>{
+    let txt;
+    try{
+      const r=await fetch(`xtal/${p}.pdb.gz`);
+      if(!r.ok) throw new Error(r.status);
+      txt=await new Response(r.body.pipeThrough(new DecompressionStream("gzip"))).text();
+    }catch(e){
+      box.innerHTML='<p class="foot" style="padding:14px">Structure file not available here '
+        +'(the viewer needs the <code>xtal/</code> folder served alongside this page).</p>';
+      return;
+    }
+    box.innerHTML="";
+    const v=$3Dmol.createViewer(box,{backgroundColor:
+      getComputedStyle(document.body).getPropertyValue("--panel").trim()||"white"});
+    v.addModel(txt,"pdb");
+    /* the assembly recedes; the chain holding the ligand and the one donating
+       into it stay legible, as on the By-enzyme tab */
+    v.setStyle({},{cartoon:{color:"#c6ccd3",opacity:.28}});
+    v.setStyle({chain:ch},{cartoon:{color:"#9aa3ad",opacity:.72}});
+    for(const nb of nbr) v.setStyle({chain:nb},{cartoon:{color:"#b9a6cf",opacity:.58}});
+    const model=v.getModel();
+    for(const c of con){
+      const col=c.itf?"#8a4bbf":"#0f5f6b";
+      v.addStyle({chain:c.ch,resi:c.rn},{stick:{color:col,radius:.17}});
+      if(!$("#xLab").checked) continue;
+      const ca=model.selectedAtoms({chain:c.ch,resi:c.rn,atom:"CA"})[0]
+            || model.selectedAtoms({chain:c.ch,resi:c.rn})[0];
+      if(!ca) continue;
+      v.addLabel(`${c.nm}${c.rn}`,{position:{x:ca.x,y:ca.y,z:ca.z},fontSize:11,
+        fontColor:"white",borderThickness:0,backgroundColor:col,
+        backgroundOpacity:.85,inFront:true,alignment:"center"});
+    }
+    /* only this copy's ligand(s): the file holds one per chain */
+    const sel={chain:ch,resn:XV.ligs[p]};
+    v.addStyle(sel,{stick:{colorscheme:"orangeCarbon",radius:.26}});
+    v.zoomTo(sel); v.zoom(.45); v.render();
+  });
 }
 
 /* ---------- residues and activity on one index ---------- */

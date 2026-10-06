@@ -72,6 +72,7 @@ fi
 # browser: a static Space serves .gz as bytes with no Content-Encoding.
 POCKETS="$ROOT/site/pockets"
 RAW="$ROOT/site/raw"
+XTAL="$ROOT/site/xtal"
 if [ -d "$POCKETS" ]; then
   echo "==> $(ls "$POCKETS"/*.pdb 2>/dev/null | wc -l) pocket structures to upload"
 fi
@@ -80,8 +81,12 @@ if [ -d "$RAW" ]; then
        "($(du -sh --apparent-size "$RAW" | cut -f1)) — this is the slow part"
 fi
 
+if [ -d "$XTAL" ]; then
+  echo "==> $(ls "$XTAL"/*.pdb.gz 2>/dev/null | wc -l) crystal structures to upload"
+fi
+
 echo "==> uploading index.html, the Space card and the structures"
-REPO="$REPO" SITE="$SITE" CARD="$CARD" POCKETS="$POCKETS" RAW="$RAW" python - <<'PYEOF'
+REPO="$REPO" SITE="$SITE" CARD="$CARD" POCKETS="$POCKETS" RAW="$RAW" XTAL="$XTAL" python - <<'PYEOF'
 import os
 from huggingface_hub import HfApi
 api, repo = HfApi(), os.environ["REPO"]
@@ -111,6 +116,11 @@ if rw and os.path.isdir(rw):
                           repo_type="space", allow_patterns=chunk,
                           commit_message=f"Raw tetramers {i + 1}-{i + len(chunk)}")
         print(f"    uploaded raw/ {i + 1}-{i + len(chunk)} of {len(names)}", flush=True)
+xt = os.environ.get("XTAL", "")
+if xt and os.path.isdir(xt):
+    api.upload_folder(folder_path=xt, path_in_repo="xtal", repo_id=repo,
+                      repo_type="space", commit_message="Crystal structures")
+    print(f"    uploaded xtal/ ({len(os.listdir(xt))} files)")
 PYEOF
 
 echo
