@@ -315,6 +315,11 @@ table.sa.rasp td.racl,table.sa.rasp th.racl{width:46px;min-width:46px;text-align
   color:var(--muted);font-size:10px}
 table.sa.rasp td{height:17px}
 table.sa.rasp tr.rathin th.saname{color:var(--muted)}
+table.sa.ram th.saname{width:52px;min-width:52px;text-align:left}
+table.sa.ram td.racl,table.sa.ram th.racl{width:40px;min-width:40px;text-align:center;
+  color:var(--muted);font-size:10px}
+table.sa.ram td.ramone{color:#b4572a;font-weight:700}
+#ramWrap{overflow:auto;max-width:100%}
 table.xt td.xyes{background:var(--hit-bg)}
 table.xt td.xitf{background:#8a4bbf22;box-shadow:inset 2px 0 0 #8a4bbf}
 table.xt td.xno{color:var(--muted)}
@@ -347,6 +352,7 @@ table.sa thead tr.sacols th{top:17px}
     <button data-v="protein">By enzyme</button>
     <button data-v="align">Alignment</button>
     <button data-v="ra">Residues &amp; activity</button>
+    <button data-v="ramine">Residue &harr; amine</button>
     <button data-v="xtal">Crystal check</button>
     <button data-v="sites">Pocket &amp; activity</button>
       <button data-v="methods">How it was made</button>
@@ -889,6 +895,46 @@ table.sa thead tr.sacols th{top:17px}
       its own pocket receives the equivalent residue from the subunit next to it</span>
     </div>
   </div>
+</section>
+
+<!-- RESIDUE <-> AMINE : which conjugates each residue identity actually touches -->
+<section class="view" id="v-ramine" hidden>
+  <div class="card prose">
+    <h2>Which amines does each residue touch?</h2>
+    <p>Every row is a <b>residue at a position</b> &mdash; an arginine at 206, a tyrosine at 19
+    &mdash; and every column is a conjugate. A cell is the fraction of the enzymes carrying that
+    residue there whose structures put it in reproducible contact with that conjugate&rsquo;s
+    <b>amine</b>, in at least three of five AlphaFold samples.</p>
+    <p>The contact itself is measured <i>inside</i> each enzyme, so it carries none of the
+    lineage problem that defeats the sequence&ndash;activity comparison. Comparing two residues at
+    the same position still does, which is why each row shows how many sequence clusters it
+    spans. A row covering one cluster is one clade, however many enzymes it holds.</p>
+  </div>
+
+  <div class="card">
+    <div class="srow">
+      <label>Group the conjugates by
+        <select id="raGrp">
+          <option value="arom">aromatic, then the rest</option>
+          <option value="charge">charged, then neutral</option>
+          <option value="name">name</option>
+        </select>
+      </label>
+      <label>Order rows by
+        <select id="raOrd">
+          <option value="arom">how aromatic-selective</option>
+          <option value="charge">how charge-selective</option>
+          <option value="pos">position</option>
+        </select>
+      </label>
+      <label class="chk"><input type="checkbox" id="raWide" checked> only groups of 4 or more enzymes</label>
+    </div>
+    <p class="foot" id="ramNote"></p>
+    <div id="ramWrap"><div id="ramGrid"></div></div>
+    <div class="slegend" id="ramLegend"></div>
+  </div>
+
+  <div class="card prose" id="ramVerdict"></div>
 </section>
 
 <!-- CRYSTAL CHECK : two experimental structures against the predicted pocket -->
@@ -1555,6 +1601,7 @@ document.querySelectorAll("nav button").forEach(b => b.onclick = () => {
   if (b.dataset.v === "sites") drawSites();
   if (b.dataset.v === "ra") drawRA();
   if (b.dataset.v === "xtal") { drawXtal(); drawXtal3D(); }
+  if (b.dataset.v === "ramine") drawRamine();
 });
 
 $("#mq").oninput = drawHeat;
@@ -4192,6 +4239,106 @@ function drawXtal(){
       + `(${ex["8BLT"].join(", ")}); it is present in our data, contacted by all 26 enzymes in `
       + `some sample but reproducible in only 8, so it fell below the threshold that defined the `
       + `11 &mdash; which suggests that threshold is slightly too strict rather than wrong.</p>`;
+}
+
+/* ---------- which amines each residue identity actually touches ---------- */
+const RM = {"rows":[{"pos":206,"col":239,"aa":"R","n":8,"clusters":1,"enzymes":["A0A0D8IVP2","A0A0G8G768","A0A174ZD20","A0A1C5MV31","A0A1Q6PYZ4","A0A350RPF7","A0A357TN00","C0ERS1"],"rates":{"2Aminophenol":0.125,"3MeOTyramine":0.125,"Ala":1.0,"Arg":1.0,"Asn":1.0,"Cadaverine":0.25,"Cit":1.0,"Cys":1.0,"Dap":1.0,"Dopamine":0.0,"GABA":1.0,"Gln":1.0,"Gly":1.0,"GlyGly":1.0,"His":1.0,"Met":1.0,"Orn":1.0,"Phe":0.875,"Pro":0.875,"Putrescine":0.25,"Ser":1.0,"Tau":1.0,"Thr":0.875,"Tryptamine":0.125,"Tyramine":0.0},"chg":0.979,"neu":0.125,"arom":0.321,"nonarom":0.903,"sel":0.854,"asel":-0.581},{"pos":222,"col":255,"aa":"R","n":26,"clusters":11,"enzymes":["A0A069S9I0","A0A078S2R5","A0A096KTH7","A0A0D8IVP2","A0A0G8G768","A0A0P0FKS2","A0A174ZD20","A0A1C5MV31","A0A1C7H271","A0A1Q6PYZ4","A0A1Y3QT37","A0A1Y3TDY5","A0A1Y3VSR9","A0A350RPF7","A0A357TN00","A0A3D3YKZ5","A0A3N2MZX6","A0A5C2C0X5","A0A6I3NAM9","A0A7W2FPE8","A0A8J7U9Z7","A6LC91","A7A5K1","A7VQ44","B0MC37","C0ERS1"],"rates":{"2Aminophenol":0.0,"3MeOTyramine":0.038,"Ala":0.885,"Arg":0.846,"Asn":0.923,"Cadaverine":0.0,"Cit":0.846,"Cys":0.5,"Dap":0.885,"Dopamine":0.192,"GABA":0.577,"Gln":0.923,"Gly":0.808,"GlyGly":0.654,"His":0.885,"Met":0.731,"Orn":0.923,"Phe":0.769,"Pro":0.115,"Putrescine":0.0,"Ser":0.731,"Tau":0.808,"Thr":0.769,"Tryptamine":0.0,"Tyramine":0.0},"chg":0.754,"neu":0.033,"arom":0.269,"nonarom":0.662,"sel":0.721,"asel":-0.393},{"pos":268,"col":315,"aa":"E","n":10,"clusters":2,"enzymes":["A0A096KTH7","A0A0D8IVP2","A0A0G8G768","A0A174ZD20","A0A1C5MV31","A0A1Q6PYZ4","A0A350RPF7","A0A357TN00","A7A5K1","C0ERS1"],"rates":{"2Aminophenol":0.3,"3MeOTyramine":0.0,"Ala":1.0,"Arg":0.9,"Asn":0.8,"Cadaverine":0.1,"Cit":0.8,"Cys":0.8,"Dap":0.9,"Dopamine":0.0,"GABA":0.1,"Gln":0.9,"Gly":0.8,"GlyGly":0.2,"His":0.9,"Met":0.5,"Orn":0.9,"Phe":0.7,"Pro":0.8,"Putrescine":0.1,"Ser":0.9,"Tau":0.7,"Thr":0.9,"Tryptamine":0.0,"Tyramine":0.0},"chg":0.75,"neu":0.071,"arom":0.271,"nonarom":0.672,"sel":0.679,"asel":-0.401},{"pos":268,"col":315,"aa":"D","n":4,"clusters":4,"enzymes":["A0A1Y3TDY5","A0A5C2C0X5","A7VQ44","B0MC37"],"rates":{"2Aminophenol":0.5,"3MeOTyramine":0.0,"Ala":0.5,"Arg":1.0,"Asn":0.75,"Cadaverine":0.0,"Cit":1.0,"Cys":0.5,"Dap":0.75,"Dopamine":0.0,"GABA":0.0,"Gln":0.75,"Gly":0.5,"GlyGly":0.75,"His":1.0,"Met":0.5,"Orn":0.75,"Phe":0.0,"Pro":0.75,"Putrescine":0.0,"Ser":1.0,"Tau":0.0,"Thr":0.75,"Tryptamine":0.0,"Tyramine":0.0},"chg":0.625,"neu":0.071,"arom":0.214,"nonarom":0.569,"sel":0.554,"asel":-0.355},{"pos":19,"col":20,"aa":"Y","n":6,"clusters":1,"enzymes":["A0A0D8IVP2","A0A174ZD20","A0A1C5MV31","A0A350RPF7","A0A357TN00","C0ERS1"],"rates":{"2Aminophenol":0.0,"3MeOTyramine":0.833,"Ala":0.0,"Arg":0.0,"Asn":0.0,"Cadaverine":0.0,"Cit":0.333,"Cys":0.0,"Dap":0.0,"Dopamine":0.5,"GABA":0.0,"Gln":0.0,"Gly":0.0,"GlyGly":0.0,"His":0.167,"Met":0.167,"Orn":0.0,"Phe":1.0,"Pro":0.0,"Putrescine":0.0,"Ser":0.0,"Tau":0.0,"Thr":0.0,"Tryptamine":0.333,"Tyramine":0.5},"chg":0.093,"neu":0.309,"arom":0.476,"nonarom":0.028,"sel":-0.217,"asel":0.448},{"pos":80,"col":92,"aa":"V","n":6,"clusters":1,"enzymes":["A0A0D8IVP2","A0A174ZD20","A0A1C5MV31","A0A350RPF7","A0A357TN00","C0ERS1"],"rates":{"2Aminophenol":0.0,"3MeOTyramine":0.5,"Ala":0.0,"Arg":0.5,"Asn":0.0,"Cadaverine":0.0,"Cit":0.333,"Cys":0.0,"Dap":0.0,"Dopamine":0.0,"GABA":0.0,"Gln":0.0,"Gly":0.0,"GlyGly":0.0,"His":0.167,"Met":0.0,"Orn":0.0,"Phe":1.0,"Pro":0.0,"Putrescine":0.0,"Ser":0.0,"Tau":0.0,"Thr":0.0,"Tryptamine":0.833,"Tyramine":0.667},"chg":0.111,"neu":0.286,"arom":0.452,"nonarom":0.046,"sel":-0.175,"asel":0.406},{"pos":169,"col":192,"aa":"N","n":26,"clusters":11,"enzymes":["A0A069S9I0","A0A078S2R5","A0A096KTH7","A0A0D8IVP2","A0A0G8G768","A0A0P0FKS2","A0A174ZD20","A0A1C5MV31","A0A1C7H271","A0A1Q6PYZ4","A0A1Y3QT37","A0A1Y3TDY5","A0A1Y3VSR9","A0A350RPF7","A0A357TN00","A0A3D3YKZ5","A0A3N2MZX6","A0A5C2C0X5","A0A6I3NAM9","A0A7W2FPE8","A0A8J7U9Z7","A6LC91","A7A5K1","A7VQ44","B0MC37","C0ERS1"],"rates":{"2Aminophenol":0.0,"3MeOTyramine":0.0,"Ala":0.308,"Arg":0.5,"Asn":0.654,"Cadaverine":0.0,"Cit":0.654,"Cys":0.154,"Dap":0.385,"Dopamine":0.0,"GABA":0.038,"Gln":0.692,"Gly":0.308,"GlyGly":0.154,"His":0.5,"Met":0.462,"Orn":0.5,"Phe":0.654,"Pro":0.077,"Putrescine":0.0,"Ser":0.346,"Tau":0.308,"Thr":0.346,"Tryptamine":0.0,"Tyramine":0.0},"chg":0.391,"neu":0.0,"arom":0.165,"nonarom":0.327,"sel":0.391,"asel":-0.162},{"pos":18,"col":19,"aa":"E","n":7,"clusters":3,"enzymes":["A0A069S9I0","A0A078S2R5","A0A1C7H271","A0A1Y3VSR9","A0A5C2C0X5","A0A7W2FPE8","A6LC91"],"rates":{"2Aminophenol":0.143,"3MeOTyramine":0.714,"Ala":1.0,"Arg":1.0,"Asn":1.0,"Cadaverine":0.429,"Cit":1.0,"Cys":0.857,"Dap":0.857,"Dopamine":0.857,"GABA":0.714,"Gln":1.0,"Gly":0.857,"GlyGly":0.714,"His":1.0,"Met":1.0,"Orn":0.857,"Phe":0.857,"Pro":0.857,"Putrescine":0.571,"Ser":0.714,"Tau":0.714,"Thr":1.0,"Tryptamine":0.429,"Tyramine":0.714},"chg":0.889,"neu":0.551,"arom":0.673,"nonarom":0.841,"sel":0.338,"asel":-0.168},{"pos":78,"col":90,"aa":"Y","n":9,"clusters":6,"enzymes":["A0A069S9I0","A0A078S2R5","A0A1Y3TDY5","A0A1Y3VSR9","A0A5C2C0X5","A0A7W2FPE8","A6LC91","A7VQ44","B0MC37"],"rates":{"2Aminophenol":0.444,"3MeOTyramine":0.667,"Ala":0.0,"Arg":0.444,"Asn":0.111,"Cadaverine":0.444,"Cit":0.556,"Cys":0.444,"Dap":0.222,"Dopamine":0.667,"GABA":0.111,"Gln":0.556,"Gly":0.111,"GlyGly":0.333,"His":0.444,"Met":0.667,"Orn":0.222,"Phe":0.778,"Pro":0.556,"Putrescine":0.111,"Ser":0.111,"Tau":0.111,"Thr":0.333,"Tryptamine":0.556,"Tyramine":0.667},"chg":0.339,"neu":0.508,"arom":0.603,"nonarom":0.302,"sel":-0.169,"asel":0.301},{"pos":78,"col":90,"aa":"N","n":10,"clusters":2,"enzymes":["A0A096KTH7","A0A0D8IVP2","A0A0G8G768","A0A174ZD20","A0A1C5MV31","A0A1Q6PYZ4","A0A350RPF7","A0A357TN00","A7A5K1","C0ERS1"],"rates":{"2Aminophenol":0.4,"3MeOTyramine":0.1,"Ala":0.3,"Arg":0.2,"Asn":0.6,"Cadaverine":0.0,"Cit":0.1,"Cys":0.3,"Dap":0.7,"Dopamine":0.2,"GABA":0.4,"Gln":0.5,"Gly":0.6,"GlyGly":0.7,"His":0.6,"Met":0.4,"Orn":0.4,"Phe":0.0,"Pro":0.8,"Putrescine":0.1,"Ser":0.7,"Tau":0.0,"Thr":0.1,"Tryptamine":0.0,"Tyramine":0.0},"chg":0.411,"neu":0.114,"arom":0.186,"nonarom":0.383,"sel":0.297,"asel":-0.198},{"pos":1,"col":0,"aa":"C","n":26,"clusters":11,"enzymes":["A0A069S9I0","A0A078S2R5","A0A096KTH7","A0A0D8IVP2","A0A0G8G768","A0A0P0FKS2","A0A174ZD20","A0A1C5MV31","A0A1C7H271","A0A1Q6PYZ4","A0A1Y3QT37","A0A1Y3TDY5","A0A1Y3VSR9","A0A350RPF7","A0A357TN00","A0A3D3YKZ5","A0A3N2MZX6","A0A5C2C0X5","A0A6I3NAM9","A0A7W2FPE8","A0A8J7U9Z7","A6LC91","A7A5K1","A7VQ44","B0MC37","C0ERS1"],"rates":{"2Aminophenol":0.0,"3MeOTyramine":0.038,"Ala":0.269,"Arg":0.615,"Asn":0.538,"Cadaverine":0.077,"Cit":0.692,"Cys":0.077,"Dap":0.346,"Dopamine":0.115,"GABA":0.077,"Gln":0.615,"Gly":0.154,"GlyGly":0.077,"His":0.654,"Met":0.423,"Orn":0.308,"Phe":0.615,"Pro":0.077,"Putrescine":0.154,"Ser":0.192,"Tau":0.038,"Thr":0.462,"Tryptamine":0.038,"Tyramine":0.346},"chg":0.346,"neu":0.11,"arom":0.258,"nonarom":0.288,"sel":0.236,"asel":-0.03},{"pos":206,"col":239,"aa":"S","n":3,"clusters":2,"enzymes":["A0A078S2R5","A0A1C7H271","A7VQ44"],"rates":{"2Aminophenol":0.0,"3MeOTyramine":0.0,"Ala":0.0,"Arg":0.667,"Asn":0.0,"Cadaverine":0.0,"Cit":0.667,"Cys":0.0,"Dap":0.333,"Dopamine":0.333,"GABA":1.0,"Gln":0.667,"Gly":0.0,"GlyGly":1.0,"His":0.0,"Met":0.0,"Orn":0.0,"Phe":0.0,"Pro":0.0,"Putrescine":0.333,"Ser":0.0,"Tau":0.333,"Thr":0.0,"Tryptamine":0.0,"Tyramine":0.0},"chg":0.259,"neu":0.095,"arom":0.048,"nonarom":0.278,"sel":0.164,"asel":-0.23},{"pos":268,"col":315,"aa":"S","n":3,"clusters":2,"enzymes":["A0A0P0FKS2","A0A3D3YKZ5","A0A3N2MZX6"],"rates":{"2Aminophenol":0.0,"3MeOTyramine":0.0,"Ala":0.0,"Arg":0.333,"Asn":0.0,"Cadaverine":0.0,"Cit":0.667,"Cys":0.0,"Dap":0.0,"Dopamine":0.0,"GABA":0.0,"Gln":0.0,"Gly":0.333,"GlyGly":0.333,"His":0.0,"Met":0.0,"Orn":0.333,"Phe":0.0,"Pro":0.0,"Putrescine":0.0,"Ser":0.667,"Tau":0.333,"Thr":1.0,"Tryptamine":0.0,"Tyramine":0.0},"chg":0.222,"neu":0.0,"arom":0.0,"nonarom":0.222,"sel":0.222,"asel":-0.222},{"pos":80,"col":92,"aa":"P","n":14,"clusters":8,"enzymes":["A0A069S9I0","A0A078S2R5","A0A096KTH7","A0A0G8G768","A0A1C7H271","A0A1Q6PYZ4","A0A1Y3QT37","A0A1Y3TDY5","A0A1Y3VSR9","A0A5C2C0X5","A0A6I3NAM9","A6LC91","A7A5K1","B0MC37"],"rates":{"2Aminophenol":0.071,"3MeOTyramine":0.357,"Ala":0.0,"Arg":0.0,"Asn":0.0,"Cadaverine":0.071,"Cit":0.0,"Cys":0.0,"Dap":0.0,"Dopamine":0.214,"GABA":0.0,"Gln":0.143,"Gly":0.0,"GlyGly":0.071,"His":0.0,"Met":0.143,"Orn":0.0,"Phe":0.286,"Pro":0.0,"Putrescine":0.0,"Ser":0.071,"Tau":0.0,"Thr":0.0,"Tryptamine":0.286,"Tyramine":0.286},"chg":0.04,"neu":0.184,"arom":0.214,"nonarom":0.028,"sel":-0.144,"asel":0.187},{"pos":78,"col":90,"aa":"F","n":5,"clusters":3,"enzymes":["A0A1C7H271","A0A1Y3QT37","A0A3D3YKZ5","A0A3N2MZX6","A0A8J7U9Z7"],"rates":{"2Aminophenol":0.4,"3MeOTyramine":0.0,"Ala":0.2,"Arg":0.4,"Asn":0.0,"Cadaverine":0.0,"Cit":0.4,"Cys":0.2,"Dap":0.2,"Dopamine":0.0,"GABA":0.0,"Gln":0.6,"Gly":0.0,"GlyGly":0.0,"His":0.6,"Met":0.2,"Orn":0.2,"Phe":0.4,"Pro":0.6,"Putrescine":0.0,"Ser":0.2,"Tau":0.2,"Thr":0.2,"Tryptamine":0.2,"Tyramine":0.4},"chg":0.256,"neu":0.143,"arom":0.286,"nonarom":0.2,"sel":0.113,"asel":0.086},{"pos":18,"col":19,"aa":"D","n":19,"clusters":8,"enzymes":["A0A096KTH7","A0A0D8IVP2","A0A0G8G768","A0A0P0FKS2","A0A174ZD20","A0A1C5MV31","A0A1Q6PYZ4","A0A1Y3QT37","A0A1Y3TDY5","A0A350RPF7","A0A357TN00","A0A3D3YKZ5","A0A3N2MZX6","A0A6I3NAM9","A0A8J7U9Z7","A7A5K1","A7VQ44","B0MC37","C0ERS1"],"rates":{"2Aminophenol":0.684,"3MeOTyramine":0.789,"Ala":0.895,"Arg":0.895,"Asn":0.895,"Cadaverine":0.737,"Cit":0.895,"Cys":0.737,"Dap":0.895,"Dopamine":0.947,"GABA":0.789,"Gln":0.947,"Gly":0.842,"GlyGly":1.0,"His":0.895,"Met":0.789,"Orn":0.947,"Phe":0.842,"Pro":0.737,"Putrescine":0.789,"Ser":0.842,"Tau":0.842,"Thr":0.842,"Tryptamine":0.737,"Tyramine":0.789},"chg":0.863,"neu":0.782,"arom":0.812,"nonarom":0.851,"sel":0.081,"asel":-0.039},{"pos":15,"col":16,"aa":"R","n":18,"clusters":9,"enzymes":["A0A069S9I0","A0A078S2R5","A0A096KTH7","A0A0D8IVP2","A0A0P0FKS2","A0A1C7H271","A0A1Q6PYZ4","A0A1Y3QT37","A0A1Y3VSR9","A0A3D3YKZ5","A0A5C2C0X5","A0A6I3NAM9","A0A7W2FPE8","A0A8J7U9Z7","A6LC91","A7A5K1","A7VQ44","B0MC37"],"rates":{"2Aminophenol":0.0,"3MeOTyramine":0.056,"Ala":0.0,"Arg":0.056,"Asn":0.111,"Cadaverine":0.0,"Cit":0.056,"Cys":0.222,"Dap":0.056,"Dopamine":0.0,"GABA":0.0,"Gln":0.056,"Gly":0.056,"GlyGly":0.0,"His":0.0,"Met":0.111,"Orn":0.056,"Phe":0.167,"Pro":0.444,"Putrescine":0.0,"Ser":0.0,"Tau":0.0,"Thr":0.0,"Tryptamine":0.0,"Tyramine":0.0},"chg":0.077,"neu":0.008,"arom":0.032,"nonarom":0.068,"sel":0.069,"asel":-0.036},{"pos":20,"col":21,"aa":"E","n":9,"clusters":2,"enzymes":["A0A0D8IVP2","A0A0G8G768","A0A174ZD20","A0A1C5MV31","A0A1Q6PYZ4","A0A1Y3TDY5","A0A350RPF7","A0A357TN00","C0ERS1"],"rates":{"2Aminophenol":0.0,"3MeOTyramine":0.0,"Ala":0.0,"Arg":0.333,"Asn":0.0,"Cadaverine":0.0,"Cit":0.222,"Cys":0.0,"Dap":0.0,"Dopamine":0.0,"GABA":0.0,"Gln":0.111,"Gly":0.0,"GlyGly":0.0,"His":0.444,"Met":0.0,"Orn":0.111,"Phe":0.0,"Pro":0.0,"Putrescine":0.0,"Ser":0.0,"Tau":0.0,"Thr":0.0,"Tryptamine":0.111,"Tyramine":0.0},"chg":0.068,"neu":0.016,"arom":0.079,"nonarom":0.043,"sel":0.052,"asel":0.036},{"pos":19,"col":20,"aa":"W","n":14,"clusters":6,"enzymes":["A0A069S9I0","A0A078S2R5","A0A096KTH7","A0A0P0FKS2","A0A1C7H271","A0A1Y3QT37","A0A1Y3VSR9","A0A3D3YKZ5","A0A3N2MZX6","A0A5C2C0X5","A0A7W2FPE8","A0A8J7U9Z7","A6LC91","A7A5K1"],"rates":{"2Aminophenol":0.071,"3MeOTyramine":0.286,"Ala":0.071,"Arg":0.214,"Asn":0.071,"Cadaverine":0.071,"Cit":0.143,"Cys":0.071,"Dap":0.0,"Dopamine":0.071,"GABA":0.0,"Gln":0.143,"Gly":0.0,"GlyGly":0.0,"His":0.214,"Met":0.286,"Orn":0.071,"Phe":0.143,"Pro":0.214,"Putrescine":0.0,"Ser":0.0,"Tau":0.0,"Thr":0.143,"Tryptamine":0.0,"Tyramine":0.071},"chg":0.099,"neu":0.081,"arom":0.122,"nonarom":0.083,"sel":0.018,"asel":0.039},{"pos":206,"col":239,"aa":"A","n":4,"clusters":2,"enzymes":["A0A069S9I0","A0A096KTH7","A6LC91","A7A5K1"],"rates":{"2Aminophenol":0.0,"3MeOTyramine":0.25,"Ala":0.0,"Arg":0.25,"Asn":0.0,"Cadaverine":0.0,"Cit":0.0,"Cys":0.0,"Dap":0.0,"Dopamine":0.0,"GABA":0.5,"Gln":0.25,"Gly":0.0,"GlyGly":0.5,"His":0.0,"Met":0.0,"Orn":0.0,"Phe":0.0,"Pro":0.0,"Putrescine":0.0,"Ser":0.0,"Tau":0.25,"Thr":0.0,"Tryptamine":0.0,"Tyramine":0.25},"chg":0.097,"neu":0.071,"arom":0.071,"nonarom":0.097,"sel":0.026,"asel":-0.026},{"pos":20,"col":21,"aa":"G","n":5,"clusters":3,"enzymes":["A0A069S9I0","A0A078S2R5","A0A1Y3VSR9","A0A5C2C0X5","A0A7W2FPE8"],"rates":{"2Aminophenol":0.0,"3MeOTyramine":0.0,"Ala":0.0,"Arg":0.4,"Asn":0.0,"Cadaverine":0.0,"Cit":0.0,"Cys":0.0,"Dap":0.0,"Dopamine":0.0,"GABA":0.0,"Gln":0.0,"Gly":0.0,"GlyGly":0.0,"His":0.0,"Met":0.0,"Orn":0.0,"Phe":0.0,"Pro":0.0,"Putrescine":0.0,"Ser":0.0,"Tau":0.0,"Thr":0.0,"Tryptamine":0.0,"Tyramine":0.0},"chg":0.022,"neu":0.0,"arom":0.0,"nonarom":0.022,"sel":0.022,"asel":-0.022},{"pos":19,"col":20,"aa":"L","n":3,"clusters":2,"enzymes":["A0A0G8G768","A0A1Q6PYZ4","A0A1Y3TDY5"],"rates":{"2Aminophenol":0.0,"3MeOTyramine":0.0,"Ala":0.0,"Arg":0.0,"Asn":0.0,"Cadaverine":0.0,"Cit":0.0,"Cys":0.0,"Dap":0.0,"Dopamine":0.0,"GABA":0.0,"Gln":0.0,"Gly":0.0,"GlyGly":0.0,"His":0.0,"Met":0.0,"Orn":0.0,"Phe":0.0,"Pro":0.0,"Putrescine":0.0,"Ser":0.0,"Tau":0.0,"Thr":0.0,"Tryptamine":0.0,"Tyramine":0.0},"chg":0.0,"neu":0.0,"arom":0.0,"nonarom":0.0,"sel":0.0,"asel":0.0},{"pos":20,"col":21,"aa":"K","n":4,"clusters":2,"enzymes":["A0A0P0FKS2","A0A3D3YKZ5","A0A3N2MZX6","A0A8J7U9Z7"],"rates":{"2Aminophenol":0.0,"3MeOTyramine":0.0,"Ala":0.0,"Arg":0.0,"Asn":0.0,"Cadaverine":0.0,"Cit":0.0,"Cys":0.0,"Dap":0.0,"Dopamine":0.0,"GABA":0.0,"Gln":0.0,"Gly":0.0,"GlyGly":0.0,"His":0.0,"Met":0.0,"Orn":0.0,"Phe":0.0,"Pro":0.0,"Putrescine":0.0,"Ser":0.0,"Tau":0.0,"Thr":0.0,"Tryptamine":0.0,"Tyramine":0.0},"chg":0.0,"neu":0.0,"arom":0.0,"nonarom":0.0,"sel":0.0,"asel":0.0}],"amines":["2Aminophenol","3MeOTyramine","Ala","Arg","Asn","Cadaverine","Cit","Cys","Dap","Dopamine","GABA","Gln","Gly","GlyGly","His","Met","Orn","Phe","Pro","Putrescine","Ser","Tau","Thr","Tryptamine","Tyramine"],"charge":{"Asn":"carboxylate","GABA":"carboxylate","Phe":"carboxylate","Dopamine":"neutral","2Aminophenol":"neutral","Dap":"carboxylate","Met":"carboxylate","Ser":"carboxylate","Gln":"carboxylate","3MeOTyramine":"neutral","Tyramine":"neutral","Tryptamine":"neutral","Thr":"carboxylate","Ala":"carboxylate","Arg":"carboxylate","Cadaverine":"neutral","Cit":"carboxylate","Cys":"carboxylate","GlyGly":"carboxylate","His":"carboxylate","Orn":"carboxylate","Pro":"carboxylate","Putrescine":"neutral","Gly":"carboxylate","Tau":"sulfonate"},"aromatic":["2Aminophenol","3MeOTyramine","Dopamine","His","Phe","Tryptamine","Tyramine"],"n_enzymes":26};
+(function ramInit(){
+  if(!document.getElementById("ramGrid")) return;
+  ["raGrp","raOrd","raWide"].forEach(id=>
+    document.getElementById(id).addEventListener("change",drawRamine));
+})();
+function ramRamp(f){
+  if(f<=0) return "var(--panel)";
+  const steps=sDark()?["#13343a","#17484f","#1b5f68","#1f7883","#24929f"]
+                     :["#dbeef0","#b4dde1","#86c7ce","#4fa8b3","#0f5f6b"];
+  return steps[Math.max(0,Math.min(4,Math.floor(f*5-1e-9)))];
+}
+function drawRamine(){
+  const grp=$("#raGrp").value, ord=$("#raOrd").value, wide=$("#raWide").checked;
+  const AROM=new Set(RM.aromatic);
+  let ams=RM.amines.slice();
+  if(grp==="arom") ams.sort((x,y)=>(AROM.has(y)?1:0)-(AROM.has(x)?1:0)||saLab(x).localeCompare(saLab(y)));
+  else if(grp==="charge") ams.sort((x,y)=>(RM.charge[x]==="neutral")-(RM.charge[y]==="neutral")
+                                          ||saLab(x).localeCompare(saLab(y)));
+  else ams.sort((x,y)=>saLab(x).localeCompare(saLab(y)));
+  const split = grp==="arom" ? ams.filter(a=>AROM.has(a)).length
+              : grp==="charge" ? ams.filter(a=>RM.charge[a]!=="neutral").length : -1;
+
+  let rows=RM.rows.filter(r=>!wide||r.n>=4);
+  if(ord==="arom") rows=rows.slice().sort((a,b)=>b.asel-a.asel);
+  else if(ord==="charge") rows=rows.slice().sort((a,b)=>b.sel-a.sel);
+  else rows=rows.slice().sort((a,b)=>a.pos-b.pos||a.aa.localeCompare(b.aa));
+
+  $("#ramNote").innerHTML = `${rows.length} residue-at-a-position groups across `
+    + `${RM.n_enzymes} folded enzymes and ${ams.length} conjugates. Each cell is the share of `
+    + `that group&rsquo;s enzymes contacting that conjugate&rsquo;s amine in at least 3 of 5 samples.`;
+
+  let h='<table class="sa ram"><thead><tr class="sagrp"><th colspan="3"></th>';
+  if(split>=0) h+=`<th class="samain" colspan="${split}"><span>`
+      + (grp==="arom"?"aromatic amines":"charged conjugates")+`</span></th>`
+      + `<th class="split" colspan="${ams.length-split}"><span>`
+      + (grp==="arom"?"the rest":"neutral")+`</span></th>`;
+  else h+=`<th class="samain" colspan="${ams.length}"><span>conjugates</span></th>`;
+  h+='</tr><tr class="sacols"><th class="saname">residue</th><th class="sacl">enz</th>'
+   + '<th class="racl">clades</th>';
+  ams.forEach((a,i)=>{ h+=`<th class="saam ${i===0?'samain':''} ${i===split?'split':''}"`
+    +` title="${saTitle(a)} · ${RM.charge[a]}${AROM.has(a)?" · aromatic":""}">`
+    +`<span>${saLab(a)}</span></th>`; });
+  h+='</tr></thead><tbody>';
+  for(const r of rows){
+    const one=r.clusters<=1;
+    h+=`<tr><th class="saname"><b style="font-family:ui-monospace,monospace">${r.pos}${r.aa}</b></th>`
+     + `<td class="sacl">${r.n}</td>`
+     + `<td class="racl${one?' ramone':''}" title="${one?"all in one 50% identity cluster — this row is a single clade":r.clusters+" sequence clusters"}">${r.clusters}</td>`;
+    ams.forEach((a,i)=>{
+      const f=r.rates[a];
+      h+=`<td class="${i===0?'samain':''} ${i===split?'split':''}" style="background:${ramRamp(f)}"`
+       +` title="${r.pos}${r.aa} · ${saTitle(a)} · ${Math.round(f*100)}% of its ${r.n} enzymes"></td>`;
+    });
+    h+='</tr>';
+  }
+  $("#ramGrid").innerHTML=h+'</tbody></table>';
+  $("#ramLegend").innerHTML =
+      [0.1,0.3,0.5,0.7,0.9].map((f,i)=>`<span><span class="sw" style="background:${ramRamp(f)}"></span>`
+        +`${i===0?"1–20%":""}${i===4?"81–100% of that group's enzymes":""}</span>`).join("")
+    + '<span><span class="sw" style="background:var(--panel);box-shadow:inset 0 0 0 1px var(--rule)"></span>never</span>'
+    + '<span class="scooh">a <b>clades</b> count of 1 means the row is one lineage, however many enzymes</span>';
+
+  const top=RM.rows.filter(r=>r.n>=4);
+  const ch=top.filter(r=>r.sel>=0.3).sort((a,b)=>b.sel-a.sel);
+  const ar=top.filter(r=>r.asel>=0.15).sort((a,b)=>b.asel-a.asel);
+  const nm=r=>`<b>${r.pos}${r.aa}</b>`;
+  $("#ramVerdict").innerHTML =
+      `<h3>Two channels, not one</h3>`
+    + `<p>The rows split cleanly in two, and the sign flips between them.</p>`
+    + `<p><b>A charge channel</b> &mdash; ${ch.map(nm).join(", ")} &mdash; contacts the `
+      + `carboxylate and sulfonate conjugates and largely ignores the neutral ones. `
+      + `${nm(ch[0])} reaches ${Math.round(ch[0].chg*100)}% on charged conjugates against `
+      + `${Math.round(ch[0].neu*100)}% on neutral.</p>`
+    + `<p><b>An aromatic channel</b> &mdash; ${ar.map(nm).join(", ")} &mdash; does the opposite, `
+      + `and it is not simply the inverse. These positions are reading the <i>ring</i>, not the `
+      + `absence of charge.</p>`
+    + `<p>The evidence for that is a two-way dissociation. <b>Phenylalanine carries a `
+      + `carboxylate and an aromatic side chain</b>: 19Y and 80V contact it in <b>100%</b> of `
+      + `their enzymes while contacting the other charged conjugates in 3&ndash;5%. `
+      + `<b>Cadaverine and putrescine are neutral but not aromatic</b>: the same positions `
+      + `contact them in <b>0%</b>, where a charge-driven channel would treat them like the `
+      + `neutral aromatics it does contact 40% of the time. Charge and ring are doing separate `
+      + `work.</p>`
+    + `<p>Position <b>78</b> makes the point on its own. An asparagine there is `
+      + `charge-selective (+${top.filter(r=>r.pos===78&&r.aa==="N").map(r=>r.sel.toFixed(2))}), `
+      + `a tyrosine at the same position is aromatic-selective `
+      + `(+${top.filter(r=>r.pos===78&&r.aa==="Y").map(r=>r.asel.toFixed(2))}). The position `
+      + `does opposite things depending on which residue occupies it.</p>`
+    + `<p class="foot"><b>What would break this.</b> Only two conjugates are both charged and `
+      + `aromatic (phenylalanine and histidine) and only two are neutral and non-aromatic `
+      + `(cadaverine, putrescine), so the whole dissociation rests on four molecules, and `
+      + `histidine behaves weakly (17% at 19Y). The charge channel is also broad &mdash; 222R `
+      + `spans 11 sequence clusters &mdash; while the aromatic rows 19Y and 80V each sit in a `
+      + `single clade, so for those the residue and the lineage cannot be separated. A `
+      + `tryptophan or tyrosine conjugate would be the cheapest way to test the aromatic arm `
+      + `properly.</p>`;
 }
 
 /* ---- interaction distances, shared by the By-enzyme and Crystal views ----

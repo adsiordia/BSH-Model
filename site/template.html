@@ -315,6 +315,11 @@ table.sa.rasp td.racl,table.sa.rasp th.racl{width:46px;min-width:46px;text-align
   color:var(--muted);font-size:10px}
 table.sa.rasp td{height:17px}
 table.sa.rasp tr.rathin th.saname{color:var(--muted)}
+table.sa.ram th.saname{width:52px;min-width:52px;text-align:left}
+table.sa.ram td.racl,table.sa.ram th.racl{width:40px;min-width:40px;text-align:center;
+  color:var(--muted);font-size:10px}
+table.sa.ram td.ramone{color:#b4572a;font-weight:700}
+#ramWrap{overflow:auto;max-width:100%}
 table.xt td.xyes{background:var(--hit-bg)}
 table.xt td.xitf{background:#8a4bbf22;box-shadow:inset 2px 0 0 #8a4bbf}
 table.xt td.xno{color:var(--muted)}
@@ -347,6 +352,7 @@ table.sa thead tr.sacols th{top:17px}
     <button data-v="protein">By enzyme</button>
     <button data-v="align">Alignment</button>
     <button data-v="ra">Residues &amp; activity</button>
+    <button data-v="ramine">Residue &harr; amine</button>
     <button data-v="xtal">Crystal check</button>
     <button data-v="sites">Pocket &amp; activity</button>
       <button data-v="methods">How it was made</button>
@@ -889,6 +895,46 @@ table.sa thead tr.sacols th{top:17px}
       its own pocket receives the equivalent residue from the subunit next to it</span>
     </div>
   </div>
+</section>
+
+<!-- RESIDUE <-> AMINE : which conjugates each residue identity actually touches -->
+<section class="view" id="v-ramine" hidden>
+  <div class="card prose">
+    <h2>Which amines does each residue touch?</h2>
+    <p>Every row is a <b>residue at a position</b> &mdash; an arginine at 206, a tyrosine at 19
+    &mdash; and every column is a conjugate. A cell is the fraction of the enzymes carrying that
+    residue there whose structures put it in reproducible contact with that conjugate&rsquo;s
+    <b>amine</b>, in at least three of five AlphaFold samples.</p>
+    <p>The contact itself is measured <i>inside</i> each enzyme, so it carries none of the
+    lineage problem that defeats the sequence&ndash;activity comparison. Comparing two residues at
+    the same position still does, which is why each row shows how many sequence clusters it
+    spans. A row covering one cluster is one clade, however many enzymes it holds.</p>
+  </div>
+
+  <div class="card">
+    <div class="srow">
+      <label>Group the conjugates by
+        <select id="raGrp">
+          <option value="arom">aromatic, then the rest</option>
+          <option value="charge">charged, then neutral</option>
+          <option value="name">name</option>
+        </select>
+      </label>
+      <label>Order rows by
+        <select id="raOrd">
+          <option value="arom">how aromatic-selective</option>
+          <option value="charge">how charge-selective</option>
+          <option value="pos">position</option>
+        </select>
+      </label>
+      <label class="chk"><input type="checkbox" id="raWide" checked> only groups of 4 or more enzymes</label>
+    </div>
+    <p class="foot" id="ramNote"></p>
+    <div id="ramWrap"><div id="ramGrid"></div></div>
+    <div class="slegend" id="ramLegend"></div>
+  </div>
+
+  <div class="card prose" id="ramVerdict"></div>
 </section>
 
 <!-- CRYSTAL CHECK : two experimental structures against the predicted pocket -->
@@ -1555,6 +1601,7 @@ document.querySelectorAll("nav button").forEach(b => b.onclick = () => {
   if (b.dataset.v === "sites") drawSites();
   if (b.dataset.v === "ra") drawRA();
   if (b.dataset.v === "xtal") { drawXtal(); drawXtal3D(); }
+  if (b.dataset.v === "ramine") drawRamine();
 });
 
 $("#mq").oninput = drawHeat;
@@ -4192,6 +4239,106 @@ function drawXtal(){
       + `(${ex["8BLT"].join(", ")}); it is present in our data, contacted by all 26 enzymes in `
       + `some sample but reproducible in only 8, so it fell below the threshold that defined the `
       + `11 &mdash; which suggests that threshold is slightly too strict rather than wrong.</p>`;
+}
+
+/* ---------- which amines each residue identity actually touches ---------- */
+const RM = /*__RESAMINE__*/{};
+(function ramInit(){
+  if(!document.getElementById("ramGrid")) return;
+  ["raGrp","raOrd","raWide"].forEach(id=>
+    document.getElementById(id).addEventListener("change",drawRamine));
+})();
+function ramRamp(f){
+  if(f<=0) return "var(--panel)";
+  const steps=sDark()?["#13343a","#17484f","#1b5f68","#1f7883","#24929f"]
+                     :["#dbeef0","#b4dde1","#86c7ce","#4fa8b3","#0f5f6b"];
+  return steps[Math.max(0,Math.min(4,Math.floor(f*5-1e-9)))];
+}
+function drawRamine(){
+  const grp=$("#raGrp").value, ord=$("#raOrd").value, wide=$("#raWide").checked;
+  const AROM=new Set(RM.aromatic);
+  let ams=RM.amines.slice();
+  if(grp==="arom") ams.sort((x,y)=>(AROM.has(y)?1:0)-(AROM.has(x)?1:0)||saLab(x).localeCompare(saLab(y)));
+  else if(grp==="charge") ams.sort((x,y)=>(RM.charge[x]==="neutral")-(RM.charge[y]==="neutral")
+                                          ||saLab(x).localeCompare(saLab(y)));
+  else ams.sort((x,y)=>saLab(x).localeCompare(saLab(y)));
+  const split = grp==="arom" ? ams.filter(a=>AROM.has(a)).length
+              : grp==="charge" ? ams.filter(a=>RM.charge[a]!=="neutral").length : -1;
+
+  let rows=RM.rows.filter(r=>!wide||r.n>=4);
+  if(ord==="arom") rows=rows.slice().sort((a,b)=>b.asel-a.asel);
+  else if(ord==="charge") rows=rows.slice().sort((a,b)=>b.sel-a.sel);
+  else rows=rows.slice().sort((a,b)=>a.pos-b.pos||a.aa.localeCompare(b.aa));
+
+  $("#ramNote").innerHTML = `${rows.length} residue-at-a-position groups across `
+    + `${RM.n_enzymes} folded enzymes and ${ams.length} conjugates. Each cell is the share of `
+    + `that group&rsquo;s enzymes contacting that conjugate&rsquo;s amine in at least 3 of 5 samples.`;
+
+  let h='<table class="sa ram"><thead><tr class="sagrp"><th colspan="3"></th>';
+  if(split>=0) h+=`<th class="samain" colspan="${split}"><span>`
+      + (grp==="arom"?"aromatic amines":"charged conjugates")+`</span></th>`
+      + `<th class="split" colspan="${ams.length-split}"><span>`
+      + (grp==="arom"?"the rest":"neutral")+`</span></th>`;
+  else h+=`<th class="samain" colspan="${ams.length}"><span>conjugates</span></th>`;
+  h+='</tr><tr class="sacols"><th class="saname">residue</th><th class="sacl">enz</th>'
+   + '<th class="racl">clades</th>';
+  ams.forEach((a,i)=>{ h+=`<th class="saam ${i===0?'samain':''} ${i===split?'split':''}"`
+    +` title="${saTitle(a)} · ${RM.charge[a]}${AROM.has(a)?" · aromatic":""}">`
+    +`<span>${saLab(a)}</span></th>`; });
+  h+='</tr></thead><tbody>';
+  for(const r of rows){
+    const one=r.clusters<=1;
+    h+=`<tr><th class="saname"><b style="font-family:ui-monospace,monospace">${r.pos}${r.aa}</b></th>`
+     + `<td class="sacl">${r.n}</td>`
+     + `<td class="racl${one?' ramone':''}" title="${one?"all in one 50% identity cluster — this row is a single clade":r.clusters+" sequence clusters"}">${r.clusters}</td>`;
+    ams.forEach((a,i)=>{
+      const f=r.rates[a];
+      h+=`<td class="${i===0?'samain':''} ${i===split?'split':''}" style="background:${ramRamp(f)}"`
+       +` title="${r.pos}${r.aa} · ${saTitle(a)} · ${Math.round(f*100)}% of its ${r.n} enzymes"></td>`;
+    });
+    h+='</tr>';
+  }
+  $("#ramGrid").innerHTML=h+'</tbody></table>';
+  $("#ramLegend").innerHTML =
+      [0.1,0.3,0.5,0.7,0.9].map((f,i)=>`<span><span class="sw" style="background:${ramRamp(f)}"></span>`
+        +`${i===0?"1–20%":""}${i===4?"81–100% of that group's enzymes":""}</span>`).join("")
+    + '<span><span class="sw" style="background:var(--panel);box-shadow:inset 0 0 0 1px var(--rule)"></span>never</span>'
+    + '<span class="scooh">a <b>clades</b> count of 1 means the row is one lineage, however many enzymes</span>';
+
+  const top=RM.rows.filter(r=>r.n>=4);
+  const ch=top.filter(r=>r.sel>=0.3).sort((a,b)=>b.sel-a.sel);
+  const ar=top.filter(r=>r.asel>=0.15).sort((a,b)=>b.asel-a.asel);
+  const nm=r=>`<b>${r.pos}${r.aa}</b>`;
+  $("#ramVerdict").innerHTML =
+      `<h3>Two channels, not one</h3>`
+    + `<p>The rows split cleanly in two, and the sign flips between them.</p>`
+    + `<p><b>A charge channel</b> &mdash; ${ch.map(nm).join(", ")} &mdash; contacts the `
+      + `carboxylate and sulfonate conjugates and largely ignores the neutral ones. `
+      + `${nm(ch[0])} reaches ${Math.round(ch[0].chg*100)}% on charged conjugates against `
+      + `${Math.round(ch[0].neu*100)}% on neutral.</p>`
+    + `<p><b>An aromatic channel</b> &mdash; ${ar.map(nm).join(", ")} &mdash; does the opposite, `
+      + `and it is not simply the inverse. These positions are reading the <i>ring</i>, not the `
+      + `absence of charge.</p>`
+    + `<p>The evidence for that is a two-way dissociation. <b>Phenylalanine carries a `
+      + `carboxylate and an aromatic side chain</b>: 19Y and 80V contact it in <b>100%</b> of `
+      + `their enzymes while contacting the other charged conjugates in 3&ndash;5%. `
+      + `<b>Cadaverine and putrescine are neutral but not aromatic</b>: the same positions `
+      + `contact them in <b>0%</b>, where a charge-driven channel would treat them like the `
+      + `neutral aromatics it does contact 40% of the time. Charge and ring are doing separate `
+      + `work.</p>`
+    + `<p>Position <b>78</b> makes the point on its own. An asparagine there is `
+      + `charge-selective (+${top.filter(r=>r.pos===78&&r.aa==="N").map(r=>r.sel.toFixed(2))}), `
+      + `a tyrosine at the same position is aromatic-selective `
+      + `(+${top.filter(r=>r.pos===78&&r.aa==="Y").map(r=>r.asel.toFixed(2))}). The position `
+      + `does opposite things depending on which residue occupies it.</p>`
+    + `<p class="foot"><b>What would break this.</b> Only two conjugates are both charged and `
+      + `aromatic (phenylalanine and histidine) and only two are neutral and non-aromatic `
+      + `(cadaverine, putrescine), so the whole dissociation rests on four molecules, and `
+      + `histidine behaves weakly (17% at 19Y). The charge channel is also broad &mdash; 222R `
+      + `spans 11 sequence clusters &mdash; while the aromatic rows 19Y and 80V each sit in a `
+      + `single clade, so for those the residue and the lineage cannot be separated. A `
+      + `tryptophan or tyrosine conjugate would be the cheapest way to test the aromatic arm `
+      + `properly.</p>`;
 }
 
 /* ---- interaction distances, shared by the By-enzyme and Crystal views ----
