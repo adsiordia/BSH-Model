@@ -779,6 +779,7 @@ table.sa thead tr.sacols th{top:17px}
       </label>
       <label class="chk"><input type="checkbox" id="ppRes" checked> draw the contacting residues</label>
       <label class="chk"><input type="checkbox" id="ppLab" checked> label them</label>
+      <label class="chk"><input type="checkbox" id="ppDist"> show the interaction distances</label>
     </div>
     <p class="foot" id="ppStructNote"></p>
     <div id="pp3d" style="position:relative;width:100%;height:460px;border:1px solid var(--rule);
@@ -932,6 +933,7 @@ table.sa thead tr.sacols th{top:17px}
         <option value="core">only the bile-acid contacts</option>
       </select></label>
       <label class="chk"><input type="checkbox" id="xLab" checked> label the residues</label>
+      <label class="chk"><input type="checkbox" id="xDist"> show the interaction distances</label>
     </div>
     <p class="foot" id="x3dNote"></p>
     <div id="x3d" style="position:relative;width:100%;height:470px;border:1px solid var(--rule);
@@ -3676,7 +3678,7 @@ const PPROT = PP.proteins, PPAM = PP.amines;
     dst.checked=src.checked;
     dst.addEventListener("change",()=>{ src.checked=dst.checked; drawProtein(); });
   })();
-  ["ppSel","ppAmine","ppPart","ppItf","ppMode","ppDetail","ppRes","ppLab"].forEach(id=>{
+  ["ppSel","ppAmine","ppPart","ppItf","ppMode","ppDetail","ppRes","ppLab","ppDist"].forEach(id=>{
     const el=document.getElementById(id); if(el) el.addEventListener("change",drawProtein);
   });
 })();
@@ -3783,7 +3785,7 @@ function ppShow3D(p){
         +`<td class="n">${c.f} of 5</td></tr>`).join("")
     + "</tbody></table>";
   const tag=[job,detail,$("#ppRes").checked?1:0,$("#ppLab").checked?1:0,
-             f.part,f.itf?1:0].join(":");
+             $("#ppDist").checked?1:0,f.part,f.itf?1:0].join(":");
   if(pp3dLoaded===tag) return;
   pp3dLoaded=tag;
   ppEnsure3Dmol(()=>{
@@ -3824,9 +3826,24 @@ function ppShow3D(p){
       /* the ligand last and thickest, so it is never hidden behind side chains */
       pp3dViewer.addStyle({hetflag:true},
         {stick:{colorscheme:"orangeCarbon",radius:.28}});
-      pp3dViewer.zoomTo({hetflag:true});
-      pp3dViewer.zoom(raw?.33:.6);
-      pp3dViewer.render();
+      const finish=()=>{ pp3dViewer.zoomTo({hetflag:true});
+        pp3dViewer.zoom(raw?.33:.6); pp3dViewer.render(); };
+      if($("#ppDist").checked){
+        ppDistances().then(D=>{
+          const rows=D[job]||[];
+          const keep=new Set(con.map(c=>c.ch+":"+c.r));
+          const items=rows.filter(r=>keep.has(r[2]+":"+r[1]))
+            .map(r=>({ch:r[2], rn:r[1], pa:r[3], la:r[4], d:r[5],
+                      itf:r[2]!=="A"}));
+          const drawn=ppDrawPairs(pp3dViewer, null, items, {hetflag:true}, {});
+          note.innerHTML += ` <b>${drawn}</b> interaction${drawn===1?"":"s"} drawn `
+            + `as dashed lines, with PandaMap's distance in this model`
+            + (rows.length?``:` (none recorded for this model)`)
+            + `. Residues in the table with no line were contacted only in one of `
+            + `the other four samples.`;
+          finish();
+        });
+      } else finish();
     }).catch(e=>{
       box.innerHTML='<p class="foot" style="padding:14px">Structure file not available here '
         +'(the viewer needs the <code>pockets/</code> and <code>raw/</code> folders served '
@@ -4177,6 +4194,55 @@ function drawXtal(){
       + `11 &mdash; which suggests that threshold is slightly too strict rather than wrong.</p>`;
 }
 
+/* ---- interaction distances, shared by the By-enzyme and Crystal views ----
+   These are PandaMap's own distances, between the specific atom pair that makes
+   each interaction -- an Arg NH2 to a sulfonate oxygen for an ionic contact,
+   say. That is deliberately NOT the minimum heavy-atom separation between the
+   residue and the ligand: recomputing it in the browser would give a different
+   number from every table on the site.
+
+   PandaMap ran per sample, and these rows come from the sample the viewer is
+   displaying (the top-ranked model, byte-identical to the best sample), so each
+   line joins two atoms that really are that far apart in the structure on
+   screen. A residue in the contact table with no line here was contacted only
+   in one of the other four samples. */
+function ppDrawPairs(v, model, items, ligSel, opts){
+  const o = opts || {};
+  const m = (model===null||model===undefined) ? v.getModel() : v.getModel(model);
+  if(!m) return 0;
+  let n = 0;
+  for(const it of items){
+    const psel = {chain: it.ch, resi: it.rn, atom: it.pa};
+    /* 2BJF holds two ligands per chain and both carry an atom named O3, so the
+       residue name has to be part of the selection or the line is drawn to the
+       wrong molecule. */
+    const lsel = Object.assign({}, ligSel, {atom: it.la});
+    if(it.lg) lsel.resn = it.lg;
+    if(model!==null && model!==undefined){ psel.model = model; lsel.model = model; }
+    const a = m.selectedAtoms(psel)[0], b = m.selectedAtoms(lsel)[0];
+    if(!a || !b) continue;
+    const col = it.itf ? "#8a4bbf" : "#0f5f6b";
+    v.addLine({start:{x:a.x,y:a.y,z:a.z}, end:{x:b.x,y:b.y,z:b.z},
+               color:col, dashed:true, linewidth:2});
+    v.addLabel(it.d.toFixed(2)+" \u00c5",
+      {position:{x:(a.x+b.x)/2, y:(a.y+b.y)/2, z:(a.z+b.z)/2},
+       fontSize:10, fontColor:"white", borderThickness:0,
+       backgroundColor:col, backgroundOpacity:.9,
+       inFront:true, alignment:"center"});
+    n++;
+  }
+  return n;
+}
+/* the By-enzyme distances are a megabyte, so they are fetched once on demand
+   rather than inlined with the page */
+let PPDIST=null, PPDISTP=null;
+function ppDistances(){
+  if(PPDIST) return Promise.resolve(PPDIST);
+  if(!PPDISTP) PPDISTP = fetch("distances.json").then(r=>r.ok?r.json():{})
+      .then(j=>{ PPDIST=j; return j; }).catch(()=>({}));
+  return PPDISTP;
+}
+
 /* ---- the crystal structures in 3D, same conventions as the By-enzyme tab ---- */
 let x3dViewer=null, x3dTag="";
 (function xInit(){
@@ -4188,7 +4254,7 @@ let x3dViewer=null, x3dTag="";
   };
   refill();
   sel.addEventListener("change",()=>{refill(); drawXtal3D();});
-  ["xCopy","xPart","xLab"].forEach(id=>
+  ["xCopy","xPart","xLab","xDist"].forEach(id=>
     document.getElementById(id).addEventListener("change",drawXtal3D));
 })();
 
@@ -4217,7 +4283,7 @@ function drawXtal3D(){
       + '</tbody></table>'
     : '<p class="foot">No residue matches that filter for this copy.</p>';
 
-  const tag=[p,ch,part,$("#xLab").checked?1:0].join(":");
+  const tag=[p,ch,part,$("#xLab").checked?1:0,$("#xDist").checked?1:0].join(":");
   if(x3dTag===tag) return;
   x3dTag=tag;
   ppEnsure3Dmol(async ()=>{
@@ -4255,6 +4321,15 @@ function drawXtal3D(){
     /* only this copy's ligand(s): the file holds one per chain */
     const sel={chain:ch,resn:XV.ligs[p]};
     v.addStyle(sel,{stick:{colorscheme:"orangeCarbon",radius:.26}});
+    if($("#xDist").checked){
+      const items=[];
+      for(const c of con) for(const pr of (c.pairs||[]))
+        items.push({ch:c.ch, rn:c.rn, pa:pr[0], la:pr[1], d:pr[2],
+                    lg:pr[4]||c.lg, itf:c.itf});
+      const drawn=ppDrawPairs(v, null, items, sel, {});
+      $("#x3dNote").innerHTML += ` <b>${drawn}</b> interaction`
+        + `${drawn===1?"":"s"} drawn as dashed lines with PandaMap's distance.`;
+    }
     v.zoomTo(sel); v.zoom(.45); v.render();
   });
 }

@@ -80,9 +80,46 @@ for pdb in ("8BLT", "2BJF"):
     core_stats[pdb] = dict(n=len(pos), ours=sum(1 for p in pos if p in CORE),
                            positions=pos)
 
+# per ligand copy, the residues to light up in the 3D viewer
+copies = {}
+for pdb, path, which in [("8BLT", "8BLT_contacts.json", "8BLT"),
+                         ("2BJF", "2BJF_contacts.json", "2BJF")]:
+    raw = json.load(open(path))
+    by = collections.defaultdict(list)
+    for r in raw:
+        part = r["part"] if which == "8BLT" else ("moiety" if r["lig"] == "TAU" else "core")
+        lg = "TCH" if which == "8BLT" else r["lig"]
+        by[r["ligchain"]].append(dict(ch=r["chain"], rn=r["resnum"], nm=r["resname"],
+                                      itf=bool(r["itf"]), part=part,
+                                      ref=r["ref"], it=r["itype"],
+                                      pa=r["pa"], la=r["la"], lg=lg,
+                                      d=round(r["dist"], 2)))
+    # collapse duplicates (same residue, several interaction types)
+    # one entry per residue for the table and the sticks, but every atom pair
+    # kept under "pairs" so each interaction can be drawn as its own line with
+    # PandaMap's own distance
+    out = {}
+    for ch, g in by.items():
+        seen = {}
+        for r in g:
+            k = (r["ch"], r["rn"], r["part"], r["lg"])
+            if k not in seen:
+                seen[k] = dict(ch=r["ch"], rn=r["rn"], nm=r["nm"], itf=r["itf"],
+                               part=r["part"], ref=r["ref"], it=[r["it"]],
+                               d=r["d"], lg=r["lg"], pairs=[])
+            else:
+                if r["it"] not in seen[k]["it"]:
+                    seen[k]["it"].append(r["it"])
+                seen[k]["d"] = min(seen[k]["d"], r["d"])
+            seen[k]["pairs"].append([r["pa"], r["la"], r["d"], r["it"], r["lg"]])
+        out[ch] = sorted(seen.values(), key=lambda x: (x["part"] != "moiety", x["rn"]))
+    copies[pdb] = out
+
+LIGS = {"8BLT": ["TCH"], "2BJF": ["TAU", "DXC"]}
+
 json.dump(dict(structures={k: {kk: vv for kk, vv in v.items() if kk != "core"}
                            for k, v in S.items()},
-               rows=rows, extra=extra, core=core_stats,
+               rows=rows, extra=extra, core=core_stats, copies=copies, ligs=LIGS,
                moiety_ref=MOI, n_core_ref=len(CORE)),
           open("/home/adsiordia/BSH-Model/site/validation.json", "w"),
           separators=(",", ":"))

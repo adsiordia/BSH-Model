@@ -86,13 +86,15 @@ if [ -d "$XTAL" ]; then
 fi
 
 echo "==> uploading index.html, the Space card and the structures"
-REPO="$REPO" SITE="$SITE" CARD="$CARD" POCKETS="$POCKETS" RAW="$RAW" XTAL="$XTAL" python - <<'PYEOF'
+DIST="$ROOT/site/distances.json"
+REPO="$REPO" SITE="$SITE" CARD="$CARD" DIST="$DIST" POCKETS="$POCKETS" RAW="$RAW" XTAL="$XTAL" python - <<'PYEOF'
 import os
 from huggingface_hub import HfApi
 api, repo = HfApi(), os.environ["REPO"]
 msg = "Update explorer build"
 for local, remote in ((os.environ["SITE"], "index.html"),
-                      (os.environ["CARD"], "README.md")):
+                      (os.environ["CARD"], "README.md"),
+                      (os.environ["DIST"], "distances.json")):
     api.upload_file(path_or_fileobj=local, path_in_repo=remote,
                     repo_id=repo, repo_type="space", commit_message=msg)
     print(f"    uploaded {remote}")
