@@ -327,6 +327,9 @@ table.sa.ram td.ramrep{color:#b4572a}
 .itchip{display:inline-block;font-size:9.5px;padding:1px 6px;border-radius:9px;
   border:1px solid var(--rule);color:var(--body);white-space:nowrap;margin:1px 3px 1px 0}
 .itchip.itbad{font-weight:700}
+td.n.pllow{color:#b4572a;font-weight:700}
+:root[data-theme="dark"] td.n.pllow{color:#e0875a}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]) td.n.pllow{color:#e0875a}}
 table.sa.rb th.saname,table.sa.rb td.saname{width:104px;min-width:104px;text-align:left;font-size:11px}
 table.sa.rb td.rbres,table.sa.rb th.rbres{width:40px;min-width:40px;text-align:center}
 table.sa.rb th.rbres span{writing-mode:horizontal-tb;transform:none;font-size:10px}
@@ -3892,7 +3895,8 @@ function ppShow3D(p){
      look up in its sequence or its structure; the position column translates it
      into the C0ERS1 frame the rest of the site names positions by. */
   tbl.innerHTML='<table class="stbl"><thead><tr><th>residue</th><th>position</th><th>chain</th>'
-    +'<th>part touched</th><th>interaction</th><th class="n">samples</th></tr></thead><tbody>'
+    +'<th>part touched</th><th>interaction</th><th class="n">samples</th>'
+    +'<th class="n">pLDDT</th></tr></thead><tbody>'
     + con.map(c=>{
         const ref=alRefOfStruct(p,c.r);
         const nm=alResNum(p, (alNumbering(p,"127")||{idx2col:[]}).idx2col[
@@ -3904,7 +3908,8 @@ function ppShow3D(p){
         +`<td>${c.ch==="A"?"A (own)":c.ch+" (neighbour)"}</td>`
         +`<td>${c.part==="m"?"amine":"bile acid"}</td>`
         +`<td>${itCell(Object.keys(c.t))}</td>`
-        +`<td class="n">${c.f} of 5</td></tr>`;}).join("")
+        +`<td class="n">${c.f} of 5</td>`
+        +`<td class="n ppres-pl" data-k="${c.ch}:${c.r}">\u2014</td></tr>`;}).join("")
     + "</tbody></table>";
   const tag=[job,detail,$("#ppRes").checked?1:0,$("#ppLab").checked?1:0,
              $("#ppDist").checked?1:0,($("#ppCol")||{}).value,f.part,f.itf?1:0].join(":");
@@ -3949,9 +3954,28 @@ function ppShow3D(p){
         plddtApply(pp3dViewer, {});
         $("#pp3dPl").innerHTML = plddtLegend();
       } else $("#pp3dPl").innerHTML = "";
-      const pst = plddtStats(pp3dViewer);
-      note.innerHTML += " " + plddtText(pst)
-        + (byPl ? ", and the backbone is coloured by it." : ".");
+      note.innerHTML += " " + plddtText(plddtOf(job))
+        + (byPl ? " The backbone is coloured by it." : "");
+      /* per-residue confidence for each contacting residue, straight from the
+         B-factors of the structure on screen, so the table matches the view */
+      try{
+        const mm=pp3dViewer.getModel();
+        const acc={};
+        for(const a of mm.selectedAtoms({})){
+          if(a.hetflag||a.b==null) continue;
+          const k=a.chain+":"+a.resi;
+          (acc[k]=acc[k]||[]).push(a.b);
+        }
+        document.querySelectorAll("#ppTable .ppres-pl").forEach(td=>{
+          const v=acc[td.dataset.k];
+          if(!v||!v.length) return;
+          const m=v.reduce((x,y)=>x+y,0)/v.length;
+          td.textContent=m.toFixed(0);
+          td.title=`mean pLDDT ${m.toFixed(1)} over this residue's ${v.length} atoms`;
+          if(m<70){ td.classList.add("pllow");
+            td.title+=" — below AlphaFold's confident band"; }
+        });
+      }catch(e){}
       ppMarkRes(pp3dViewer, null, con, {});
       /* the ligand last and thickest, so it is never hidden behind side chains */
       pp3dViewer.addStyle({hetflag:true},
@@ -4663,28 +4687,29 @@ function plddtLegend(){
   return PLDDT_BANDS.map(([,c,l])=>`<span><span class="sw" style="background:${c}"></span>${l}</span>`)
     .join("") + '<span class="scooh">AlphaFold&rsquo;s own confidence bands, per atom</span>';
 }
-/* mean pLDDT over the model on screen, protein and ligand separately -- they
-   differ a lot and the ligand is the one that should worry you */
-function plddtStats(v){
-  const m=v.getModel(); if(!m) return null;
-  const at=m.selectedAtoms({});
-  let ps=0,pn=0,ls=0,ln=0;
-  for(const a of at){ if(a.b==null) continue;
-    if(a.hetflag){ ls+=a.b; ln++; } else { ps+=a.b; pn++; } }
-  return {prot: pn?ps/pn:null, protN:pn, lig: ln?ls/ln:null, ligN:ln};
-}
+/* The JOB's own pLDDT, from plddt.json, computed once over the whole top-ranked
+   model. Averaging the atoms the viewer happens to have loaded was wrong: in
+   pocket mode that is the 8 A crop, so the "protein" figure moved when you
+   switched to the raw tetramer. These do not move.
+
+   Across the panel the protein averages 93.5 and the ligand 55.5, and 226 of
+   675 ligands sit below 50 -- so the ligand figure is the one to read. */
+const PLDDT = /*__PLDDT__*/{};
+function plddtOf(job){ return PLDDT[job] || null; }
 function plddtApply(v, sel){
   /* 3Dmol colours per atom from a function, so the bands apply exactly */
   v.setStyle(sel||{}, {cartoon:{colorfunc:a=>plddtColor(a.b), opacity:.75}});
 }
 function plddtText(st){
   if(!st) return "";
-  const f=x=>x==null?"\u2014":x.toFixed(1);
-  return `mean pLDDT <b>${f(st.prot)}</b> over ${st.protN} protein atoms and `
-       + `<b>${f(st.lig)}</b> over ${st.ligN} ligand atoms`
-       + (st.lig!=null && st.lig<70
-          ? ` &mdash; the ligand is in AlphaFold&rsquo;s <b>low-confidence</b> band, so its exact pose is not well determined`
-          : ``);
+  const band=st.lig==null?"":st.lig_band;
+  const warn = st.lig!=null && st.lig<70;
+  return `<b>pLDDT of this model:</b> protein <b>${st.prot}</b> (${st.prot_n} atoms, all four `
+       + `chains), ligand <b>${st.lig==null?"\u2014":st.lig}</b>`
+       + (st.lig==null?``:` (${st.lig_n} atoms, ${st.lig_min}\u2013${st.lig_max})`)
+       + (band?` &mdash; AlphaFold&rsquo;s <b>${band}</b> band`:``)
+       + (warn?`, so the ligand pose itself is not well determined even though the fold is`:``)
+       + `. These are the model&rsquo;s own numbers, not an average of whatever is cropped into view.`;
 }
 
 /* ---- interaction types, shared by every 3D view -------------------------
