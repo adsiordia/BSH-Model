@@ -319,6 +319,10 @@ table.sa.ram th.saname{width:52px;min-width:52px;text-align:left}
 table.sa.ram td.racl,table.sa.ram th.racl{width:40px;min-width:40px;text-align:center;
   color:var(--muted);font-size:10px}
 table.sa.ram td.ramone{color:#b4572a;font-weight:700}
+table.sa.ram th.ramhow,table.sa.ram td.ramhow{width:150px;min-width:150px;padding-left:10px;
+  text-align:left;font-size:9.5px;color:var(--muted);border:0;background:transparent}
+table.sa.ram th.ramhow{vertical-align:bottom}
+table.sa.ram td.ramrep{color:#b4572a}
 table.sa.rb th.saname,table.sa.rb td.saname{width:104px;min-width:104px;text-align:left;font-size:11px}
 table.sa.rb td.rbres,table.sa.rb th.rbres{width:40px;min-width:40px;text-align:center}
 table.sa.rb th.rbres span{writing-mode:horizontal-tb;transform:none;font-size:10px}
@@ -4535,7 +4539,8 @@ function drawRamine(){
       +` title="${saTitle(a)}"><span>${saLab(a)}</span></th>`; });
   else CLS.forEach((c,i)=>{ h+=`<th class="ramcls ${i===0?'samain':''}"`
       +` title="${RM.classes[c].map(x=>saLab(x)).join(", ")}"><span>${c}</span></th>`; });
-  h+='<th class="rampol">prefers rings &rarr;</th></tr></thead><tbody>';
+  h+='<th class="ramhow">how it touches</th>'
+   + '<th class="rampol">prefers rings &rarr;</th></tr></thead><tbody>';
   for(const r of rows){
     const one=r.clusters<=1;
     h+=`<tr><th class="saname"><b style="font-family:ui-monospace,monospace">${r.pos}${r.aa}</b></th>`
@@ -4553,6 +4558,20 @@ function drawRamine(){
        +`${Math.round(f*100)}% of its ${r.n} enzymes">`
        +`<span class="ramv">${f>=0.05?Math.round(f*100):""}</span></td>`;
     });
+    const it=r.itypes;
+    if(!it) h+='<td class="ramhow"><span class="scooh">&mdash;</span></td>';
+    else {
+      const parts=[["H-bond",it.hydrogen_bonds],["attraction",it.attractive_charge],
+                   ["hydrophobic",it.hydrophobic],["repulsion",it.repulsion]]
+                  .filter(x=>x[1]>=8).sort((a,b)=>b[1]-a[1]);
+      const rep=it.repulsion;
+      h+=`<td class="ramhow${rep>=20?" ramrep":""}" title="${r.pos}${r.aa}, ${it.n} PandaMap rows: `
+        + `${it.hydrogen_bonds}% hydrogen bond, ${it.attractive_charge}% attractive charge, `
+        + `${it.hydrophobic}% hydrophobic, ${it.repulsion}% repulsion`
+        + (rep>=20?` — repulsion is an UNFAVOURABLE interaction that PandaMap still reports, so this row's contacts are partly proximity rather than attraction`:``)
+        + `">${parts.map(x=>x[0]).slice(0,2).join(" + ")||"—"}`
+        + (rep>=20?` <b>${rep}% repulsive</b>`:``)+`</td>`;
+    }
     const w=Math.abs(r.pol)/maxPol*50;
     h+=`<td class="rampol"><span class="rambar ${r.pol>=0?'pos':'neg'}" `
       +`style="width:${w}%;margin-left:${r.pol>=0?50:50-w}%" `
@@ -4589,6 +4608,14 @@ function ramVerdict(){
       + `100% of their enzymes while contacting the other charged conjugates in 3&ndash;5%. `
       + `Cadaverine and putrescine are neutral but have no ring, and the same positions contact `
       + `them in 0% &mdash; the polyamine column is empty almost everywhere.</p>`
+    + `<p class="foot"><b>Not every &ldquo;contact&rdquo; is an attraction.</b> PandaMap reports `
+      + `<i>repulsion</i> as an interaction, and it is counted here like any other. On charged `
+      + `conjugates <b>268E is 41% repulsion</b> and 268D 26% &mdash; a carboxylate residue sitting `
+      + `near a carboxylate amine &mdash; so that row&rsquo;s apparent charge preference is partly `
+      + `proximity, not attraction. The arginines are clean by comparison: <b>222R is 0% repulsive `
+      + `and 206R 5%</b>, both around 40% attractive charge. The aromatic rows are 89&ndash;100% `
+      + `hydrophobic, which is what stacking against a ring should look like. The &ldquo;how it `
+      + `touches&rdquo; column carries this for every row.</p>`
     + `<p class="foot"><b>This is about binding, not activity.</b> Of these positions only `
       + `<b>206</b> has any measurable link to whether the enzyme actually makes the conjugate; `
       + `the aromatic rows carry none. And the two strongest aromatic rows, 19Y and 80V, sit in `

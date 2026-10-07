@@ -94,6 +94,26 @@ for r in out:
     r["x2BJF"] = f"{b[1]}{b[0]}" if b else None
     r["x8BLT"] = f"{l[1]}{l[0]}" if l else None
 
+# What KIND of interaction is being counted at each position+residue. PandaMap's
+# labels are not five physical categories: attractive_charge and ionic are the
+# same rows, and repulsion is UNFAVOURABLE yet still reported as an interaction.
+# Position 268 is 39% repulsion on charged conjugates -- a carboxylate residue
+# near a carboxylate amine -- so its "charge selectivity" is partly proximity,
+# not attraction. The arginines at 222 and 206 are 0% and 5%.
+mo = d[d.part == "moiety"]
+ity = {}
+for (col, rn), x in mo.groupby(["col", "resname"]):
+    aa = AA3.get(rn, "X")
+    n = len(x)
+    if n < 40:
+        continue
+    ity[f"{col}:{aa}"] = {t: round(100 * (x.itype == t).sum() / n)
+                          for t in ("hydrogen_bonds", "attractive_charge",
+                                    "hydrophobic", "repulsion")}
+    ity[f"{col}:{aa}"]["n"] = int(n)
+for r in out:
+    r["itypes"] = ity.get(f'{r["col"]}:{r["aa"]}')
+
 out.sort(key=lambda r: -r["pol"])
 json.dump(dict(rows=out, amines=AM, charge=charge, classes=CLS,
                aromatic=sorted(AROM & set(AM)), n_enzymes=len(PR)),
