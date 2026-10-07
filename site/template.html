@@ -325,6 +325,8 @@ table.sa.rb th.rbres span{writing-mode:horizontal-tb;transform:none;font-size:10
 table.sa.rb td.rbres{height:22px}
 table.sa.rb .rbv{font-size:9.5px;font-weight:600;color:var(--body);mix-blend-mode:luminosity}
 table.sa.rb tr.rbthin th.saname{color:var(--muted)}
+table.sa.rb th.rbres .rbpos{display:block;font-size:8.5px;font-weight:400;color:var(--muted);
+  margin-top:1px}
 #rbWrap{overflow:auto;max-width:100%}
 table.sa.ram td.ramcls,table.sa.ram th.ramcls{width:58px;min-width:58px;text-align:center}
 table.sa.ram th.ramcls span{writing-mode:horizontal-tb;transform:none;font-size:10px}
@@ -958,6 +960,14 @@ table.sa thead tr.sacols th{top:17px}
     reproducible amine-side contact and asks it by chemistry instead: for each class of amine,
     which amino acids line it <b>more or less often than they line the pocket overall</b>.
     1.0&times; means exactly as expected, so the scale runs both ways from a neutral middle.</p>
+    <p class="foot"><b>These are the same positions, relabelled.</b> Pooling by residue type
+    hides where the residue sits, and it is nearly always the same handful of places: the small
+    number under each column is the position most of that residue&rsquo;s contacts come from, and
+    hovering gives the full breakdown. 99% of the arginine contacts are positions 222, 206 and
+    15; <b>all</b> of the cysteine ones are position 1, the catalytic residue; 87% of the proline
+    ones are position 80. So this is not independent evidence from the grid above &mdash; it is
+    the same eleven positions seen from the side of what occupies them. Leucine is the one
+    exception, with only 16% at a named position, so its contacts are genuinely scattered.</p>
     <div class="srow">
       <label>Show
         <select id="rbMode">
@@ -4386,8 +4396,14 @@ function drawRB(){
     + `under 80 contacts each, against 645 for the polar class.`;
   let h='<table class="sa rb"><thead><tr class="sacols"><th class="saname">amine class</th>'
     + '<th class="sacl">n</th>';
-  for(const r of R) h+=`<th class="rbres" title="${r}, ${(RB.bg[r]*100).toFixed(1)}% of all `
-    + `amine-side contacts"><span>${r}</span></th>`;
+  for(const r of R){
+    const b=(RB.bypos||{})[r]||{top:[],named:0,total:0};
+    const where=b.top.map(t=>`${t[0]} (${t[2]}%)`).join(", ");
+    h+=`<th class="rbres" title="${r} \u00b7 ${b.total} amine-side contacts, `
+      + `${(RB.bg[r]*100).toFixed(1)}% of all of them \u00b7 sitting at position${b.top.length===1?"":"s"} `
+      + `${where} \u00b7 ${b.named}% of them at one of the 11 named amine positions">`
+      + `<span>${r}</span><span class="rbpos">${b.top.length?b.top[0][0]:"\u2014"}</span></th>`;
+  }
   h+='</tr></thead><tbody>';
   for(const c of C){
     const thin=RB.totals[c]<100;
