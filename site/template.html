@@ -319,6 +319,13 @@ table.sa.ram th.saname{width:52px;min-width:52px;text-align:left}
 table.sa.ram td.racl,table.sa.ram th.racl{width:40px;min-width:40px;text-align:center;
   color:var(--muted);font-size:10px}
 table.sa.ram td.ramone{color:#b4572a;font-weight:700}
+table.sa.rb th.saname,table.sa.rb td.saname{width:104px;min-width:104px;text-align:left;font-size:11px}
+table.sa.rb td.rbres,table.sa.rb th.rbres{width:40px;min-width:40px;text-align:center}
+table.sa.rb th.rbres span{writing-mode:horizontal-tb;transform:none;font-size:10px}
+table.sa.rb td.rbres{height:22px}
+table.sa.rb .rbv{font-size:9.5px;font-weight:600;color:var(--body);mix-blend-mode:luminosity}
+table.sa.rb tr.rbthin th.saname{color:var(--muted)}
+#rbWrap{overflow:auto;max-width:100%}
 table.sa.ram td.ramcls,table.sa.ram th.ramcls{width:58px;min-width:58px;text-align:center}
 table.sa.ram th.ramcls span{writing-mode:horizontal-tb;transform:none;font-size:10px}
 table.sa.ram td.ramcls .ramv{font-size:10px;font-weight:600;color:var(--panel);
@@ -944,6 +951,26 @@ table.sa thead tr.sacols th{top:17px}
   </div>
 
   <div class="card prose" id="ramVerdict"></div>
+
+  <div class="card">
+    <h3 style="margin-top:0">Which <i>kinds</i> of residue line which <i>kinds</i> of amine</h3>
+    <p class="foot">The grid above asks the question one position at a time. This pools every
+    reproducible amine-side contact and asks it by chemistry instead: for each class of amine,
+    which amino acids line it <b>more or less often than they line the pocket overall</b>.
+    1.0&times; means exactly as expected, so the scale runs both ways from a neutral middle.</p>
+    <div class="srow">
+      <label>Show
+        <select id="rbMode">
+          <option value="enr">enrichment against expectation</option>
+          <option value="cnt">raw contact counts</option>
+        </select>
+      </label>
+      <label class="chk"><input type="checkbox" id="rbNum" checked> print the numbers</label>
+    </div>
+    <p class="foot" id="rbNote"></p>
+    <div id="rbWrap"><div id="rbGrid"></div></div>
+    <div class="slegend" id="rbLegend"></div>
+  </div>
 </section>
 
 <!-- CRYSTAL CHECK : two experimental structures against the predicted pocket -->
@@ -1610,7 +1637,7 @@ document.querySelectorAll("nav button").forEach(b => b.onclick = () => {
   if (b.dataset.v === "sites") drawSites();
   if (b.dataset.v === "ra") drawRA();
   if (b.dataset.v === "xtal") { drawXtal(); drawXtal3D(); }
-  if (b.dataset.v === "ramine") drawRamine();
+  if (b.dataset.v === "ramine") { drawRamine(); drawRB(); }
 });
 
 $("#mq").oninput = drawHeat;
@@ -4320,6 +4347,76 @@ function ppShowAssay(prot, token){
     + `<p class="foot" style="margin:6px 0 0">Every structure on this page uses the `
       + `<b>Tri</b> (cholic) core, so only that row is the one the contacts can speak to. `
       + `Across the dataset the core changes the answer in 24% of pairs.</p></div>`;
+}
+
+/* ---- residue chemistry against amine chemistry ----------------------------
+   Enrichment is a ratio around 1.0, so it is a diverging measure and gets a
+   diverging scale: two hues meeting at a neutral grey, never a single ramp and
+   never a rainbow. Both arms validated -- monotone lightness, adjacent dL, and
+   the step nearest the midpoint clears 2:1 against the page, so "slightly over
+   expectation" is still visible. The midpoint itself is deliberately faint: it
+   means nothing is happening. */
+const RB = /*__RESBYAMINE__*/{};
+const RB_DIV={light:["#8c4a22","#aa7c60","#c8ae9e","#e9e7e3","#9fb9ba","#578c93","#0f5f6b"],
+              dark: ["#e0875a","#a66c4e","#6c5142","#3a3a38","#446467","#4f969d","#5bc7d4"]};
+function rbColor(e){
+  const st=sDark()?RB_DIV.dark:RB_DIV.light;
+  if(!(e>0)) return st[0];                        // never contacted: the far warm end
+  const l=Math.log2(e);                           // symmetric around 1.0x
+  const k=Math.max(-3,Math.min(3,Math.round(l/0.5)));
+  return st[k+3];
+}
+function rbSeq(f,max){
+  const st=sDark()?RM_DARK:RM_LIGHT;
+  if(f<=0) return "transparent";
+  return st[Math.max(0,Math.min(4,Math.floor(f/max*5-1e-9)))];
+}
+(function rbInit(){
+  if(!document.getElementById("rbGrid")) return;
+  ["rbMode","rbNum"].forEach(id=>document.getElementById(id).addEventListener("change",drawRB));
+})();
+function drawRB(){
+  const mode=$("#rbMode").value, nums=$("#rbNum").checked;
+  const C=RB.classes, R=RB.residues;
+  const maxc=Math.max(...C.flatMap(c=>R.map(r=>RB.counts[c][r])));
+  $("#rbNote").innerHTML = `${RB.n_contacts} reproducible amine-side contacts over `
+    + `${R.length} residue types. Contacts per class: `
+    + C.map(c=>`${c} <b>${RB.totals[c]}</b>`).join(", ")
+    + `. Enrichment on a small class is unstable &mdash; taurine and the polyamines have `
+    + `under 80 contacts each, against 645 for the polar class.`;
+  let h='<table class="sa rb"><thead><tr class="sacols"><th class="saname">amine class</th>'
+    + '<th class="sacl">n</th>';
+  for(const r of R) h+=`<th class="rbres" title="${r}, ${(RB.bg[r]*100).toFixed(1)}% of all `
+    + `amine-side contacts"><span>${r}</span></th>`;
+  h+='</tr></thead><tbody>';
+  for(const c of C){
+    const thin=RB.totals[c]<100;
+    h+=`<tr${thin?' class="rbthin"':''}><th class="saname" title="${RB.members[c].map(x=>saLab(x)).join(", ")}">`
+     + `${c}${thin?' <span class="scooh">(thin)</span>':''}</th>`
+     + `<td class="sacl">${RB.totals[c]}</td>`;
+    for(const r of R){
+      const e=RB.enr[c][r], n=RB.counts[c][r];
+      const bg = mode==="enr" ? rbColor(e) : rbSeq(n,maxc);
+      const lab = !nums ? "" : (mode==="enr"
+            ? (n===0 ? "" : (e>=10?e.toFixed(0):e.toFixed(1)))
+            : (n||""));
+      h+=`<td class="rbres" style="background:${bg}" title="${c} \u00b7 ${r} \u00b7 `
+       +`${n} contact${n===1?"":"s"} \u00b7 ${(100*n/RB.totals[c]).toFixed(1)}% of this class `
+       +`\u00b7 ${e>0?e.toFixed(2)+"\u00d7 expected":"never seen"}">`
+       +`<span class="rbv">${lab}</span></td>`;
+    }
+    h+='</tr>';
+  }
+  $("#rbGrid").innerHTML=h+'</tbody></table>';
+  const st=sDark()?RB_DIV.dark:RB_DIV.light;
+  $("#rbLegend").innerHTML = mode==="enr"
+    ? [["0.25\u00d7",0],["0.5\u00d7",1],["0.7\u00d7",2],["1\u00d7 as expected",3],
+       ["1.4\u00d7",4],["2\u00d7",5],["4\u00d7 or more",6]]
+        .map(([t,i])=>`<span><span class="sw" style="background:${st[i]}"></span>${t}</span>`).join("")
+      + '<span class="scooh">a ratio, so the scale diverges from the middle; thin classes are greyed in the first column</span>'
+    : (sDark()?RM_DARK:RM_LIGHT).map((cc,i)=>`<span><span class="sw" style="background:${cc}"></span>`
+        +`${i===0?"few":""}${i===4?"most contacts":""}</span>`).join("")
+      + '<span class="scooh">raw counts, so the biggest classes dominate &mdash; switch to enrichment to compare across classes</span>';
 }
 
 /* ---- residue numbering, both directions ----------------------------------
