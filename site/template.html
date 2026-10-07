@@ -323,6 +323,10 @@ table.sa.ram th.ramhow,table.sa.ram td.ramhow{width:150px;min-width:150px;paddin
   text-align:left;font-size:9.5px;color:var(--muted);border:0;background:transparent}
 table.sa.ram th.ramhow{vertical-align:bottom}
 table.sa.ram td.ramrep{color:#b4572a}
+.sw.itsw{color:#fff;font-size:9px;line-height:13px;text-align:center;font-weight:700}
+.itchip{display:inline-block;font-size:9.5px;padding:1px 6px;border-radius:9px;
+  border:1px solid var(--rule);color:var(--body);white-space:nowrap;margin:1px 3px 1px 0}
+.itchip.itbad{font-weight:700}
 table.sa.rb th.saname,table.sa.rb td.saname{width:104px;min-width:104px;text-align:left;font-size:11px}
 table.sa.rb td.rbres,table.sa.rb th.rbres{width:40px;min-width:40px;text-align:center}
 table.sa.rb th.rbres span{writing-mode:horizontal-tb;transform:none;font-size:10px}
@@ -809,6 +813,12 @@ table.sa thead tr.sacols th{top:17px}
       <label class="chk"><input type="checkbox" id="ppRes" checked> draw the contacting residues</label>
       <label class="chk"><input type="checkbox" id="ppLab" checked> label them</label>
       <label class="chk"><input type="checkbox" id="ppDist"> show the interaction distances</label>
+      <label>Colour the backbone by
+        <select id="ppCol">
+          <option value="flat">subunit</option>
+          <option value="plddt">AlphaFold confidence (pLDDT)</option>
+        </select>
+      </label>
     </div>
     <div id="ppAssay"></div>
     <p class="foot" id="ppStructNote"></p>
@@ -821,6 +831,8 @@ table.sa thead tr.sacols th{top:17px}
       <span><span class="sw" style="background:#c8742a"></span>the conjugate</span>
       <span class="scooh">drag to rotate &middot; scroll to zoom</span>
     </div>
+    <div class="slegend" id="pp3dIt"></div>
+    <div class="slegend" id="pp3dPl"></div>
     <div id="ppTable"></div>
   </div>
 
@@ -1043,6 +1055,7 @@ table.sa thead tr.sacols th{top:17px}
       <span><span class="sw" style="background:#c8742a"></span>the bile salt</span>
       <span class="scooh">drag to rotate &middot; scroll to zoom &middot; the whole deposited assembly is drawn, uncropped</span>
     </div>
+    <div class="slegend" id="x3dIt"></div>
     <div id="xTable"></div>
   </div>
 
@@ -3775,7 +3788,7 @@ const PPROT = PP.proteins, PPAM = PP.amines;
     dst.checked=src.checked;
     dst.addEventListener("change",()=>{ src.checked=dst.checked; drawProtein(); });
   })();
-  ["ppSel","ppAmine","ppPart","ppItf","ppMode","ppDetail","ppRes","ppLab","ppDist"].forEach(id=>{
+  ["ppSel","ppAmine","ppPart","ppItf","ppMode","ppDetail","ppRes","ppLab","ppDist","ppCol"].forEach(id=>{
     const el=document.getElementById(id); if(el) el.addEventListener("change",drawProtein);
   });
 })();
@@ -3890,11 +3903,11 @@ function ppShow3D(p){
         +`<td>${ref==null?'<span class="scooh">&mdash;</span>':ref}</td>`
         +`<td>${c.ch==="A"?"A (own)":c.ch+" (neighbour)"}</td>`
         +`<td>${c.part==="m"?"amine":"bile acid"}</td>`
-        +`<td>${Object.keys(c.t).map(x=>S_TYPENAME[x]||x).join(", ")}</td>`
+        +`<td>${itCell(Object.keys(c.t))}</td>`
         +`<td class="n">${c.f} of 5</td></tr>`;}).join("")
     + "</tbody></table>";
   const tag=[job,detail,$("#ppRes").checked?1:0,$("#ppLab").checked?1:0,
-             $("#ppDist").checked?1:0,f.part,f.itf?1:0].join(":");
+             $("#ppDist").checked?1:0,($("#ppCol")||{}).value,f.part,f.itf?1:0].join(":");
   if(pp3dLoaded===tag) return;
   pp3dLoaded=tag;
   ppEnsure3Dmol(()=>{
@@ -3905,9 +3918,9 @@ function ppShow3D(p){
       note.innerHTML = raw
         ? `<b>${job}</b> — the <b>whole top-ranked AlphaFold 3 model</b>, uncropped: all four `
           + `chains and the ligand, exactly as AlphaFold wrote them. Only one of the four sites `
-          + `is occupied, which is why the ligand sits off to one side. Backbone colour is pLDDT.`
+          + `is occupied, which is why the ligand sits off to one side.`
         : `<b>${job}</b> — the ligand and every residue within 8 &Aring;, cropped from the `
-          + `top-ranked AlphaFold 3 model. Backbone colour is pLDDT.`
+          + `top-ranked AlphaFold 3 model.`
           + (fell ? ' <b>The raw file could not be loaded, so this is the cropped pocket.</b>' : '');
       if (con.length < all.length)
         note.innerHTML += ` Drawing <b>${con.length} of ${all.length}</b> contacting residues &mdash; `
@@ -3931,6 +3944,14 @@ function ppShow3D(p){
       } else {
         pp3dViewer.setStyle({},{cartoon:{color:"#9aa3ad",opacity:.6}});
       }
+      const byPl = (($("#ppCol")||{}).value === "plddt");
+      if(byPl){
+        plddtApply(pp3dViewer, {});
+        $("#pp3dPl").innerHTML = plddtLegend();
+      } else $("#pp3dPl").innerHTML = "";
+      const pst = plddtStats(pp3dViewer);
+      note.innerHTML += " " + plddtText(pst)
+        + (byPl ? ", and the backbone is coloured by it." : ".");
       ppMarkRes(pp3dViewer, null, con, {});
       /* the ligand last and thickest, so it is never hidden behind side chains */
       pp3dViewer.addStyle({hetflag:true},
@@ -3941,12 +3962,15 @@ function ppShow3D(p){
         ppDistances().then(D=>{
           const rows=D[job]||[];
           const keep=new Set(con.map(c=>c.ch+":"+c.r));
-          const items=rows.filter(r=>keep.has(r[2]+":"+r[1]))
-            .map(r=>({ch:r[2], rn:r[1], pa:r[3], la:r[4], d:r[5],
-                      itf:r[2]!=="A"}));
+          const items=itGroupPairs(rows.filter(r=>keep.has(r[2]+":"+r[1]))
+            .map(r=>({ch:r[2], rn:r[1], pa:r[3], la:r[4], d:r[5], it:r[6],
+                      itf:r[2]!=="A"})));
           const drawn=ppDrawPairs(pp3dViewer, null, items, {hetflag:true}, {});
+          $("#pp3dIt").innerHTML = drawn
+            ? itLegend([...new Set(items.map(i=>i.it))])
+            : "";
           note.innerHTML += ` <b>${drawn}</b> interaction${drawn===1?"":"s"} drawn `
-            + `as dashed lines, with PandaMap's distance in this model`
+            + `as lines coloured by type, with PandaMap's distance in this model`
             + (rows.length?``:` (none recorded for this model)`)
             + `. Residues in the table with no line were contacted only in one of `
             + `the other four samples.`;
@@ -4623,6 +4647,123 @@ function ramVerdict(){
       + `apart. 222R, by contrast, spans 11 clusters.</p>`;
 }
 
+/* ---- pLDDT ---------------------------------------------------------------
+   AlphaFold's per-atom confidence, 0-100, which make_pockets.py and make_raw.py
+   write into the PDB B-factor column. Until now the viewer ignored it and the
+   caption claimed "backbone colour is pLDDT" while the backbone was a flat
+   grey -- the claim was simply untrue. It is now real and optional, and the
+   numbers are printed either way.
+
+   The bands are AlphaFold's own convention, which readers already know, so they
+   are kept rather than restyled; the legend names each band in words. */
+const PLDDT_BANDS=[[90,"#0053d6","very high (>90)"],[70,"#65cbf3","confident (70-90)"],
+                   [50,"#ffdb13","low (50-70)"],[0,"#ff7d45","very low (<50)"]];
+function plddtColor(b){ for(const [t,c] of PLDDT_BANDS) if(b>=t) return c; return "#ff7d45"; }
+function plddtLegend(){
+  return PLDDT_BANDS.map(([,c,l])=>`<span><span class="sw" style="background:${c}"></span>${l}</span>`)
+    .join("") + '<span class="scooh">AlphaFold&rsquo;s own confidence bands, per atom</span>';
+}
+/* mean pLDDT over the model on screen, protein and ligand separately -- they
+   differ a lot and the ligand is the one that should worry you */
+function plddtStats(v){
+  const m=v.getModel(); if(!m) return null;
+  const at=m.selectedAtoms({});
+  let ps=0,pn=0,ls=0,ln=0;
+  for(const a of at){ if(a.b==null) continue;
+    if(a.hetflag){ ls+=a.b; ln++; } else { ps+=a.b; pn++; } }
+  return {prot: pn?ps/pn:null, protN:pn, lig: ln?ls/ln:null, ligN:ln};
+}
+function plddtApply(v, sel){
+  /* 3Dmol colours per atom from a function, so the bands apply exactly */
+  v.setStyle(sel||{}, {cartoon:{colorfunc:a=>plddtColor(a.b), opacity:.75}});
+}
+function plddtText(st){
+  if(!st) return "";
+  const f=x=>x==null?"\u2014":x.toFixed(1);
+  return `mean pLDDT <b>${f(st.prot)}</b> over ${st.protN} protein atoms and `
+       + `<b>${f(st.lig)}</b> over ${st.ligN} ligand atoms`
+       + (st.lig!=null && st.lig<70
+          ? ` &mdash; the ligand is in AlphaFold&rsquo;s <b>low-confidence</b> band, so its exact pose is not well determined`
+          : ``);
+}
+
+/* ---- interaction types, shared by every 3D view -------------------------
+   Three categorical hues, validated all-pairs in both modes (lightness band,
+   chroma floor, CVD separation, normal-vision floor, contrast). Their CVD
+   separation sits in the 6-8 floor band, which is only legal with secondary
+   encoding, so every line also carries a direct label with a glyph.
+
+   Repulsion is NOT a fourth category: it is an unfavourable interaction, so it
+   takes a reserved status colour and is always named in words, never colour
+   alone. `ionic` is dropped throughout because it is the same rows as
+   attractive_charge -- showing both would imply two interactions where there is
+   one. */
+const ITYPE = {
+  hydrogen_bonds:    {label:"hydrogen bond",     glyph:"H", light:"#2a5fa8", dark:"#4a86cc", dash:false},
+  attractive_charge: {label:"attractive charge", glyph:"+", light:"#0f8f7d", dark:"#1f9e74", dash:true},
+  hydrophobic:       {label:"hydrophobic",       glyph:"\u03c6", light:"#8a6b12", dark:"#b5852a", dash:true},
+  repulsion:         {label:"REPULSION (unfavourable)", glyph:"\u2715",
+                      light:"#b4572a", dark:"#e0875a", dash:true, status:true},
+  alkyl_pi:          {label:"hydrophobic",       glyph:"\u03c6", light:"#8a6b12", dark:"#b5852a", dash:true},
+  /* the same atom pair as attractive_charge, labelled twice by PandaMap, so it
+     shares that hue and glyph rather than implying a second interaction */
+  ionic:             {label:"ionic",              glyph:"+", light:"#0f8f7d", dark:"#1f9e74", dash:true}
+};
+const IT_ORDER=["hydrogen_bonds","attractive_charge","ionic","hydrophobic","alkyl_pi","repulsion"];
+const itRank=t=>{const i=IT_ORDER.indexOf(t); return i<0?IT_ORDER.length:i;};
+/* `ionic` and `attractive_charge` are the same rows in PandaMap's output -- the
+   same atom pair at the same distance, labelled twice. Both are kept, because
+   both are what the tool reported, but a pair is drawn ONCE with every label it
+   carries rather than as two identical overlapping lines. */
+const IT_SAME = new Set(["ionic", "attractive_charge"]);
+/* one table cell naming every interaction type PandaMap reported for a residue,
+   as chips whose colour matches the lines in the 3D view above. Nothing is
+   dropped -- ionic and attractive_charge both appear, with a note on hover that
+   they are the same pair labelled twice -- and repulsion is called out in bold
+   because it is unfavourable and must not read as just another contact. */
+function itCell(types){
+  const t=[...new Set(types||[])];
+  if(!t.length) return '<span class="scooh">&mdash;</span>';
+  t.sort((a,b)=>itRank(a)-itRank(b));
+  const dup=t.includes("ionic")&&t.includes("attractive_charge");
+  return t.map(x=>{
+    const o=itSpec(x);
+    const nm=x==="ionic"?"ionic":o.label;
+    return `<span class="itchip${o.status?" itbad":""}" style="border-color:${itColor(x)};`
+      + `background:${itColor(x)}1a" title="${nm}`
+      + (dup&&IT_SAME.has(x)?" \u00b7 ionic and attractive charge are the same atom pair in PandaMap's output, labelled twice":"")
+      + `">${o.glyph} ${nm}</span>`;
+  }).join(" ");
+}
+function itGroupPairs(items){
+  const m = new Map();
+  for (const it of items){
+    const k = [it.ch, it.rn, it.pa, it.la, it.lg||""].join("|");
+    if (!m.has(k)) m.set(k, Object.assign({}, it, {types:[it.it]}));
+    else if (!m.get(k).types.includes(it.it)) m.get(k).types.push(it.it);
+  }
+  return [...m.values()];
+}
+function itSpec(t){
+  return ITYPE[t] || {label:(t||"contact").replace(/_/g," "), glyph:"\u00b7",
+                      light:"#6b7177", dark:"#9aa3ad", dash:true};
+}
+function itColor(t){ const o=itSpec(t); return sDark()?o.dark:o.light; }
+/* the legend every structure view shares */
+function itLegend(types){
+  const seen=[...new Set(types||Object.keys(ITYPE))];
+  seen.sort((a,b)=>itRank(a)-itRank(b));
+  const out=[], done=new Set();
+  for(const t of seen){
+    const o=itSpec(t);
+    if(done.has(o.label)) continue;
+    done.add(o.label);
+    out.push(`<span><span class="sw itsw" style="background:${itColor(t)}">${o.glyph}</span>`
+      + `${o.status?"<b>":""}${o.label}${o.status?"</b>":""}</span>`);
+  }
+  return out.join("");
+}
+
 /* ---- interaction distances, shared by the By-enzyme and Crystal views ----
    These are PandaMap's own distances, between the specific atom pair that makes
    each interaction -- an Arg NH2 to a sulfonate oxygen for an ionic contact,
@@ -4650,10 +4791,18 @@ function ppDrawPairs(v, model, items, ligSel, opts){
     if(model!==null && model!==undefined){ psel.model = model; lsel.model = model; }
     const a = m.selectedAtoms(psel)[0], b = m.selectedAtoms(lsel)[0];
     if(!a || !b) continue;
-    const col = it.itf ? "#8a4bbf" : "#0f5f6b";
+    /* coloured by what KIND of interaction it is, not by which subunit: the
+       sticks already carry own-vs-neighbour, so hue is free to do this. */
+    /* a pair may carry several labels; the strongest claim wins the colour,
+       and repulsion always wins because it is the one that changes the reading */
+    const ts = it.types || [it.it];
+    const primary = ts.includes("repulsion") ? "repulsion"
+                  : ts.find(t=>t!=="ionic") || ts[0];
+    const spec = itSpec(primary);
+    const col = itColor(primary);
     v.addLine({start:{x:a.x,y:a.y,z:a.z}, end:{x:b.x,y:b.y,z:b.z},
-               color:col, dashed:true, linewidth:2});
-    v.addLabel(it.d.toFixed(2)+" \u00c5",
+               color:col, dashed:spec.dash, linewidth:spec.status?3:2});
+    v.addLabel(spec.glyph+" "+it.d.toFixed(2)+" \u00c5",
       {position:{x:(a.x+b.x)/2, y:(a.y+b.y)/2, z:(a.z+b.z)/2},
        fontSize:10, fontColor:"white", borderThickness:0,
        backgroundColor:col, backgroundOpacity:.9,
@@ -4695,7 +4844,9 @@ function drawXtal3D(){
   const nbr=[...new Set(all.filter(c=>c.itf).map(c=>c.ch))];
   $("#x3dNote").innerHTML =
       `<b>${p}</b>, chain ${ch} &mdash; ${M.enzyme}, ${M.res}&nbsp;&Aring;. The whole deposited `
-    + `assembly is drawn, nothing cropped. <b>${con.length}</b> residue`
+    + `assembly is drawn, nothing cropped. Colour is by subunit; this is an `
+    + `experimental structure, so its B-factors are crystallographic displacement, `
+    + `<b>not</b> an AlphaFold confidence score. <b>${con.length}</b> residue`
     + `${con.length===1?"":"s"} contact this copy of the ligand`
     + (part==="all"?"":`, filtered to the ${part==="moiety"?"amine":"bile-acid"} side`)
     + (nbr.length?`; chain ${nbr.join(" and ")} reaches in from the neighbouring subunit.`:`.`);
@@ -4707,7 +4858,7 @@ function drawXtal3D(){
           + `<td>${c.itf?`${c.ch} <b>(neighbour)</b>`:`${c.ch} (own)`}</td>`
           + `<td>${c.part==="moiety"?"the amine":"the bile acid"}</td>`
           + `<td>${c.ref==null?"&mdash;":c.ref}</td>`
-          + `<td>${c.it.map(x=>S_TYPENAME[x]||x.replace(/_/g," ")).join(", ")}</td>`
+          + `<td>${itCell(c.it)}</td>`
           + `<td class="n">${c.d} &Aring;</td></tr>`).join("")
       + '</tbody></table>'
     : '<p class="foot">No residue matches that filter for this copy.</p>';
@@ -4751,13 +4902,15 @@ function drawXtal3D(){
     const sel={chain:ch,resn:XV.ligs[p]};
     v.addStyle(sel,{stick:{colorscheme:"orangeCarbon",radius:.26}});
     if($("#xDist").checked){
-      const items=[];
+      let items=[];
       for(const c of con) for(const pr of (c.pairs||[]))
-        items.push({ch:c.ch, rn:c.rn, pa:pr[0], la:pr[1], d:pr[2],
+        items.push({ch:c.ch, rn:c.rn, pa:pr[0], la:pr[1], d:pr[2], it:pr[3],
                     lg:pr[4]||c.lg, itf:c.itf});
+      items = itGroupPairs(items);
       const drawn=ppDrawPairs(v, null, items, sel, {});
+      $("#x3dIt").innerHTML = drawn ? itLegend([...new Set(items.map(i=>i.it))]) : "";
       $("#x3dNote").innerHTML += ` <b>${drawn}</b> interaction`
-        + `${drawn===1?"":"s"} drawn as dashed lines with PandaMap's distance.`;
+        + `${drawn===1?"":"s"} drawn as lines coloured by type, with PandaMap's distance.`;
     }
     v.zoomTo(sel); v.zoom(.45); v.render();
   });
