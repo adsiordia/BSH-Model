@@ -73,6 +73,7 @@ fi
 POCKETS="$ROOT/site/pockets"
 RAW="$ROOT/site/raw"
 XTAL="$ROOT/site/xtal"
+PKALL="$ROOT/site/pockets_all"
 if [ -d "$POCKETS" ]; then
   echo "==> $(ls "$POCKETS"/*.pdb 2>/dev/null | wc -l) pocket structures to upload"
 fi
@@ -87,7 +88,11 @@ fi
 
 echo "==> uploading index.html, the Space card and the structures"
 DIST="$ROOT/site/distances.json"
-REPO="$REPO" SITE="$SITE" CARD="$CARD" DIST="$DIST" POCKETS="$POCKETS" RAW="$RAW" XTAL="$XTAL" python - <<'PYEOF'
+if [ -d "$PKALL" ]; then
+  echo "==> $(ls "$PKALL"/*.pdb 2>/dev/null | wc -l) per-rank pockets to upload" \
+       "($(du -sh --apparent-size "$PKALL" | cut -f1))"
+fi
+REPO="$REPO" SITE="$SITE" CARD="$CARD" DIST="$DIST" POCKETS="$POCKETS" RAW="$RAW" XTAL="$XTAL" PKALL="$PKALL" python - <<'PYEOF'
 import os
 from huggingface_hub import HfApi
 api, repo = HfApi(), os.environ["REPO"]
@@ -118,6 +123,17 @@ if rw and os.path.isdir(rw):
                           repo_type="space", allow_patterns=chunk,
                           commit_message=f"Raw tetramers {i + 1}-{i + len(chunk)}")
         print(f"    uploaded raw/ {i + 1}-{i + len(chunk)} of {len(names)}", flush=True)
+pa = os.environ.get("PKALL", "")
+if pa and os.path.isdir(pa):
+    # 3,375 files: batched so no single commit carries the lot
+    names = sorted(f for f in os.listdir(pa) if f.endswith(".pdb"))
+    B = 400
+    for i in range(0, len(names), B):
+        chunk = names[i:i + B]
+        api.upload_folder(folder_path=pa, path_in_repo="pockets_all", repo_id=repo,
+                          repo_type="space", allow_patterns=chunk,
+                          commit_message=f"Per-rank pockets {i + 1}-{i + len(chunk)}")
+        print(f"    uploaded pockets_all/ {i + 1}-{i + len(chunk)} of {len(names)}", flush=True)
 xt = os.environ.get("XTAL", "")
 if xt and os.path.isdir(xt):
     api.upload_folder(folder_path=xt, path_in_repo="xtal", repo_id=repo,

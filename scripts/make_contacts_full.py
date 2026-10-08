@@ -42,6 +42,16 @@ for e, s in AL["aln127"].items():
     idx[e] = m
 
 
+# pos -> the 27-sequence alignment column, so downstream scripts that key on
+# `col` keep working unchanged
+M27 = {int(k): v for k, v in AL["map27to127"].items()}
+POS2COL = {}
+for c27, c127 in M27.items():
+    pp = REF.get(c127)
+    if pp is not None:
+        POS2COL[pp] = c27
+
+
 def pos_of(prot, resnum):
     o = idx.get(prot)
     if not o:
@@ -69,13 +79,13 @@ for f in files:
                      float(r["distance_A"]),
                      r["solvent_accessible"], r["halogen_element"],
                      "moiety" if r["ligand_atom"] in moi else "core",
-                     pos_of(prot, rn)))
+                     (pz := pos_of(prot, rn)), POS2COL.get(pz)))
     f_.close()
 
 d = pd.DataFrame(rows, columns=[
     "job", "protein", "token", "seed", "sample", "itype", "resname", "resnum",
     "chain", "patom", "latom", "lelem", "dist", "solvent_accessible",
-    "halogen_element", "part", "pos"])
+    "halogen_element", "part", "pos", "col"])
 d.to_pickle(f"{AF3}/analysis/contacts_full.pkl")
 
 print(f"wrote analysis/contacts_full.pkl")

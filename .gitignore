@@ -13,3 +13,5 @@ site/.serve.log
 site/raw/
 # crystal tetramers, regenerable from refstruct/ (see scripts/make_validation.py)
 site/xtal/
+# per-rank pocket crops, regenerable with analysis/make_pockets_all.py
+site/pockets_all/

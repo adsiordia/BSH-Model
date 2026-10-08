@@ -17,8 +17,10 @@ import pandas as pd
 AF3 = "/home/adsiordia/AF3/BSH_AF3"
 SITE = "/home/adsiordia/BSH-Model/site"
 
-cols, rows = pickle.load(open(f"{AF3}/analysis/all_contacts25.pkl", "rb"))
-d = pd.DataFrame(rows, columns=cols)
+# the COMPLETE PandaMap output: all 13 interaction types, nothing dropped.
+# all_contacts25.pkl kept 5 types and discarded 59% of rows, which removed
+# most of the evidence at the aromatic positions.
+d = pd.read_pickle(f"{AF3}/analysis/contacts_full.pkl")
 d = d[d.protein != "A0A414Q275"]          # no catalytic Cys, excluded from claims
 charge = json.load(open(f"{AF3}/analysis/amine_charge.json"))
 c2r = pickle.load(open(f"{AF3}/analysis/msa_struct.pkl", "rb"))["col2res"]["C0ERS1"]

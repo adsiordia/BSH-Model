@@ -813,6 +813,7 @@ table.sa thead tr.sacols th{top:17px}
           <option value="raw">the whole raw tetramer, uncropped</option>
         </select>
       </label>
+      <label>Model <select id="ppRank"></select></label>
       <label class="chk"><input type="checkbox" id="ppRes" checked> draw the contacting residues</label>
       <label class="chk"><input type="checkbox" id="ppLab" checked> label them</label>
       <label class="chk"><input type="checkbox" id="ppDist"> show the interaction distances</label>
@@ -3791,7 +3792,7 @@ const PPROT = PP.proteins, PPAM = PP.amines;
     dst.checked=src.checked;
     dst.addEventListener("change",()=>{ src.checked=dst.checked; drawProtein(); });
   })();
-  ["ppSel","ppAmine","ppPart","ppItf","ppMode","ppDetail","ppRes","ppLab","ppDist","ppCol"].forEach(id=>{
+  ["ppSel","ppAmine","ppPart","ppItf","ppMode","ppDetail","ppRes","ppLab","ppDist","ppCol","ppRank"].forEach(id=>{
     const el=document.getElementById(id); if(el) el.addEventListener("change",drawProtein);
   });
 })();
@@ -3883,6 +3884,7 @@ function ppShow3D(p){
   if(!a){ box.innerHTML=""; tbl.innerHTML=""; $("#ppAssay").innerHTML="";
     note.textContent="Pick a conjugate above to load its structure."; pp3dLoaded=""; return; }
   const job=`${p}_tet_${a}`;
+  ppRankFill(job);
   const detail=($("#ppDetail")||{}).value||"pocket";
   ppShowAssay(p, a);
   const E=PPROT[p];
@@ -3912,11 +3914,14 @@ function ppShow3D(p){
         +`<td class="n ppres-pl" data-k="${c.ch}:${c.r}">\u2014</td></tr>`;}).join("")
     + "</tbody></table>";
   const tag=[job,detail,$("#ppRes").checked?1:0,$("#ppLab").checked?1:0,
-             $("#ppDist").checked?1:0,($("#ppCol")||{}).value,f.part,f.itf?1:0].join(":");
+             $("#ppDist").checked?1:0,($("#ppCol")||{}).value,
+             ($("#ppRank")||{}).value,f.part,f.itf?1:0].join(":");
   if(pp3dLoaded===tag) return;
   pp3dLoaded=tag;
   ppEnsure3Dmol(()=>{
-    ppFetch(job, detail).then(txt=>{
+    const _r = ppRankOf(job);
+    const _s = (_r && _r.rank !== 0 && detail === "pocket") ? _r.sample : null;
+    ppFetch(job, detail, _s).then(txt=>{
       let fell=false;
       if(txt.startsWith("__FELLBACK__")){ fell=true; txt=txt.slice(12); }
       const raw = detail==="raw" && !fell;
@@ -3954,6 +3959,7 @@ function ppShow3D(p){
         plddtApply(pp3dViewer, {});
         $("#pp3dPl").innerHTML = plddtLegend();
       } else $("#pp3dPl").innerHTML = "";
+      note.innerHTML += " " + ppRankText(job);
       note.innerHTML += " " + plddtText(plddtOf(job))
         + (byPl ? " The backbone is coloured by it." : "");
       /* per-residue confidence for each contacting residue, straight from the
@@ -4013,10 +4019,17 @@ function ppShow3D(p){
    a static host sends .gz as bytes with no Content-Encoding to do it for us.
    Falls back to the pocket if the browser has no DecompressionStream. ---- */
 const PP_CACHE = new Map();
-async function ppFetch(job, detail){
-  const key = detail + ":" + job;
+async function ppFetch(job, detail, sample){
+  const key = detail + ":" + job + ":" + (sample||"");
   if (PP_CACHE.has(key)) return PP_CACHE.get(key);
   let txt = null;
+  /* a non-default rank: its 8 A pocket lives in pockets_all/, named to match
+     the PandaMap CSV. Rank 0 keeps the original path, and the raw tetramer is
+     only shipped for Rank 0. */
+  if (detail === "pocket" && arguments.length > 2 && arguments[2]){
+    const r = await fetch(`pockets_all/${job}__${arguments[2]}.pdb`);
+    if (r.ok){ txt = await r.text(); PP_CACHE.set(key, txt); return txt; }
+  }
   if (detail === "raw" && typeof DecompressionStream === "function"){
     try{
       const r = await fetch(`raw/${job}.pdb.gz`);
@@ -4669,6 +4682,48 @@ function ramVerdict(){
       + `the aromatic rows carry none. And the two strongest aromatic rows, 19Y and 80V, sit in `
       + `a single sequence cluster each, so for them the residue and the lineage cannot be told `
       + `apart. 222R, by contrast, spans 11 clusters.</p>`;
+}
+
+/* ---- the five AlphaFold models per job -----------------------------------
+   AF3 wrote 5 models and ranked them; all five have been on disk since the runs,
+   along with a PandaMap analysis of each. Rank 0 is what AF3 ranked first and is
+   the default, but the others are available because they genuinely differ -- the
+   ligand pose especially, at a mean pLDDT of 55 -- and that variation is what
+   the 3-of-5 threshold is measuring. Every NUMBER on the site stays on the
+   consensus; this selector only changes which structure is drawn. */
+const RANKS = /*__RANKS__*/{};
+function ppRankList(job){ return RANKS[job] || []; }
+function ppRankFill(job){
+  const sel=$("#ppRank"); if(!sel) return;
+  const rs=ppRankList(job), cur=sel.value;
+  sel.innerHTML = rs.map(r=>
+    `<option value="${r.rank}">Rank ${r.rank}${r.rank===0?" (AF3's best)":""} `
+    + `\u00b7 score ${r.rank_score}`
+    + (r.plddt_lig!=null?` \u00b7 ligand pLDDT ${r.plddt_lig}`:``)
+    + `</option>`).join("");
+  if(rs.some(r=>String(r.rank)===cur)) sel.value=cur; else sel.value="0";
+}
+function ppRankOf(job){
+  const rs=ppRankList(job);
+  const want=($("#ppRank")||{}).value;
+  return rs.find(r=>String(r.rank)===String(want)) || rs[0] || null;
+}
+/* how the chosen model compares with the other four */
+function ppRankText(job){
+  const rs=ppRankList(job), r=ppRankOf(job);
+  if(!r) return "";
+  const lig=rs.filter(x=>x.plddt_lig!=null).map(x=>x.plddt_lig);
+  const best=lig.length?Math.max(...lig):null;
+  return `<b>Rank ${r.rank} of ${rs.length}</b> \u00b7 AF3 ranking score `
+    + `<b>${r.rank_score}</b>`
+    + (r.ptm!=null?` \u00b7 pTM ${r.ptm}`:``)
+    + (r.iptm!=null?` \u00b7 ipTM ${r.iptm}`:``)
+    + (r.plddt_prot!=null?` \u00b7 protein pLDDT ${r.plddt_prot}`:``)
+    + (r.plddt_lig!=null?` \u00b7 ligand pLDDT <b>${r.plddt_lig}</b>`
+        +(best!=null&&r.plddt_lig<best?` (the best of the five is ${best})`:``):``)
+    + (r.n_contacts!=null?` \u00b7 ${r.n_contacts} PandaMap contacts in this model`:``)
+    + `. The contact table below is the <b>consensus over all five</b>, not this `
+    + `model alone \u2014 switching Rank changes the structure drawn, never the numbers.`;
 }
 
 /* ---- pLDDT ---------------------------------------------------------------

@@ -17,8 +17,8 @@ import pickle, json, collections
 import pandas as pd, numpy as np
 
 AF3 = "/home/adsiordia/AF3/BSH_AF3"
-cols, rows = pickle.load(open(f"{AF3}/analysis/all_contacts25.pkl", "rb"))
-d = pd.DataFrame(rows, columns=cols)
+# the COMPLETE PandaMap output: all 13 interaction types, nothing dropped
+d = pd.read_pickle(f"{AF3}/analysis/contacts_full.pkl")
 d = d[d.protein != "A0A414Q275"]
 
 CLS = {"aromatic": ["Phe", "Tyramine", "Dopamine", "3MeOTyramine", "Tryptamine",
