@@ -44,7 +44,11 @@ def entropy(c):
     return float(-(p*np.log(p)).sum())
 
 ent={c:entropy(c) for c in range(L)}
-pocket=[p["col127"] for p in RA["positions"] if p["amine"] and not p["invariant"]]
+# a position whose column is gapped in more than 10% of sequences has no
+# defined entropy, so it cannot be entropy-matched and is dropped from this
+# comparison only (it stays in the pocket definition)
+pocket=[p["col127"] for p in RA["positions"]
+        if p["amine"] and not p["invariant"] and ent.get(p["col127"]) is not None]
 pe=[ent[c] for c in pocket]
 print(f"pocket columns: {len(pocket)}  entropies {[f'{x:.2f}' for x in pe]}")
 cand=[c for c in range(L) if c not in contact127 and ent[c] is not None and ent[c]>0.05]

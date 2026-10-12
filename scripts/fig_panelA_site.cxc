@@ -1,0 +1,37 @@
+open /home/adsiordia/AF3/BSH_AF3/out_panel/A0A3N2MZX6_tet_Tryptamine/seed-1_sample-3/A0A3N2MZX6_tet_Tryptamine_seed-1_sample-3_model.cif
+set bgColor white
+hide atoms
+hide cartoons
+show /A cartoons
+cartoon style thickness 0.35 width 0.9
+color /A #dfe2e5
+transparency 55 cartoons
+show /L atoms
+style /L stick
+size /L stickRadius 0.23
+color /L #c8742a
+color /L byhetero
+show /A:206 atoms
+style /A:206 stick
+size /A:206 stickRadius 0.19
+color /A:206 #0f8f7d
+show /A:1 atoms
+style /A:1 stick
+size /A:1 stickRadius 0.16
+color /A:1 #2a5fa8
+hide H
+# the stacking pair: guanidinium of Arg222 (res 206 here) over the indole
+distance /A:206@CZ /L@C13 color #3a3a38 dashes 6 radius 0.06
+distance style decimalPlaces 1
+label delete
+label /A:206 text "Arg222" height 1.3 color #0b4a53 offset -3.4,1.8,0
+label /A:1 text "Cys1" height 1.2 color #1d4480 offset -1.0,-2.2,0
+view /L /A:206 /A:1
+zoom 0.62
+turn x -55
+turn y 15
+lighting soft
+lighting shadows false
+graphics silhouettes true width 0.9
+save /home/adsiordia/AF3/figs/panelA_site.png width 2200 height 1500 supersample 3
+exit
