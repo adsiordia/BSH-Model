@@ -22,8 +22,7 @@ import json, pickle, csv, collections
 
 import sys as _sys, pathlib as _pl
 _sys.path.insert(0, str(_pl.Path(__file__).resolve().parent))
-from _paths import AF3_ROOT, need_af3
-need_af3("msa_struct.pkl")
+from _paths import AF3_ROOT, ANALYSIS as _ANALYSIS, SITE as _SITE
 AF3 = str(AF3_ROOT)
 SITE = str(_SITE)
 
@@ -33,9 +32,9 @@ REF = {int(a): b for a, b in AL["ref127"].items()}
 POS2COL = {v: k for k, v in REF.items()}
 M27 = {int(k): v for k, v in AL["map27to127"].items()}
 C127TO27 = {v: k for k, v in M27.items()}
-src = json.load(open(f"{AF3}/analysis/sequence_source.json"))
-c2r = pickle.load(open(f"{AF3}/analysis/msa_struct.pkl", "rb"))["col2res"]
-PC = json.load(open(f"{AF3}/analysis/pocket_columns.json"))
+src = json.load(open(f"{_ANALYSIS}/sequence_source.json"))
+c2r = pickle.load(open(f"{_ANALYSIS}/msa_struct.pkl", "rb"))["col2res"]
+PC = json.load(open(f"{_ANALYSIS}/pocket_columns.json"))
 XF = json.load(open(f"{AF3}/refstruct/xtal_frames.json"))
 
 AMINE = set(PC["moiety_ref"])

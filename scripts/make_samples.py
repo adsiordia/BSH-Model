@@ -13,7 +13,7 @@ import csv, glob, json, os, collections, re
 
 import sys as _sys, pathlib as _pl
 _sys.path.insert(0, str(_pl.Path(__file__).resolve().parent))
-from _paths import AF3_ROOT
+from _paths import AF3_ROOT, SITE as _SITE
 AF3 = str(AF3_ROOT)
 SITE = str(_SITE)
 jobs = sorted(os.path.basename(f)[:-4]

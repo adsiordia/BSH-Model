@@ -25,15 +25,14 @@ import pandas as pd
 
 import sys as _sys, pathlib as _pl
 _sys.path.insert(0, str(_pl.Path(__file__).resolve().parent))
-from _paths import AF3_ROOT, need_af3
-need_af3("contacts_full.pkl")
+from _paths import AF3_ROOT, DERIVED, ANALYSIS as _ANALYSIS, SITE as _SITE
 AF3 = str(AF3_ROOT)
 SITE = str(_SITE)
 
-MOI = pickle.load(open(f"{AF3}/analysis/moiety_atoms25.pkl", "rb"))
+MOI = pickle.load(open(f"{_ANALYSIS}/moiety_atoms25.pkl", "rb"))
 AL = json.load(open(f"{SITE}/alignment.json"))
 REF = {int(a): b for a, b in AL["ref127"].items()}
-src = json.load(open(f"{AF3}/analysis/sequence_source.json"))
+src = json.load(open(f"{_ANALYSIS}/sequence_source.json"))
 
 # mature-sequence index -> alignment column, per enzyme
 idx = {}
@@ -66,7 +65,7 @@ def pos_of(prot, resnum):
 
 
 rows = []
-files = sorted(glob.glob(f"{AF3}/analysis/contacts/*.csv"))
+files = sorted(glob.glob(f"{_ANALYSIS}/contacts/*.csv"))
 for f in files:
     b = os.path.basename(f)[:-4]
     job, samp = b.split("__")
@@ -90,14 +89,14 @@ d = pd.DataFrame(rows, columns=[
     "job", "protein", "token", "seed", "sample", "itype", "resname", "resnum",
     "chain", "patom", "latom", "lelem", "dist", "solvent_accessible",
     "halogen_element", "part", "pos", "col"])
-d.to_pickle(f"{AF3}/analysis/contacts_full.pkl")
+d.to_pickle(f"{DERIVED}/contacts_full.pkl")
 
 print(f"wrote analysis/contacts_full.pkl")
 print(f"  {len(d)} rows from {len(files)} CSV files")
 print(f"  {d.job.nunique()} jobs, {d.protein.nunique()} proteins, "
       f"{d.token.nunique()} conjugates, {d['sample'].nunique()} samples each")
 print(f"  {d.itype.nunique()} interaction types, all kept\n")
-old = pickle.load(open(f"{AF3}/analysis/all_contacts25.pkl", "rb"))
+old = pickle.load(open(f"{_ANALYSIS}/all_contacts25.pkl", "rb"))
 print(f"  previous dataset: {len(old[1])} rows, 5 types")
 print(f"  this one:         {len(d)} rows, {d.itype.nunique()} types "
       f"(+{len(d)-len(old[1])} rows recovered)\n")

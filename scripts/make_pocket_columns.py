@@ -12,14 +12,13 @@ import pandas as pd
 
 import sys as _sys, pathlib as _pl
 _sys.path.insert(0, str(_pl.Path(__file__).resolve().parent))
-from _paths import AF3_ROOT, need_af3
-need_af3("contacts_full.pkl")
+from _paths import AF3_ROOT, DERIVED, ANALYSIS as _ANALYSIS
 AF3 = str(AF3_ROOT)
 SOLID, MIN_ENZ = 3, 3
 
-d = pd.read_pickle(f"{AF3}/analysis/contacts_full.pkl")
+d = pd.read_pickle(f"{DERIVED}/contacts_full.pkl")
 d = d[d.protein != "A0A414Q275"]          # no catalytic cysteine
-old = json.load(open(f"{AF3}/analysis/pocket_columns.json"))
+old = json.load(open(f"{_ANALYSIS}/pocket_columns.json"))
 
 out = {}
 for part, key in (("moiety", "moiety"), ("core", "core")):
@@ -32,7 +31,7 @@ for part, key in (("moiety", "moiety"), ("core", "core")):
     out[key] = sorted(int(c) for c in n.col.unique())
     out[key + "_ref"] = sorted(int(p) for p in n.pos.unique())
 
-json.dump(out, open(f"{AF3}/analysis/pocket_columns.json", "w"))
+json.dump(out, open(f"{_ANALYSIS}/pocket_columns.json", "w"))
 print("rebuilt analysis/pocket_columns.json at >=3 of 5, >=3 enzymes\n")
 for k in ("moiety_ref", "core_ref"):
     o = sorted(x for x in old[k] if x is not None)

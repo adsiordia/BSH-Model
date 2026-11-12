@@ -18,11 +18,10 @@ import pandas as pd, numpy as np
 
 import sys as _sys, pathlib as _pl
 _sys.path.insert(0, str(_pl.Path(__file__).resolve().parent))
-from _paths import AF3_ROOT, need_af3
-need_af3("contacts_full.pkl", "msa_struct.pkl")
+from _paths import AF3_ROOT, DERIVED, ANALYSIS as _ANALYSIS, SITE as _SITE
 AF3 = str(AF3_ROOT)
 # the COMPLETE PandaMap output: all 13 interaction types, nothing dropped
-d = pd.read_pickle(f"{AF3}/analysis/contacts_full.pkl")
+d = pd.read_pickle(f"{DERIVED}/contacts_full.pkl")
 d = d[d.protein != "A0A414Q275"]
 
 CLS = {"aromatic": ["Phe", "Tyramine", "Dopamine", "3MeOTyramine", "Tryptamine",
@@ -45,8 +44,8 @@ g["cls"] = g.token.map(tok2cls)
 # when it is the same eleven positions relabelled by what sits in them: 99% of
 # the arginine contacts are positions 222, 206 and 15; 100% of the cysteine ones
 # are position 1, the catalytic residue; 88% of the proline ones are position 80.
-c2r = pickle.load(open(f"{AF3}/analysis/msa_struct.pkl", "rb"))["col2res"]["C0ERS1"]
-PCJ = json.load(open(f"{AF3}/analysis/pocket_columns.json"))
+c2r = pickle.load(open(f"{_ANALYSIS}/msa_struct.pkl", "rb"))["col2res"]["C0ERS1"]
+PCJ = json.load(open(f"{_ANALYSIS}/pocket_columns.json"))
 NAMED = set(PCJ["moiety_ref"])
 g["pos"] = g.col.map(lambda c: c2r.get(c))
 bypos = {}

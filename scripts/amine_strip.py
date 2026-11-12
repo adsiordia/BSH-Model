@@ -41,7 +41,7 @@ RDLogger.DisableLog("rdApp.*")
 
 import sys as _sys, pathlib as _pl
 _sys.path.insert(0, str(_pl.Path(__file__).resolve().parent))
-from _paths import AF3_ROOT
+from _paths import AF3_ROOT, REPO as _REPO
 AF3 = str(AF3_ROOT)
 HALO = (0.984, 0.851, 0.784)          # tint of categorical orange #eb6834
 # TILE is the strip's own resolution per column. The strip is drawn once at

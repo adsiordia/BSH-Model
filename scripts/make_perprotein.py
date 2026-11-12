@@ -21,13 +21,12 @@ import pandas as pd
 
 import sys as _sys, pathlib as _pl
 _sys.path.insert(0, str(_pl.Path(__file__).resolve().parent))
-from _paths import AF3_ROOT, need_af3
-need_af3("contacts_full.pkl")
+from _paths import AF3_ROOT, DERIVED, SITE as _SITE
 AF3 = str(AF3_ROOT)
 SITE = str(_SITE)
 SOLID = 3
 
-d = pd.read_pickle(f"{AF3}/analysis/contacts_full.pkl")
+d = pd.read_pickle(f"{DERIVED}/contacts_full.pkl")
 old = json.load(open(f"{SITE}/perprotein.json"))
 man = {r["protein"]: r for r in csv.DictReader(open(f"{AF3}/panel/manifest.csv"))}
 

@@ -26,8 +26,7 @@ import pandas as pd
 
 import sys as _sys, pathlib as _pl
 _sys.path.insert(0, str(_pl.Path(__file__).resolve().parent))
-from _paths import AF3_ROOT, need_af3
-need_af3("contacts_full.pkl")
+from _paths import AF3_ROOT, DERIVED, ANALYSIS as _ANALYSIS, REPO as _REPO, SITE as _SITE
 AF3 = str(AF3_ROOT)
 SITE = str(_SITE)
 OUT = str(_REPO / "figures")
@@ -42,9 +41,9 @@ AROM = {"Phe", "Tyramine", "Dopamine", "3MeOTyramine", "Tryptamine",
 CATPI = {"pi_cation", "cation_pi"}
 IONIC = {"ionic", "attractive_charge"}
 
-d = pd.read_pickle(f"{AF3}/analysis/contacts_full.pkl")
+d = pd.read_pickle(f"{DERIVED}/contacts_full.pkl")
 d = d[d.protein != "A0A414Q275"]
-charge = json.load(open(f"{AF3}/analysis/amine_charge.json"))
+charge = json.load(open(f"{_ANALYSIS}/amine_charge.json"))
 m = d[(d.part == "moiety") & (d.itype != "ionic")].copy()   # see docstring
 
 

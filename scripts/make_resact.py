@@ -21,12 +21,12 @@ import json, os, collections
 SITE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "site")
 import sys as _sys, pathlib as _pl
 _sys.path.insert(0, str(_pl.Path(__file__).resolve().parent))
-from _paths import AF3_ROOT
+from _paths import AF3_ROOT, ANALYSIS as _ANALYSIS
 AF3 = str(AF3_ROOT / "analysis")
 
 AL = json.load(open(f"{SITE}/alignment.json"))
 SA = json.load(open(f"{SITE}/sitesactivity.json"))
-PC = json.load(open(f"{AF3}/pocket_columns.json"))
+PC = json.load(open(f"{_ANALYSIS}/pocket_columns.json"))
 
 m27 = {int(k): v for k, v in AL["map27to127"].items()}      # col27 -> col127
 ref127 = {int(k): v for k, v in AL["ref127"].items()}       # col127 -> C0ERS1 pos

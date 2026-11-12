@@ -32,8 +32,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 import sys as _sys, pathlib as _pl
 _sys.path.insert(0, str(_pl.Path(__file__).resolve().parent))
-from _paths import AF3_ROOT, need_af3
-need_af3("contacts_full.pkl")
+from _paths import AF3_ROOT, DERIVED, ANALYSIS as _ANALYSIS, REPO as _REPO
 AF3 = str(AF3_ROOT)
 BSH = str(_REPO)
 OUT = f"{BSH}/figures"
@@ -54,10 +53,10 @@ FAM = {"hydrogen_bonds": "H-bond", "hydrophobic": "hydrophobic",
        "attractive_charge": "ionic", "repulsion": "repulsion",
        "covalent": "covalent"}
 
-d = pd.read_pickle(f"{AF3}/analysis/contacts_full.pkl")
+d = pd.read_pickle(f"{DERIVED}/contacts_full.pkl")
 d = d[d.protein != "A0A414Q275"]              # no catalytic cysteine
-charge = json.load(open(f"{AF3}/analysis/amine_charge.json"))
-POS = json.load(open(f"{AF3}/analysis/pocket_columns.json"))["moiety_ref"]
+charge = json.load(open(f"{_ANALYSIS}/amine_charge.json"))
+POS = json.load(open(f"{_ANALYSIS}/pocket_columns.json"))["moiety_ref"]
 NENZ = d.protein.nunique()
 
 m = d[d.part == "moiety"]

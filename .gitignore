@@ -20,3 +20,4 @@ site/.serve.log
 #   site/pockets_all/   3,375 per-rank 8 A crops, .pdb, 138 MB -> ~36 MB packed
 #   site/xtal/          3 crystal tetramers, .pdb.gz, 0.8 MB
 #                       (rebuild with scripts/make_xtal_pdb.py)
+data/af3/derived/

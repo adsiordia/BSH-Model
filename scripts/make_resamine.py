@@ -16,19 +16,18 @@ import pandas as pd
 
 import sys as _sys, pathlib as _pl
 _sys.path.insert(0, str(_pl.Path(__file__).resolve().parent))
-from _paths import AF3_ROOT, need_af3
-need_af3("contacts_full.pkl", "msa_struct.pkl")
+from _paths import AF3_ROOT, DERIVED, ANALYSIS as _ANALYSIS, SITE as _SITE
 AF3 = str(AF3_ROOT)
 SITE = str(_SITE)
 
 # the COMPLETE PandaMap output: all 13 interaction types, nothing dropped.
 # all_contacts25.pkl kept 5 types and discarded 59% of rows, which removed
 # most of the evidence at the aromatic positions.
-d = pd.read_pickle(f"{AF3}/analysis/contacts_full.pkl")
+d = pd.read_pickle(f"{DERIVED}/contacts_full.pkl")
 d = d[d.protein != "A0A414Q275"]          # no catalytic Cys, excluded from claims
-charge = json.load(open(f"{AF3}/analysis/amine_charge.json"))
-c2r = pickle.load(open(f"{AF3}/analysis/msa_struct.pkl", "rb"))["col2res"]["C0ERS1"]
-PC = json.load(open(f"{AF3}/analysis/pocket_columns.json"))
+charge = json.load(open(f"{_ANALYSIS}/amine_charge.json"))
+c2r = pickle.load(open(f"{_ANALYSIS}/msa_struct.pkl", "rb"))["col2res"]["C0ERS1"]
+PC = json.load(open(f"{_ANALYSIS}/pocket_columns.json"))
 RA = json.load(open(f"{SITE}/resact.json"))
 cluster = {r["id"]: r["cluster"] for r in RA["rows"]}
 

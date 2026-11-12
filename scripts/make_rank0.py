@@ -19,7 +19,7 @@ import numpy as np
 
 import sys as _sys, pathlib as _pl
 _sys.path.insert(0, str(_pl.Path(__file__).resolve().parent))
-from _paths import AF3_ROOT, need_af3
+from _paths import AF3_ROOT, need_af3, SITE as _SITE
 need_af3("the 675 predictions in out_panel/")
 AF3 = str(AF3_ROOT)
 SITE = str(_SITE)

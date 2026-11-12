@@ -38,6 +38,13 @@ SITE = REPO / "site"
 AF3_ROOT = Path(os.environ.get("BSH_AF3_ROOT", "/home/adsiordia/AF3/BSH_AF3"))
 AF3_ANALYSIS = AF3_ROOT / "analysis"
 
+# Where the one genuinely large derived artefact goes: contacts_full.pkl, 215 MB,
+# 127,807 rows rebuilt from the 3,375 PandaMap CSVs in ANALYSIS/contacts/. It is
+# regenerable, so it is not tracked -- but a clone has to be able to write it
+# somewhere, so it lands beside the AlphaFold directory when that exists and
+# inside the repo (gitignored) when it does not.
+DERIVED = AF3_ANALYSIS if AF3_ANALYSIS.is_dir() else REPO / "data/af3/derived"
+
 
 def need_af3(*what):
     """Fail with a useful message rather than a FileNotFoundError 40 lines later."""
