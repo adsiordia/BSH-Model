@@ -1011,18 +1011,55 @@ table.sa thead tr.sacols th{top:17px}
     <h2>Does an experimental structure agree?</h2>
     <p>Everything on the structural tabs comes from AlphaFold&nbsp;3. The obvious worry is that a
     pocket predicted by a model and analysed by a geometric tool might be an artefact of the
-    model. So here the same analysis is run, unchanged, on two <b>crystal structures of real
-    BSH enzymes with a bile salt bound</b> &mdash; neither of which is in our panel, and neither
+    model. So here the same analysis is run, unchanged, on three <b>crystal structures of real
+    BSH enzymes with a bile salt bound</b> &mdash; none of which is in our panel, and none
     of which was used to choose any of our positions.</p>
-    <p class="foot">Both went through the identical pipeline: PandaMap for contacts, the same
+    <p class="foot">All three went through the identical pipeline: PandaMap for contacts, the same
     geometric rule to separate the amine from the bile acid, and MAFFT to place their residue
-    numbers in the C0ERS1 frame. Both put their catalytic cysteine on alignment column 30, like
-    all 127 of our sequences.</p>
+    numbers in the C0ERS1 frame. All three put their catalytic cysteine on alignment column 30,
+    like all 127 of our sequences.</p>
     <div id="xStruct"></div>
   </div>
 
+  <div class="card prose">
+    <h3 style="margin-top:0">What &ldquo;ours&rdquo; means here</h3>
+    <p>&ldquo;Ours&rdquo; is not a hand-picked list of interesting residues. It is the pocket as
+    the AlphaFold panel defines it, by one rule applied throughout: <b>a residue&ndash;ligand
+    contact counts when at least 3 of the 5 diffusion samples show it, and an alignment column
+    counts as a pocket position when at least 3 enzymes contact it that way.</b> The input is the
+    675 predictions behind the <i>By enzyme</i> tab &mdash; 27 enzymes &times; 25 conjugates, each
+    folded as a tetramer, 5 samples each. One enzyme (A0A414Q275) is excluded everywhere because
+    it has no catalytic cysteine, so 26 contribute.</p>
+    <p>That yields <b id="xNamine"></b> positions on the amine side and <b id="xNcore"></b> on the
+    bile-acid side, quoted as <b>C0ERS1 residue numbers</b> so enzymes that number their own
+    residues differently can be laid side by side. The amine-side set is every row of the table
+    below:</p>
+    <p class="mono foot" id="xOursList" style="overflow-wrap:anywhere"></p>
+    <h3>And what is being compared with what</h3>
+    <p>The crystals do not hold the same molecule we folded, so this is worth being exact about:</p>
+    <table class="stbl"><thead><tr><th>structure</th><th>the bound molecule</th>
+      <th>bile-acid core</th><th>amine</th></tr></thead><tbody>
+      <tr><td><b>our 675 predictions</b></td><td>one intact conjugate, amide <i>formed</i>
+        &mdash; the product of transamidation</td><td>cholic acid (3&alpha;,7&alpha;,12&alpha;)</td>
+        <td><b>25 different amines</b></td></tr>
+      <tr><td>7SVG</td><td>two separate products</td>
+        <td>chenodeoxycholate (3&alpha;,7&alpha;)</td><td>taurine</td></tr>
+      <tr><td>2BJF</td><td>two separate products</td>
+        <td>deoxycholate (3&alpha;,12&alpha;)</td><td>taurine</td></tr>
+      <tr><td>8BLT</td><td>one intact substrate, amide <i>uncleaved</i></td>
+        <td>cholate (3&alpha;,7&alpha;,12&alpha;)</td><td>taurine</td></tr>
+    </tbody></table>
+    <p class="foot">Because our conjugate is a single molecule, its amine half has to be separated
+    from its bile-acid half geometrically &mdash; the same rule 8BLT needs. In 7SVG and 2BJF the
+    products are already separate molecules, so their taurine rows are amine-subsite contacts by
+    construction, which makes those two the cleaner comparison. The consequence is the limit
+    restated at the bottom of this tab: <b>all three crystals carry taurine in the amine
+    site.</b> They test whether that site is in the right place and built the way we say. They do
+    not test whether it tells 25 amines apart.</p>
+  </div>
+
   <div class="card">
-    <h3 style="margin-top:0">Our 11 amine-contacting positions, checked against the crystals</h3>
+    <h3 style="margin-top:0">Our amine-contacting positions, checked against the crystals</h3>
     <p class="foot" id="xNote"></p>
     <div id="xWrap"><div id="xGrid"></div></div>
     <div class="slegend">
@@ -1037,6 +1074,7 @@ table.sa thead tr.sacols th{top:17px}
     <h3 style="margin-top:0">The crystal structure in 3D</h3>
     <div class="srow">
       <label>Structure <select id="xSel">
+        <option value="7SVG">7SVG — L. gasseri, taurine + chenodeoxycholate</option>
         <option value="2BJF">2BJF — C. perfringens, taurine + deoxycholate</option>
         <option value="8BLT">8BLT — L. salivarius, taurocholate</option>
       </select></label>
@@ -4302,7 +4340,7 @@ function ppOverlay(mode){
 /* ---------- crystal check: the predicted pocket against two real structures ---------- */
 const XV = /*__VALID__*/{};
 function drawXtal(){
-  const PDBS=["8BLT","2BJF"];
+  const PDBS=["7SVG","8BLT","2BJF"];
   $("#xStruct").innerHTML = PDBS.map(p=>{
     const m=XV.structures[p].meta, S=XV.structures[p];
     return `<p style="margin:.5rem 0"><b>${p}</b> &mdash; ${m.enzyme}, ${m.res}&nbsp;&Aring;, `
@@ -4312,12 +4350,16 @@ function drawXtal(){
   }).join("");
 
   const rows=XV.rows;
-  const hit8=rows.filter(r=>r["8BLT"]).length, hit2=rows.filter(r=>r["2BJF"]).length;
-  const n8=Object.keys(XV.structures["8BLT"].amine).length;
-  const n2=Object.keys(XV.structures["2BJF"].amine).length;
+  $("#xNamine").textContent = XV.moiety_ref.length;
+  $("#xNcore").textContent  = XV.n_core_ref;
+  $("#xOursList").textContent = XV.moiety_ref.join(" \u00b7 ");
   $("#xNote").innerHTML =
-      `8BLT contacts the amine at <b>${n8}</b> positions, <b>${hit8}</b> of them ours. `
-    + `2BJF contacts it at <b>${n2}</b>, <b>${hit2}</b> of them ours. `
+      PDBS.map(p=>{
+        const n=Object.keys(XV.structures[p].amine).length;
+        const hit=rows.filter(r=>r[p]).length;
+        return `${p} contacts the amine at <b>${n}</b> position${n===1?"":"s"}, `
+             + `<b>${hit}</b> of them ours.`;
+      }).join(" ") + " "
     + `Positions are in the C0ERS1 frame; the four greyed ones are invariant across all 127 `
     + `sequences, so they cannot distinguish enzymes even when they are contacted.`;
 
@@ -4347,30 +4389,43 @@ function drawXtal(){
   const ex=XV.extra, core=XV.core;
   $("#xVerdict").innerHTML =
       `<h3>What this does and does not show</h3>`
-    + `<p><b>Position 206 is donated by a neighbouring subunit in every copy of both `
-      + `structures</b> &mdash; 8 of 8 in 8BLT, 4 of 4 in 2BJF. That was the single finding most `
-      + `at risk of being a modelling artefact, since in our tetramers 861 of 863 contacts at `
-      + `that position come from the other chain. Two independent crystals say it is real.</p>`
-    + `<p><b>Position 222 is contacted in every copy of both</b>, and in 2BJF the contact is `
-      + `explicitly <i>ionic</i>, between an arginine and the taurine sulfonate. That is the `
-      + `residue our panel scores as a universal anion sensor &mdash; +0.80 selectivity for `
-      + `charged conjugates in 26 of 26 enzymes.</p>`
+    + `<p><b>Position 206 is donated by a neighbouring subunit in every copy of all three `
+      + `structures</b> &mdash; 8 of 8 in 8BLT, 4 of 4 in 2BJF, 4 of 4 in 7SVG. That was the `
+      + `single finding most at risk of being a modelling artefact, since in our tetramers 861 `
+      + `of 863 contacts at that position come from the other chain. Three independent crystals, `
+      + `three species, both directions of the reaction, say it is real.</p>`
+    + `<p>And the residue there is <i>not</i> conserved &mdash; Thr208 in 8BLT, Gln212 in 2BJF, `
+      + `Val211 in 7SVG &mdash; yet all three still reach across the interface. So what is `
+      + `conserved at 206 is the <b>position</b>, not what sits in it.</p>`
+    + `<p><b>Position 222 is contacted in every copy of all three</b>, and in all three the `
+      + `contact is explicitly <i>ionic</i> &mdash; an arginine guanidinium against the taurine `
+      + `sulfonate: Arg224 in 8BLT, Arg228 in 2BJF, Arg227 in 7SVG. That is the residue our panel `
+      + `scores as a universal anion sensor &mdash; and it is an arginine in <b>114 of our 115 `
+      + `enzymes</b> as well, which makes it part of the machine rather than a specificity `
+      + `switch.</p>`
     + `<p>The asymmetry we reported also holds. In 2BJF, <b>4 of 16</b> taurine contacts come `
-      + `from a neighbouring subunit and <b>0 of 112</b> deoxycholate contacts do. The bile acid `
-      + `is held entirely by one chain; only the amine sees across the interface.</p>`
+      + `from a neighbouring subunit and <b>0 of 112</b> deoxycholate contacts do; 7SVG and 8BLT `
+      + `agree, with <b>no</b> inter-subunit contact on the bile-acid side in either. The bile `
+      + `acid is held entirely by one chain; only the amine sees across the interface.</p>`
     + `<p>On the bile-acid side the overlap is high but unremarkable, as expected for a pocket `
       + `that barely changes: ${core["2BJF"].ours} of ${core["2BJF"].n} deoxycholate positions `
-      + `in 2BJF and ${core["8BLT"].ours} of ${core["8BLT"].n} in 8BLT fall among our `
+      + `in 2BJF, ${core["7SVG"].ours} of ${core["7SVG"].n} chenodeoxycholate positions in 7SVG `
+      + `and ${core["8BLT"].ours} of ${core["8BLT"].n} in 8BLT fall among our `
       + `${XV.n_core_ref} predicted core positions.</p>`
-    + `<p class="foot"><b>Three honest limits.</b> First, neither crystal carries an `
-      + `<i>arginine</i> at 206 &mdash; 8BLT has Thr208 and 2BJF Gln212 &mdash; so they confirm `
-      + `that the position is the donated one, but they do not test the arginine-specific charge `
-      + `selectivity, which remains supported only by our own structures. Second, both ligands `
-      + `are taurine-based, so this checks the sulfonate case and says nothing directly about the `
-      + `other 24 conjugates. Third, 8BLT contacts the amine at one position we do not list `
-      + `(${ex["8BLT"].join(", ")}); it is present in our data, contacted by all 26 enzymes in `
-      + `some sample but reproducible in only 8, so it fell below the threshold that defined the `
-      + `11 &mdash; which suggests that threshold is slightly too strict rather than wrong.</p>`;
+    + `<p class="foot"><b>Two honest limits.</b> First, <i>none</i> of the three carries an `
+      + `arginine at 206 (Thr, Gln, Val), so they confirm that the position is the donated one `
+      + `but do not test the arginine-specific charge selectivity, which remains supported only `
+      + `by our own structures. Second, all three ligands are taurine-based, so this checks the `
+      + `sulfonate case and says nothing directly about the other 24 conjugates &mdash; every `
+      + `amine-side position below is a taurine contact.`
+      + (PDBS.every(p=>!ex[p].length)
+          ? ` A third limit stated here previously &mdash; that 8BLT touched a position we did `
+            + `not list &mdash; no longer applies: with the pocket rebuilt from the complete `
+            + `interaction data, <b>every amine position in all three structures is one of `
+            + `ours</b>.`
+          : ` One position is contacted that we do not list: `
+            + PDBS.filter(p=>ex[p].length).map(p=>`${p} at ${ex[p].join(", ")}`).join("; ") + `.`)
+      + `</p>`;
 }
 
 /* ---- what the assay actually measured for this enzyme and conjugate ----

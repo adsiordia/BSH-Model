@@ -1,10 +1,15 @@
 #!/usr/bin/env python3
-"""Build validation.json: the two crystal structures against our predicted pocket.
+"""Build validation.json: the three crystal structures against our predicted pocket.
 
 8BLT  L. salivarius BSH + taurocholate (intact substrate), 2.10 A, 8 copies.
 2BJF  C. perfringens CBAH + taurine AND deoxycholate (the products), 1.67 A,
       1 chain deposited -- the tetramer is rebuilt from the 4 crystal symmetry
       operators, without which the inter-subunit contacts do not exist at all.
+
+7SVG  L. gasseri BSHA + taurine AND chenodeoxycholate (the products), 1.35 A,
+      all four chains deposited, so no symmetry rebuild. The highest-resolution
+      reference of the three, and the only one whose bile-acid core (3a,7a)
+      matches the GCDCA donor the assay actually used.
 
 For 8BLT the ligand is one molecule, so amine vs core is split with the same
 geometric rule used on the AF3 panel. For 2BJF the products are already separate
@@ -23,7 +28,7 @@ def load(path, which):
         core = [r for r in rows if r["part"] == "core"]
     else:
         amine = [r for r in rows if r["lig"] == "TAU"]
-        core = [r for r in rows if r["lig"] == "DXC"]
+        core = [r for r in rows if r["lig"] != "TAU"]
     return amine, core
 
 def summarise(rows, key="ligchain"):
@@ -54,7 +59,14 @@ for pdb, path, ncopy, meta in [
               ligand="taurine + deoxycholate (the reaction products)",
               note="one chain deposited; the tetramer is rebuilt from the four "
                    "crystal symmetry operators, without which no inter-subunit "
-                   "contact exists"))]:
+                   "contact exists")),
+        ("7SVG", "7SVG_contacts.json", 4,
+         dict(enzyme="Lactobacillus gasseri BSHA", res=1.35,
+              ligand="taurine + chenodeoxycholate (the reaction products)",
+              note="all four chains deposited, so the inter-subunit contacts are "
+                   "read straight off the deposit with no symmetry rebuild; the "
+                   "catalytic Cys is oxidised to OCS. A third CDCA copy sits 13.9 A "
+                   "from the catalytic residue and is excluded as a surface site"))]:
     amine, core = load(path, pdb)
     S[pdb] = dict(meta=meta, ncopy=ncopy,
                   n_amine=len(amine), n_core=len(core),
@@ -65,17 +77,17 @@ for pdb, path, ncopy, meta in [
 rows = []
 for pos in MOI:
     row = dict(pos=pos, invariant=pos in (1, 15, 169, 222))
-    for pdb in ("8BLT", "2BJF"):
+    for pdb in ("8BLT", "2BJF", "7SVG"):
         hit = S[pdb]["amine"].get(pos)
         row[pdb] = hit
     rows.append(row)
 
 extra = {}
-for pdb in ("8BLT", "2BJF"):
+for pdb in ("8BLT", "2BJF", "7SVG"):
     extra[pdb] = sorted(p for p in S[pdb]["amine"] if p not in MOI)
 
 core_stats = {}
-for pdb in ("8BLT", "2BJF"):
+for pdb in ("8BLT", "2BJF", "7SVG"):
     pos = sorted(S[pdb]["core"])
     core_stats[pdb] = dict(n=len(pos), ours=sum(1 for p in pos if p in CORE),
                            positions=pos)
@@ -83,7 +95,8 @@ for pdb in ("8BLT", "2BJF"):
 # per ligand copy, the residues to light up in the 3D viewer
 copies = {}
 for pdb, path, which in [("8BLT", "8BLT_contacts.json", "8BLT"),
-                         ("2BJF", "2BJF_contacts.json", "2BJF")]:
+                         ("2BJF", "2BJF_contacts.json", "2BJF"),
+                         ("7SVG", "7SVG_contacts.json", "7SVG")]:
     raw = json.load(open(path))
     by = collections.defaultdict(list)
     for r in raw:
@@ -115,7 +128,7 @@ for pdb, path, which in [("8BLT", "8BLT_contacts.json", "8BLT"),
         out[ch] = sorted(seen.values(), key=lambda x: (x["part"] != "moiety", x["rn"]))
     copies[pdb] = out
 
-LIGS = {"8BLT": ["TCH"], "2BJF": ["TAU", "DXC"]}
+LIGS = {"8BLT": ["TCH"], "2BJF": ["TAU", "DXC"], "7SVG": ["TAU", "JN3"]}
 
 json.dump(dict(structures={k: {kk: vv for kk, vv in v.items() if kk != "core"}
                            for k, v in S.items()},
@@ -127,5 +140,5 @@ print("wrote site/validation.json")
 for pdb in S:
     a = S[pdb]
     hits = sum(1 for p in a["amine"] if p in MOI)
-    print(f"  {pdb}: {len(a['amine'])} amine positions, {hits} in our 11; "
+    print(f"  {pdb}: {len(a['amine'])} amine positions, {hits} in our {len(MOI)}; "
           f"core {core_stats[pdb]['ours']}/{core_stats[pdb]['n']} in our {len(CORE)}")
