@@ -60,10 +60,10 @@
  },
  "cystine": {
   "classes": {
-   "primary amine": 2
+   "primary amine": 1
   },
-  "n_nitrogen": 2,
-  "nucleophilic": 2
+  "n_nitrogen": 1,
+  "nucleophilic": 1
  },
  "dopamine": {
   "classes": {

@@ -6,6 +6,15 @@ Corrections applied here (raw file is left untouched):
     spreadsheet's own MW column. Stereochemistry is NOT asserted: unlike the other
     amino acids the name carries no L-/D- prefix, so the corrected SMILES is achiral.
 
+  * cystine / L-Cysteine -- the activity table's column is spelled "cystine", which
+    is a MISNOMER: the assay vial is L-Cysteine (R-75DRN7, MW 121.16, free thiol),
+    and the reactants sheet carries its SMILES directly. DATA_NAME therefore maps
+    L-Cysteine onto the activity name "cystine". Until 11 November 2026 that column
+    was instead served by an INFERRED SMILES for the DISULFIDE DIMER
+    (OC(=O)C(N)CSSCC(N)C(=O)O, C6H12N2O4S2, MW 240.31), read off the misspelled
+    name. That doubled the molecule, its nucleophilic nitrogens (2 instead of 1)
+    and its amine_class (polyamine instead of amino_acid). Raised by a collaborator.
+
 Noted but NOT changed:
   * TLCA -- spreadsheet MW (505.7) is the sodium salt; the SMILES is the free acid
     (483.7). The structure is correct, so the SMILES stands.
@@ -34,7 +43,6 @@ SMILES_FIXES = {
 INFERRED_AMINES = {
     "serotonin": ("NCCc1c[nH]c2ccc(O)cc12", "5-hydroxytryptamine; not in reactants sheet"),
     "tyramine":  ("NCCc1ccc(O)cc1",         "4-hydroxyphenethylamine; not in reactants sheet"),
-    "cystine":   ("OC(=O)C(N)CSSCC(N)C(=O)O", "disulfide dimer of L-cysteine, which IS a reactant"),
 }
 
 # core identity after deconjugation, and which conjugate forms were supplied
@@ -56,7 +64,7 @@ DATA_NAME = {
     "2,3-Diaminopropinoic Acid": "2,3_diaminopropionic acid", "2-aminophenol": "2_aminophenol",
     "3-methoxytyramine HCl": "3_methoxytyramine", "4-aminophenol": "4_aminophenol",
     "L-Alanine": "alanine", "L-Arginine": "arginine", "Asparagine": "asparagine",
-    "Cadaverine": "cadaverine", "L-Citrulline": "citrulline", "L-Cysteine": "cysteine",
+    "Cadaverine": "cadaverine", "L-Citrulline": "citrulline", "L-Cysteine": "cystine",
     "Dopamine HCl": "dopamine", "gamma-Aminobutyric acid >99%": "gaba",
     "L-Glutamine": "glutamine", "Glycyl-L-Valine": "glyglycine", "L-Histidine": "histidine",
     "L-Lysine": "lysine", "L-Methionine": "methionine",

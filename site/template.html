@@ -581,7 +581,7 @@ table.sa thead tr.sacols th{top:17px}
     <p class="prose foot" style="margin-bottom:12px">Each dot is one amine. Up the side is
     <b>how often it was attached</b> — of all <span id="chemDen"></span> chances that amine had
     (every enzyme, on every bile acid type), the share that produced a detectable product.
-    GABA at 86% was attached by almost every enzyme; proline at 3% by almost none. Along the
+    GABA at 81% was attached by almost every enzyme (279 of its 345 chances); proline at under 1% by almost none (3 of 345). Along the
     bottom is whichever property you pick. A relationship would show as the dots trending
     up or down together.</p>
     <div id="scatterWrap"></div>
@@ -591,8 +591,10 @@ table.sa thead tr.sacols th{top:17px}
     <div class="scroll" id="corrTable"></div>
     <p class="foot">Correlation is Spearman's rho across the 25 amines — it runs from −1 to +1,
     and anything between about −0.4 and +0.4 is too weak to mean much with only 25 points.
-    Only two properties clear that bar, and one of them is a quirk of the experiment rather
-    than chemistry.</p>
+    <b>No property clears that bar.</b> The strongest is the number of reactive nitrogens
+    at −0.27, and nothing else reaches ±0.25. No single descriptor of the amine predicts
+    how often it gets attached &mdash; which is the argument for giving the model a structural
+    fingerprint rather than a handful of hand-picked properties.</p>
   </div>
 </section>
 
@@ -1646,7 +1648,10 @@ const amineNames = Object.keys(AM).sort();
 const enzNames = Object.keys(EN).sort();
 const pretty = s => s.replace(/_/g," ").replace(/\b3 methoxytyramine\b/,"3-methoxytyramine")
   .replace(/^2 aminophenol$/,"2-aminophenol").replace(/^2,3 diaminopropionic acid$/,"2,3-diaminopropionic acid")
-  .replace(/^glyglycine$/,"glycyl-valine").replace(/^gaba$/,"GABA");
+  .replace(/^glyglycine$/,"glycyl-valine").replace(/^gaba$/,"GABA")
+  /* the assay table's "cystine" column is the free thiol, i.e. cysteine; the key
+     stays "cystine" because that is what the raw data calls it */
+  .replace(/^cystine$/,"cysteine");
 const byEnz = {}, byAm = {}, key = {};
 for (const c of cells){ (byEnz[c.Enzyme] ||= []).push(c); (byAm[c.Amine] ||= []).push(c);
   key[c.Enzyme+"|"+c.Amine+"|"+c.Hydroxyl] = c; }
@@ -2103,6 +2108,7 @@ function amDetail(){
     <h2>${pretty(curA)}</h2>
     <p class="foot">${kindOf(info.cls)} · ${ch.formula||""} · ${info.mw.toFixed(1)} g/mol
       ${info.inferred?' · <span class="tag pred">structure inferred</span>':""}</p>
+    ${ch.note?`<p class="foot" style="border-left:3px solid var(--warn,#b0702a);padding-left:9px;margin-top:-4px">${ch.note}</p>`:""}
     ${ch.svg?`<div class="struct"><div class="lt">${ch.svg}</div><div class="dk">${ch.svg_dark}</div></div>`:""}
     ${ch.props?`<div class="props">${CHEM.desc_labels.map(d=>
       `<div><b>${ch.props[d.k]}</b><span>${d.label}${d.unit?" ("+d.unit+")":""}</span></div>`).join("")}</div>`:""}
@@ -2231,8 +2237,11 @@ function spearman(a,b){const x=rank(a),y=rank(b),n=a.length;
   const mx=x.reduce((s,v)=>s+v,0)/n, my=y.reduce((s,v)=>s+v,0)/n;
   let num=0,dx=0,dy=0;for(let i=0;i<n;i++){const u=x[i]-mx,v=y[i]-my;num+=u*v;dx+=u*u;dy+=v*v;}
   return num/Math.sqrt(dx*dy);}
-const EXTRA = [{k:"nuc",label:"reactive nitrogens",unit:""},
-               {k:"cores",label:"bile acid types tested on",unit:""}];
+/* "bile acid types tested on" used to live here and was the one property whose
+   correlation was an artefact of uneven testing. The grid is now complete -- every
+   amine is measured on all three cores -- so the value is constant for all 25, its
+   rho is undefined, and the table rendered a literal NaN. Removed. */
+const EXTRA = [{k:"nuc",label:"reactive nitrogens",unit:""}];
 function chemVals(k){const A=CHEM.amines;return Object.keys(A).map(n=>
   k==="nuc"?A[n].nuc : k==="cores"?new Set(byAm[n].filter(c=>c.active>=0).map(c=>c.Hydroxyl)).size
   : A[n].props[k]);}
@@ -3291,7 +3300,7 @@ if (typeof TRIM !== "undefined" && TRIM && TRIM.n_proteins) {
       if(!rows || !rows.length){ $(el).innerHTML='<p class="foot">none</p>'; return; }
       $(el).innerHTML = `<table><thead><tr><th>amine</th><th>core</th><th class="r">n</th>
         <th class="r">made by</th><th class="r">full &rarr; trimmed</th></tr></thead><tbody>${
-        rows.map(r=>`<tr><td>${r.Amine.replace(/_/g," ")}</td><td>${r.Hydroxyl}</td>
+        rows.map(r=>`<tr><td>${pretty(r.Amine)}</td><td>${r.Hydroxyl}</td>
           <td class="r"><b>${r.n}</b></td>
           <td class="r">${r.made_by==null?"&mdash;":(r.made_by*100).toFixed(0)+"%"}</td>
           <td class="r mono">${num(r.mean_full)} &rarr; ${num(r.mean_trim)}</td></tr>`).join("")}

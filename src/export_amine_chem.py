@@ -63,6 +63,18 @@ def ntype(r):
     return "primary"
 
 
+# Per-amine caveats rendered on the amine detail card. Keep these short; they are
+# for things a reader of the card would otherwise get wrong.
+AMINE_NOTES = {
+    "cystine": "The assay column is spelled \u201ccystine\u201d but the vial was "
+               "L-Cysteine (MW 121.16, free thiol), so that is the structure shown. "
+               "Until 11 November 2026 this column carried an inferred SMILES for the "
+               "disulfide DIMER, and the shipped model\u2019s fingerprint for it still "
+               "does \u2014 every prediction on this site for this amine predates the "
+               "correction and will change when the model is retrained.",
+}
+
+
 def main():
     act = lb.build(min_reps=1)
     sm = rep.load_smiles("Amine")
@@ -88,7 +100,8 @@ def main():
             n_secondary=int(cur.n_secondary.get(a, 0) or 0),
             has_cooh=str(cur.has_COOH.get(a, "")).lower() in ("true", "1"),
             rate=round(float(rate[a]), 4), cells=int(n_cells[a]), hits=int(n_hit[a]),
-            props={k: round(float(f(m)), 2) for k, _, f, _ in DESCS})
+            props={k: round(float(f(m)), 2) for k, _, f, _ in DESCS},
+            note=AMINE_NOTES.get(a))
 
     # pairwise Tanimoto, for the "most similar" panel
     gen = rdfp.GetMorganGenerator(radius=2, fpSize=512)

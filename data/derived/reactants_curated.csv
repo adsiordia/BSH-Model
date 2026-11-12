@@ -17,7 +17,7 @@ Isoniazid,Amine,,C1=CN=CC=C1C(=O)NN,raw,,137.14,True,C6H7N3O,137.14,3.0,1.0,0.0,
 L-Alanine,Amine,alanine,C[C@@H](C(=O)O)N,raw,,89.09,True,C3H7NO2,89.09,1.0,1.0,0.0,0.0,0.0,True,1.0,amino_acid,,,,,,,,
 L-Arginine,Amine,arginine,C(C[C@@H](C(=O)O)N)CN=C(N)N,raw,,174.2,True,C6H14N4O2,174.2,4.0,1.0,0.0,0.0,0.0,True,1.0,amino_acid,,,,,,,,
 L-Citrulline,Amine,citrulline,C(C[C@@H](C(=O)O)N)CNC(=O)N,raw,,175.19,True,C6H13N3O3,175.19,3.0,1.0,0.0,0.0,0.0,True,1.0,amino_acid,,,,,,,,
-L-Cysteine,Amine,cysteine,C([C@@H](C(=O)O)N)S,raw,,121.16,True,C3H7NO2S,121.16,1.0,1.0,0.0,0.0,0.0,True,1.0,amino_acid,,,,,,,,
+L-Cysteine,Amine,cystine,C([C@@H](C(=O)O)N)S,raw,,121.16,True,C3H7NO2S,121.16,1.0,1.0,0.0,0.0,0.0,True,1.0,amino_acid,,,,,,,,
 L-Glutamine,Amine,glutamine,C(CC(=O)N)[C@@H](C(=O)O)N,raw,,146.14,True,C5H10N2O3,146.15,2.0,1.0,0.0,0.0,0.0,True,1.0,amino_acid,,,,,,,,
 L-Glutathione (Reduced),Amine,,C(CC(=O)NC(CS)C(=O)NCC(=O)O)C(C(=O)O)N,raw,,307.33,True,C10H17N3O6S,307.33,3.0,1.0,0.0,0.0,0.0,True,1.0,amino_acid,,,,,,,,
 L-Histidine,Amine,histidine,C1=C(NC=N1)C[C@@H](C(=O)O)N,raw,,155.15,True,C6H9N3O2,155.16,3.0,1.0,0.0,0.0,0.0,True,1.0,amino_acid,,,,,,,,
@@ -56,4 +56,3 @@ THDCA,Bile Acid,,C[C@H](CCC(=O)NCCS(=O)(=O)O)[C@H]1CC[C@@H]2[C@@]1(CC[C@H]3[C@H]
 3k7k12k-Tau,Bile Acid,,[H][C@@]1(CC([C@@]2([H])[C@]3([H])CC[C@@H]([C@]34C)[C@H](C)CCC(NCCS(O)(=O)=O)=O)=O)CC(CC[C@]1(C)[C@@]2([H])CC4=O)=O,raw,,509.66,True,C26H39NO7S,509.67,,,,,,,,,"3k,7k,12k",Tau,Tau,0.0,3.0,,True,1.0
 serotonin,Amine,serotonin,NCCc1c[nH]c2ccc(O)cc12,INFERRED,5-hydroxytryptamine; not in reactants sheet,,True,C10H12N2O,176.22,2.0,1.0,0.0,0.0,0.0,False,1.0,primary_amine,,,,,,,,
 tyramine,Amine,tyramine,NCCc1ccc(O)cc1,INFERRED,4-hydroxyphenethylamine; not in reactants sheet,,True,C8H11NO,137.18,1.0,1.0,0.0,0.0,0.0,False,1.0,primary_amine,,,,,,,,
-cystine,Amine,cystine,OC(=O)C(N)CSSCC(N)C(=O)O,INFERRED,"disulfide dimer of L-cysteine, which IS a reactant",,True,C6H12N2O4S2,240.31,2.0,2.0,0.0,0.0,0.0,True,2.0,polyamine,,,,,,,,

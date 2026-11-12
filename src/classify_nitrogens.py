@@ -53,3 +53,20 @@ if __name__ == "__main__":
         print(f"  {a:28s} old={v['cls']:10s} ->  {cls or '(none found)'}")
     (ROOT / "data/derived/nitrogen_classes.json").write_text(json.dumps(out, indent=1))
     print(f"\nwrote data/derived/nitrogen_classes.json")
+
+    # Write the same three fields back into chem.json, which is what the amine
+    # detail card renders. export_amine_chem.py does not produce them, so
+    # without this step a chem.json rebuild silently drops the per-amine
+    # nitrogen breakdown and the card falls back to the single `cls` label.
+    cp = ROOT / "site/chem.json"
+    for a, v in chem["amines"].items():
+        r = out.get(a)
+        if not r:
+            continue
+        v["n_classes"] = r["classes"]
+        v["n_nitrogen"] = r["n_nitrogen"]
+        v["label"] = ", ".join(f"{k} \u00d7{n}" if n > 1 else k
+                               for k, n in r["classes"].items()) or "(none found)"
+    cp.write_text(json.dumps(chem, separators=(",", ":")))
+    print(f"patched site/chem.json with n_classes/n_nitrogen/label "
+          f"for {sum(1 for a in chem['amines'] if 'n_classes' in chem['amines'][a])} amines")
