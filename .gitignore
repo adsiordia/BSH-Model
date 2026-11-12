@@ -9,9 +9,14 @@ slurm-*.out
 site/.serve.pid
 site/.serve.log
 .DS_Store
-# 130 MB of raw tetramers, regenerable with analysis/make_raw.py in AF3/BSH_AF3
-site/raw/
-# crystal tetramers, regenerable from refstruct/ (see scripts/make_validation.py)
-site/xtal/
-# per-rank pocket crops, regenerable with analysis/make_pockets_all.py
-site/pockets_all/
+# site/raw/, site/xtal/ and site/pockets_all/ used to be ignored here as
+# "regenerable". They are now TRACKED, because the only thing that could
+# regenerate them is /home/adsiordia/AF3/BSH_AF3, which is not under version
+# control on any machine -- so "regenerable" meant "exists once". Tracking them
+# makes the repo a complete copy of what the published Space serves.
+#
+#   site/raw/           675 whole tetramers, .pdb.gz, ~130 MB (already
+#                       compressed, so git cannot shrink it further)
+#   site/pockets_all/   3,375 per-rank 8 A crops, .pdb, 138 MB -> ~36 MB packed
+#   site/xtal/          3 crystal tetramers, .pdb.gz, 0.8 MB
+#                       (rebuild with scripts/make_xtal_pdb.py)
