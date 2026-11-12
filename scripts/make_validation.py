@@ -15,9 +15,13 @@ For 8BLT the ligand is one molecule, so amine vs core is split with the same
 geometric rule used on the AF3 panel. For 2BJF the products are already separate
 molecules, so taurine contacts are amine-subsite contacts by construction.
 """
-import json, collections
+import json, collections, os, sys
 
-PC = json.load(open("../analysis/pocket_columns.json"))
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from _paths import REFSTRUCT, ANALYSIS, SITE
+
+os.chdir(REFSTRUCT)          # the *_contacts.json files live here
+PC = json.load(open(ANALYSIS / "pocket_columns.json"))
 MOI = PC["moiety_ref"]
 CORE = {x for x in PC["core_ref"] if x is not None}
 
@@ -134,7 +138,7 @@ json.dump(dict(structures={k: {kk: vv for kk, vv in v.items() if kk != "core"}
                            for k, v in S.items()},
                rows=rows, extra=extra, core=core_stats, copies=copies, ligs=LIGS,
                moiety_ref=MOI, n_core_ref=len(CORE)),
-          open("/home/adsiordia/BSH-Model/site/validation.json", "w"),
+          open(SITE / "validation.json", "w"),
           separators=(",", ":"))
 print("wrote site/validation.json")
 for pdb in S:

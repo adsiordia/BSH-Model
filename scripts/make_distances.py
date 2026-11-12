@@ -18,8 +18,12 @@ other samples -- the table is the union over five, the viewer is one model.
 """
 import csv, glob, json, os, collections
 
-ROOT = "/home/adsiordia/AF3/BSH_AF3"
+import sys as _sys, pathlib as _pl
+_sys.path.insert(0, str(_pl.Path(__file__).resolve().parent))
+from _paths import AF3_ROOT, need_af3
+ROOT = str(AF3_ROOT)
 CSVD = f"{ROOT}/analysis/contacts"
+need_af3("the 675 predictions in out_panel/")
 
 
 def top_sample(job):
@@ -36,7 +40,7 @@ def top_sample(job):
 
 if __name__ == "__main__":
     jobs = sorted(os.path.basename(f)[:-4]
-                  for f in glob.glob("/home/adsiordia/BSH-Model/site/pockets/*.pdb"))
+                  for f in glob.glob(f"{_SITE}/pockets/*.pdb"))
     out, miss, ntot = {}, 0, 0
     for job in jobs:
         samp = top_sample(job)
@@ -54,7 +58,7 @@ if __name__ == "__main__":
                          round(float(r["distance_A"]), 2), r["interaction_type"]])
         out[job] = rows
         ntot += len(rows)
-    dst = "/home/adsiordia/BSH-Model/site/distances.json"
+    dst = f"{_SITE}/distances.json"
     json.dump(out, open(dst, "w"), separators=(",", ":"))
     print(f"wrote {dst}  ({os.path.getsize(dst)/1024:.0f} KB)")
     print(f"  {len(out)} jobs, {ntot} contacts from the displayed model, {miss} missing")

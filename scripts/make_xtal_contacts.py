@@ -16,11 +16,15 @@ are needed, not just the distance, so they are carried through here.
       site rather than the core subsite, so it is excluded here -- keeping it
       adds four positions seen in only one copy.
 """
-import json, csv, glob, os, warnings
+import json, csv, glob, os, sys, warnings
 warnings.filterwarnings("ignore")
 from Bio.PDB import MMCIFParser
 
-AL = json.load(open("/home/adsiordia/BSH-Model/site/alignment.json"))
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from _paths import REFSTRUCT, SITE
+
+os.chdir(REFSTRUCT)          # every path below is relative to the tracked inputs
+AL = json.load(open(SITE / "alignment.json"))
 REF127 = {int(a): b for a, b in AL["ref127"].items()}
 P = MMCIFParser(QUIET=True)
 

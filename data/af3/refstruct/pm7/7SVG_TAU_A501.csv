@@ -1,0 +1,7 @@
+interaction_type,protein_residue,protein_resnum,protein_chain,protein_atom,ligand_atom,ligand_element,distance_A,solvent_accessible,halogen_element
+attractive_charge,ARG,227,A,NH2,O3,O,4.67,True,
+hydrogen_bonds,GLU,273,A,OE1,N1,N,2.63,True,
+hydrogen_bonds,ASP,21,A,O,N1,N,2.84,True,
+hydrogen_bonds,VAL,211,B,N,O3,O,2.96,False,
+hydrogen_bonds,ASN,81,A,ND2,O2,O,3.33,True,
+ionic,ARG,227,A,NH2,O3,O,4.67,True,

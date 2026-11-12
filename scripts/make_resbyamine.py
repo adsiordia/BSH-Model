@@ -16,7 +16,11 @@ taurine has 75 contacts and the polyamines 69, against 645 for the polar class.
 import pickle, json, collections
 import pandas as pd, numpy as np
 
-AF3 = "/home/adsiordia/AF3/BSH_AF3"
+import sys as _sys, pathlib as _pl
+_sys.path.insert(0, str(_pl.Path(__file__).resolve().parent))
+from _paths import AF3_ROOT, need_af3
+need_af3("contacts_full.pkl", "msa_struct.pkl")
+AF3 = str(AF3_ROOT)
 # the COMPLETE PandaMap output: all 13 interaction types, nothing dropped
 d = pd.read_pickle(f"{AF3}/analysis/contacts_full.pkl")
 d = d[d.protein != "A0A414Q275"]
@@ -74,7 +78,7 @@ json.dump(dict(classes=ORDER, residues=keep,
                bg={r: round(float(bg[r]), 4) for r in keep},
                bypos={r: bypos[r] for r in keep},
                n_contacts=int(len(g))),
-          open("/home/adsiordia/BSH-Model/site/resbyamine.json", "w"),
+          open(f"{_SITE}/resbyamine.json", "w"),
           separators=(",", ":"))
 print(f"wrote site/resbyamine.json")
 print(f"  {len(g)} reproducible amine-side contacts, {len(ORDER)} classes, {len(keep)} residues")

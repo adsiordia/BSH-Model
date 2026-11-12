@@ -19,7 +19,10 @@ Inputs are the files the site already ships, so this adds no new analysis:
 import json, os, collections
 
 SITE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "site")
-AF3 = "/home/adsiordia/AF3/BSH_AF3/analysis"
+import sys as _sys, pathlib as _pl
+_sys.path.insert(0, str(_pl.Path(__file__).resolve().parent))
+from _paths import AF3_ROOT
+AF3 = str(AF3_ROOT / "analysis")
 
 AL = json.load(open(f"{SITE}/alignment.json"))
 SA = json.load(open(f"{SITE}/sitesactivity.json"))

@@ -19,8 +19,12 @@ their own f so the page can apply the threshold -- but the derived counts
 import json, csv, collections
 import pandas as pd
 
-AF3 = "/home/adsiordia/AF3/BSH_AF3"
-SITE = "/home/adsiordia/BSH-Model/site"
+import sys as _sys, pathlib as _pl
+_sys.path.insert(0, str(_pl.Path(__file__).resolve().parent))
+from _paths import AF3_ROOT, need_af3
+need_af3("contacts_full.pkl")
+AF3 = str(AF3_ROOT)
+SITE = str(_SITE)
 SOLID = 3
 
 d = pd.read_pickle(f"{AF3}/analysis/contacts_full.pkl")

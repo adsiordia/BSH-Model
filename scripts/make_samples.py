@@ -11,8 +11,11 @@ because the table row is per residue.
 """
 import csv, glob, json, os, collections, re
 
-AF3 = "/home/adsiordia/AF3/BSH_AF3"
-SITE = "/home/adsiordia/BSH-Model/site"
+import sys as _sys, pathlib as _pl
+_sys.path.insert(0, str(_pl.Path(__file__).resolve().parent))
+from _paths import AF3_ROOT
+AF3 = str(AF3_ROOT)
+SITE = str(_SITE)
 jobs = sorted(os.path.basename(f)[:-4]
               for f in glob.glob(f"{SITE}/pockets/*.pdb"))
 out, miss = {}, 0

@@ -25,7 +25,11 @@ The gap between the two is the point of the script.
 import json, collections, itertools
 from scipy.stats import fisher_exact
 
-SITE = "/home/adsiordia/BSH-Model/site"
+import sys as _sys, pathlib as _pl
+_sys.path.insert(0, str(_pl.Path(__file__).resolve().parent))
+from _paths import SITE as _SITE, REPO as _REPO
+
+SITE = str(_SITE)
 CLASSES = {
     "aromatic": ["phenylalanine", "tyramine", "dopamine", "3_methoxytyramine",
                  "tryptamine", "serotonin", "2_aminophenol", "histidine"],

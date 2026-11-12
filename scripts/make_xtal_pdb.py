@@ -27,8 +27,10 @@ from pathlib import Path
 warnings.filterwarnings("ignore")
 from Bio.PDB import MMCIFParser, PDBIO, Select
 
-REF = Path("/home/adsiordia/AF3/BSH_AF3/refstruct")
-SITE = Path(__file__).resolve().parent.parent / "site/xtal"
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from _paths import REFSTRUCT as REF, SITE as _SITE
+
+SITE = _SITE / "xtal"
 # the catalytic cysteine, oxidised in both of these deposits
 AS_ATOM = {"OCS"}
 

@@ -10,7 +10,11 @@ once, which is what made the tabs disagree.
 import json
 import pandas as pd
 
-AF3 = "/home/adsiordia/AF3/BSH_AF3"
+import sys as _sys, pathlib as _pl
+_sys.path.insert(0, str(_pl.Path(__file__).resolve().parent))
+from _paths import AF3_ROOT, need_af3
+need_af3("contacts_full.pkl")
+AF3 = str(AF3_ROOT)
 SOLID, MIN_ENZ = 3, 3
 
 d = pd.read_pickle(f"{AF3}/analysis/contacts_full.pkl")

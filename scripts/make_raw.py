@@ -18,8 +18,12 @@ from Bio.PDB import MMCIFParser
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from make_pockets import _rec            # same fixed-column writer, same bug fixes
 
-ROOT = "/home/adsiordia/AF3/BSH_AF3"
+import sys as _sys, pathlib as _pl
+_sys.path.insert(0, str(_pl.Path(__file__).resolve().parent))
+from _paths import AF3_ROOT, need_af3
+ROOT = str(AF3_ROOT)
 OUT = f"{ROOT}/analysis/raw"
+need_af3("the 675 predictions in out_panel/")
 p = MMCIFParser(QUIET=True)
 
 
@@ -57,7 +61,7 @@ if __name__ == "__main__":
     os.makedirs(OUT, exist_ok=True)
     # mirror exactly the job set the site already ships pockets for
     jobs = sorted(os.path.basename(f)[:-4]
-                  for f in glob.glob("/home/adsiordia/BSH-Model/site/pockets/*.pdb"))
+                  for f in glob.glob(f"{_SITE}/pockets/*.pdb"))
     done = skip = 0
     for j in jobs:
         dst = f"{OUT}/{j}.pdb.gz"

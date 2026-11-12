@@ -14,7 +14,7 @@ lower than the protein's.
 import gzip, glob, json, os
 import numpy as np
 
-SITE = "/home/adsiordia/BSH-Model/site"
+SITE = str(_SITE)
 out = {}
 for f in sorted(glob.glob(f"{SITE}/raw/*.pdb.gz")):
     job = os.path.basename(f)[:-7]
@@ -44,5 +44,9 @@ print(f"wrote site/plddt.json  ({os.path.getsize(f'{SITE}/plddt.json')/1024:.0f}
 print(f"  protein pLDDT: mean {np.mean(w):.1f}, range {min(w):.1f}-{max(w):.1f}")
 print(f"  ligand  pLDDT: mean {np.mean(v):.1f}, range {min(v):.1f}-{max(v):.1f}")
 import collections
+
+import sys as _sys, pathlib as _pl
+_sys.path.insert(0, str(_pl.Path(__file__).resolve().parent))
+from _paths import SITE as _SITE, REPO as _REPO
 b = collections.Counter(o["lig_band"] for o in out.values())
 print(f"  ligand confidence bands across the panel: {dict(b)}")

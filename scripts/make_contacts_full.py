@@ -23,8 +23,12 @@ matters.
 import csv, glob, json, os, pickle, re, collections
 import pandas as pd
 
-AF3 = "/home/adsiordia/AF3/BSH_AF3"
-SITE = "/home/adsiordia/BSH-Model/site"
+import sys as _sys, pathlib as _pl
+_sys.path.insert(0, str(_pl.Path(__file__).resolve().parent))
+from _paths import AF3_ROOT, need_af3
+need_af3("contacts_full.pkl")
+AF3 = str(AF3_ROOT)
+SITE = str(_SITE)
 
 MOI = pickle.load(open(f"{AF3}/analysis/moiety_atoms25.pkl", "rb"))
 AL = json.load(open(f"{SITE}/alignment.json"))

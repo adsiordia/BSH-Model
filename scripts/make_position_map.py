@@ -20,8 +20,12 @@ numbers a reader can look up in the PDB.
 """
 import json, pickle, csv, collections
 
-AF3 = "/home/adsiordia/AF3/BSH_AF3"
-SITE = "/home/adsiordia/BSH-Model/site"
+import sys as _sys, pathlib as _pl
+_sys.path.insert(0, str(_pl.Path(__file__).resolve().parent))
+from _paths import AF3_ROOT, need_af3
+need_af3("msa_struct.pkl")
+AF3 = str(AF3_ROOT)
+SITE = str(_SITE)
 
 AL = json.load(open(f"{SITE}/alignment.json"))
 aln, ids = AL["aln127"], AL["order127"]

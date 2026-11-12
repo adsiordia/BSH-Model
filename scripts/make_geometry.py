@@ -20,7 +20,11 @@ cysteine at all.
 import gzip, glob, json, os, collections
 import numpy as np
 
-SITE = "/home/adsiordia/BSH-Model/site"
+import sys as _sys, pathlib as _pl
+_sys.path.insert(0, str(_pl.Path(__file__).resolve().parent))
+from _paths import SITE as _SITE, REPO as _REPO
+
+SITE = str(_SITE)
 COV = {("C", "C"): 1.75, ("C", "N"): 1.65, ("C", "O"): 1.60, ("C", "S"): 1.95,
        ("N", "N"): 1.55, ("N", "O"): 1.55, ("O", "O"): 1.60, ("S", "S"): 2.20,
        ("N", "S"): 1.80, ("O", "S"): 1.60}

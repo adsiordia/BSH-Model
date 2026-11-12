@@ -169,11 +169,48 @@ jobs_*.sh        SLURM submission scripts (all compute runs through sbatch)
 data/raw/        the proteomics table, sequences, SMILES, signal peptides
 data/embeddings/ ProstT5 embeddings: what the production model trains and predicts on
 data/derived/    MSA, conservation, clusters, holdout split  (see PROVENANCE.md)
+data/af3/        the AlphaFold inputs the structural tabs are built from
+                   refstruct/  crystal CIFs, MAFFT --add alignments, PandaMap CSVs
+                               and per-structure contact JSONs (8BLT, 2BJF, 7SVG)
+                   analysis/   pocket_columns.json -- the pocket definition every
+                               structural claim is quoted against -- and the other
+                               small derived JSON/CSV/FASTA
+scripts/af3/     the scripts that produced the AlphaFold panel: predictions,
+                 pocket crops, per-rank structures, PandaMap batches
+scripts/_paths.py  resolves where the inputs live; see "Reproducing" below
 models/          trained models as pickles, label rule recorded inside each
 outputs/         out-of-fold predictions, sweep results, candidate predictions
 site/            the interactive site: template.html + JSON -> build.py -> index.html
+site/pockets*, site/raw, site/xtal
+                 the structures the 3D viewers fetch at runtime; tracked, because
+                 the only thing that could regenerate them is not in git
 images/          figures
 ```
+
+### Paths, and what a fresh clone can and cannot rebuild
+
+Until November 2026 the scripts hard-coded `/home/adsiordia/AF3/BSH_AF3` and
+`/home/adsiordia/BSH-Model`, so a clone anywhere else was broken and 8 of the 23
+data payloads the site inlines could only be rebuilt on one machine. Paths now
+resolve through `scripts/_paths.py`:
+
+| | |
+|---|---|
+| `REFSTRUCT`, `ANALYSIS` | in this repo, under `data/af3/` |
+| `SITE`, `REPO` | derived from the script's own location |
+| `AF3_ROOT` | the large AlphaFold artefacts, **not** in git -- `contacts_full.pkl` (215 MB), the 675 predictions, `out_panel/` (8.4 GB). Defaults to the path above; override with `BSH_AF3_ROOT` |
+
+So from a clone with no AlphaFold directory at all:
+
+```bash
+python scripts/make_xtal_contacts.py   # rebuilds all three crystal contact sets
+python scripts/make_validation.py      # rebuilds site/validation.json
+python scripts/make_xtal_pdb.py 7SVG   # rebuilds the tetramer the viewer fetches
+```
+
+all work, and reproduce the shipped files byte for byte. Scripts that need the
+large artefacts stop with a message naming what is missing and how to point at
+it, rather than a `FileNotFoundError` forty lines in.
 
 ## The site
 
